@@ -1,4 +1,4 @@
-#include "events_table.h"
+#include "comp_table.h"
 
 enum {
 	ID_TIMER,
@@ -6,44 +6,54 @@ enum {
 	ID_MENU_AUTOUPDATE
 };
 
-BEGIN_EVENT_TABLE(cEventsTable, wxListCtrl)
-//	EVT_CONTEXT_MENU(cEventsTable::OnContextMenu)
-//	EVT_MENU(ID_MENU_AUTOUPDATE, cEventsTable::OnAutoUpdate)
-	EVT_TIMER(ID_TIMER, cEventsTable::OnTimer)
+BEGIN_EVENT_TABLE(cCompTable, wxListCtrl)
+//	EVT_CONTEXT_MENU(cCompTable::OnContextMenu)
+//	EVT_MENU(ID_MENU_AUTOUPDATE, cCompTable::OnAutoUpdate)
+//	EVT_TIMER(ID_TIMER, cCompTable::OnTimer)
 END_EVENT_TABLE()
 
+enum {
+	COL_NUM = 0,
+	COL_DESIGNATOR,
+	COL_PATTERN,
+	COL_SRC_NAME,
+	COL_NAME,
+	COL_VALUE,
+	COL_LAYER,
+	COL_LOCATION_X,
+	COL_LOCATION_Y,
+	COL_ANGLE,
+	COL_ENABLED,
+	COL_COUNT
+};
 
-#define COL_TIME		0
-#define COL_DEV_SN		1
-#define COL_REC_ID		2
-#define COL_TYPE		3
-#define COL_SERVER		4
-
-cEventsTable::cEventsTable(tEventArray *a_data, wxWindow *parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style, const wxValidator &validator, const wxString &name)
+cCompTable::cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style, const wxValidator &validator, const wxString &name)
 	: wxListCtrl(parent, winid, pos, size, style | wxLC_VIRTUAL, validator, name)
 {
-	m_events_data = a_data;
-	m_Timer = new wxTimer(this, ID_TIMER);
-	m_Timer->Start(AUTOUPDATE_INTERVAL);
+	m_comp_data = a_data;
+//	m_Timer = new wxTimer(this, ID_TIMER);
+//	m_Timer->Start(AUTOUPDATE_INTERVAL);
 
-#if USE_TIMESTAMP_WITH_DATE
-	InsertColumn(COL_TIME,   _T("Time"),   wxLIST_FORMAT_LEFT, 150);
-#else
-	InsertColumn(COL_TIME,   _T("Time"),   wxLIST_FORMAT_LEFT, 60);
-#endif
-	InsertColumn(COL_DEV_SN, _T("DevSN"),  wxLIST_FORMAT_LEFT, 60);
-	InsertColumn(COL_REC_ID, _T("RecID"),  wxLIST_FORMAT_LEFT, 60);
-	InsertColumn(COL_TYPE,   _T("Type"),   wxLIST_FORMAT_LEFT, 30);
-	InsertColumn(COL_SERVER, _T("Server"), wxLIST_FORMAT_LEFT, 30);
+	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
+	InsertColumn(COL_DESIGNATOR,	_T("Des"),	wxLIST_FORMAT_LEFT, 60);
+	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_SRC_NAME,	_T("Name"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_NAME,		_T("New Name"),	wxLIST_FORMAT_LEFT, 110);
+	InsertColumn(COL_VALUE,		_T("Value"),	wxLIST_FORMAT_LEFT, 60);
+	InsertColumn(COL_LAYER,		_T("Layer"),	wxLIST_FORMAT_LEFT, 40);
+	InsertColumn(COL_LOCATION_X,	_T("X"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_LOCATION_Y,	_T("Y"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_ANGLE,		_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
 
 	ReInit();
 
 }
 
-cEventsTable::~cEventsTable()
+cCompTable::~cCompTable()
 {
-	m_Timer->Stop();
-	delete m_Timer;
+//	m_Timer->Stop();
+//	delete m_Timer;
 //	delete m_PopupMenu;
 }
 
@@ -51,22 +61,34 @@ cEventsTable::~cEventsTable()
 // ----------------------------------------------------------------------------
 // Текст в ячейках
 // ----------------------------------------------------------------------------
-wxString cEventsTable::OnGetItemText(long item, long column) const
+wxString cCompTable::OnGetItemText(long item, long column) const
 {
-	if (m_events_data)
+	if (m_comp_data)
 	{
 		switch (column)
 		{
-			case COL_TIME:
-				return m_events_data->Item(item).time;
-			case COL_DEV_SN:
-				return wxString::Format("%d", m_events_data->Item(item).dev_sn);
-			case COL_REC_ID:
-				return wxString::Format("%d", m_events_data->Item(item).record_id);
-			case COL_TYPE:
-				return wxString::Format("%d", m_events_data->Item(item).rec_type);
-			case COL_SERVER:
-				return m_events_data->Item(item).server_name;
+			case COL_NUM:
+				return wxString::Format("%ld", item+1);
+			case COL_DESIGNATOR:
+				return m_comp_data->Item(item).designator;
+			case COL_PATTERN:
+				return m_comp_data->Item(item).pattern;
+			case COL_SRC_NAME:
+				return m_comp_data->Item(item).src_name;
+			case COL_NAME:
+				return m_comp_data->Item(item).name;
+			case COL_VALUE:
+				return m_comp_data->Item(item).value;
+			case COL_LAYER:
+				return m_comp_data->Item(item).layer;
+			case COL_LOCATION_X:
+				return wxString::Format("%.3f", m_comp_data->Item(item).location_x);
+			case COL_LOCATION_Y:
+				return wxString::Format("%.3f", m_comp_data->Item(item).location_y);
+			case COL_ANGLE:
+				return wxString::Format("%.1f", m_comp_data->Item(item).angle);
+			case COL_ENABLED:
+				return wxString::Format("%d", m_comp_data->Item(item).enabled);;
 			default:
 				return wxEmptyString;
 		}
@@ -78,7 +100,7 @@ wxString cEventsTable::OnGetItemText(long item, long column) const
 // ----------------------------------------------------------------------------
 // Атрибуты строки
 // ----------------------------------------------------------------------------
-wxListItemAttr *cEventsTable::OnGetItemAttr(long item) const
+wxListItemAttr *cCompTable::OnGetItemAttr(long item) const
 {
 	return NULL;
 }
@@ -86,44 +108,44 @@ wxListItemAttr *cEventsTable::OnGetItemAttr(long item) const
 // ----------------------------------------------------------------------------
 // Картинки в строках
 // ----------------------------------------------------------------------------
-int cEventsTable::OnGetItemImage(long item) const
+int cCompTable::OnGetItemImage(long item) const
 {
 	return -1;
 }
 // ----------------------------------------------------------------------------
 
-int cEventsTable::OnGetItemColumnImage(long item, long column) const
+int cCompTable::OnGetItemColumnImage(long item, long column) const
 {
 	return -1;
 }
 // ----------------------------------------------------------------------------
 
-void cEventsTable::ReInit()
+void cCompTable::ReInit()
 {
-	if (m_events_data)
+	if (m_comp_data)
 	{
-		SetItemCount(m_events_data->GetCount());
+		SetItemCount(m_comp_data->GetCount());
 		Refresh();
 //		if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
 //			EnsureVisible(GetItemCount() - 1);
 	}
 }
 // ----------------------------------------------------------------------------
-//void cEventsTable::OnContextMenu(wxContextMenuEvent& event)
+//void cCompTable::OnContextMenu(wxContextMenuEvent& event)
 //{
 //	PopupMenu(m_PopupMenu);
 //	return;
 //}
-//void cEventsTable::OnAutoUpdate(wxCommandEvent& event)
+//void cCompTable::OnAutoUpdate(wxCommandEvent& event)
 //{
 //	if(event.IsChecked())
 //		m_Timer->Start(AUTOUPDATE_INTERVAL);
 //	else
 //		m_Timer->Stop();
 //}
-void cEventsTable::OnTimer(wxTimerEvent& event)
-{
-	if((size_t)GetItemCount() != m_events_data->GetCount())
-		ReInit();
-}
-
+//void cCompTable::OnTimer(wxTimerEvent& event)
+//{
+//	if((size_t)GetItemCount() != m_events_data->GetCount())
+//		ReInit();
+//}
+//

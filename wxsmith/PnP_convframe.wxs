@@ -47,19 +47,55 @@
 					<style>wxAUI_NB_TAB_SPLIT|wxAUI_NB_TAB_MOVE|wxAUI_NB_WINDOWLIST_BUTTON</style>
 					<object class="AuiNotebookPage">
 						<object class="wxPanel" name="ID_PANEL4" variable="Panel4" member="yes">
-							<object class="wxBoxSizer" variable="BoxSizer3" member="no" />
+							<object class="wxBoxSizer" variable="BoxSizer3" member="no">
+								<object class="sizeritem">
+									<object class="Custom" name="ID_COMP_TABLE" subclass="cCompTable" variable="m_comp_table" member="yes">
+										<creating_code>$(THIS) = new $(CLASS)(&amp;m__components__list, $(PARENT),$(ID),$(POS),$(SIZE));</creating_code>
+										<include_file>comp__table.h</include_file>
+										<local_include>1</local_include>
+										<style></style>
+									</object>
+									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<option>1</option>
+								</object>
+							</object>
 						</object>
-						<label>Elements</label>
+						<label>Componenets</label>
 					</object>
 					<object class="AuiNotebookPage">
 						<object class="wxPanel" name="ID_PANEL1" variable="Panel1" member="yes">
-							<object class="wxBoxSizer" variable="BoxSizer1" member="no" />
+							<object class="wxBoxSizer" variable="BoxSizer1" member="no">
+								<object class="sizeritem">
+									<object class="Custom" name="ID_COMP_TYPE_TABLE" subclass="cCompTypeTable" variable="m_comp_type_table" member="yes">
+										<creating_code>$(THIS) = new $(CLASS)(&amp;m__component__types__list, $(PARENT),$(ID),$(POS),$(SIZE));</creating_code>
+										<include_file>comp__type__table.h</include_file>
+										<local_include>1</local_include>
+										<style></style>
+									</object>
+									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<option>1</option>
+								</object>
+							</object>
 						</object>
-						<label>Components</label>
+						<label>Component Types</label>
 					</object>
 					<object class="AuiNotebookPage">
 						<object class="wxPanel" name="ID_PANEL2" variable="Panel2" member="yes">
-							<object class="wxBoxSizer" variable="BoxSizer2" member="no" />
+							<object class="wxBoxSizer" variable="BoxSizer2" member="no">
+								<object class="sizeritem">
+									<object class="Custom" name="ID_PATTERNS_TABLE" subclass="cPatternTable" variable="m_pattern_table" member="yes">
+										<creating_code>$(THIS) = new $(CLASS)(&amp;m__patterns__list, $(PARENT),$(ID),$(POS),$(SIZE));</creating_code>
+										<include_file>pattern__table.h</include_file>
+										<local_include>1</local_include>
+										<style></style>
+									</object>
+									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<option>1</option>
+								</object>
+							</object>
 						</object>
 						<label>Footprints</label>
 					</object>

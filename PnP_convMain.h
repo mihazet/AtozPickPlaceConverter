@@ -7,17 +7,20 @@
  * License:
  **************************************************************/
 
-#ifndef IKZ_LOG_VIEWERMAIN_H
-#define IKZ_LOG_VIEWERMAIN_H
+#ifndef PNP_CONV_MAIN_H
+#define PNP_CONV_MAIN_H
 
 //(*Headers(PnP_convFrame)
+#include "comp_table.h"
 #include <wx/sizer.h>
 #include <wx/menu.h>
 #include <wx/panel.h>
 #include <wx/statusbr.h>
+#include "comp_type_table.h"
 #include <wx/frame.h>
 #include <wx/aui/aui.h>
 #include <wx/textctrl.h>
+#include "pattern_table.h"
 #include <wx/propgrid/propgrid.h>
 //*)
 
@@ -33,10 +36,13 @@ class PnP_convFrame: public wxFrame
     private:
     	wxString		m_filename;
 	tComponentDescr		m_components_list;
+	tComponentTypeDescr	m_component_types_list;
+	tPatternDescr		m_patterns_list;
 
 	wxString RemoveQuotes(const wxString a_str);
 	void PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp);
 	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp);
+	void ReInitLists() {m_comp_table->ReInit();m_comp_type_table->ReInit();m_pattern_table->ReInit();};
 
         //(*Handlers(PnP_convFrame)
         void OnQuit(wxCommandEvent& event);
@@ -54,8 +60,11 @@ class PnP_convFrame: public wxFrame
         //(*Identifiers(PnP_convFrame)
         static const long ID_TEXTCTRL1;
         static const long ID_PROP;
+        static const long ID_COMP_TABLE;
         static const long ID_PANEL4;
+        static const long ID_COMP_TYPE_TABLE;
         static const long ID_PANEL1;
+        static const long ID_PATTERNS_TABLE;
         static const long ID_PANEL2;
         static const long ID_AUINOTEBOOK1;
         static const long ID_OPEN;
@@ -74,6 +83,9 @@ class PnP_convFrame: public wxFrame
         wxTextCtrl* m_txtLog;
         wxPanel* Panel4;
         wxAuiNotebook* auiMainNotebook;
+        cCompTypeTable* m_comp_type_table;
+        cPatternTable* m_pattern_table;
+        cCompTable* m_comp_table;
         //*)
 
         DECLARE_EVENT_TABLE()

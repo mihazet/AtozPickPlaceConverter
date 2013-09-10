@@ -47,6 +47,12 @@
 		<Unit filename="PnP_convMain.cpp" />
 		<Unit filename="PnP_convMain.h" />
 		<Unit filename="common.h" />
+		<Unit filename="comp_table.cpp" />
+		<Unit filename="comp_table.h" />
+		<Unit filename="comp_type_table.cpp" />
+		<Unit filename="comp_type_table.h" />
+		<Unit filename="pattern_table.cpp" />
+		<Unit filename="pattern_table.h" />
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>

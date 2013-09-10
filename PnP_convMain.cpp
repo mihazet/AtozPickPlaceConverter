@@ -19,9 +19,19 @@
 #include <wx/intl.h>
 //*)
 
-
 #include <wx/arrimpl.cpp> // This is a magic incantation which must be done!
 WX_DEFINE_OBJARRAY(tComponentDescr);
+//WX_DEFINE_OBJARRAY(tComponentTypeDescr);
+//WX_DEFINE_OBJARRAY(tPatternDescr);
+
+int CmpCompTypeFunc(t_component_type_descr *a_arg1, t_component_type_descr *a_arg2)
+{
+   return (a_arg1->name).CmpNoCase(a_arg2->name);
+}
+int CmpPatternFunc(t_pattern_descr *a_arg1, t_pattern_descr *a_arg2)
+{
+   return (a_arg1->pattern).CmpNoCase(a_arg2->pattern);
+}
 
 //helper functions
 enum wxbuildinfoformat {
@@ -52,8 +62,11 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 //(*IdInit(PnP_convFrame)
 const long PnP_convFrame::ID_TEXTCTRL1 = wxNewId();
 const long PnP_convFrame::ID_PROP = wxNewId();
+const long PnP_convFrame::ID_COMP_TABLE = wxNewId();
 const long PnP_convFrame::ID_PANEL4 = wxNewId();
+const long PnP_convFrame::ID_COMP_TYPE_TABLE = wxNewId();
 const long PnP_convFrame::ID_PANEL1 = wxNewId();
+const long PnP_convFrame::ID_PATTERNS_TABLE = wxNewId();
 const long PnP_convFrame::ID_PANEL2 = wxNewId();
 const long PnP_convFrame::ID_AUINOTEBOOK1 = wxNewId();
 const long PnP_convFrame::ID_OPEN = wxNewId();
@@ -68,7 +81,8 @@ BEGIN_EVENT_TABLE(PnP_convFrame,wxFrame)
     //*)
 END_EVENT_TABLE()
 
-PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id)
+PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
+	m_component_types_list(CmpCompTypeFunc), m_patterns_list(CmpPatternFunc)
 {
     //(*Initialize(PnP_convFrame)
     wxMenuItem* mnuAbout;
@@ -92,21 +106,27 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id)
     auiMainNotebook = new wxAuiNotebook(this, ID_AUINOTEBOOK1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TAB_SPLIT|wxAUI_NB_TAB_MOVE|wxAUI_NB_WINDOWLIST_BUTTON);
     Panel4 = new wxPanel(auiMainNotebook, ID_PANEL4, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL4"));
     BoxSizer3 = new wxBoxSizer(wxHORIZONTAL);
+    m_comp_table = new cCompTable(&m_components_list, Panel4,ID_COMP_TABLE,wxDefaultPosition,wxDefaultSize);
+    BoxSizer3->Add(m_comp_table, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Panel4->SetSizer(BoxSizer3);
     BoxSizer3->Fit(Panel4);
     BoxSizer3->SetSizeHints(Panel4);
     Panel1 = new wxPanel(auiMainNotebook, ID_PANEL1, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL1"));
     BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
+    m_comp_type_table = new cCompTypeTable(&m_component_types_list, Panel1,ID_COMP_TYPE_TABLE,wxDefaultPosition,wxDefaultSize);
+    BoxSizer1->Add(m_comp_type_table, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Panel1->SetSizer(BoxSizer1);
     BoxSizer1->Fit(Panel1);
     BoxSizer1->SetSizeHints(Panel1);
     Panel2 = new wxPanel(auiMainNotebook, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL2"));
     BoxSizer2 = new wxBoxSizer(wxHORIZONTAL);
+    m_pattern_table = new cPatternTable(&m_patterns_list, Panel2,ID_PATTERNS_TABLE,wxDefaultPosition,wxDefaultSize);
+    BoxSizer2->Add(m_pattern_table, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Panel2->SetSizer(BoxSizer2);
     BoxSizer2->Fit(Panel2);
     BoxSizer2->SetSizeHints(Panel2);
-    auiMainNotebook->AddPage(Panel4, _("Elements"));
-    auiMainNotebook->AddPage(Panel1, _("Components"));
+    auiMainNotebook->AddPage(Panel4, _("Componenets"));
+    auiMainNotebook->AddPage(Panel1, _("Component Types"));
     auiMainNotebook->AddPage(Panel2, _("Footprints"));
     auiManager->AddPane(auiMainNotebook, wxAuiPaneInfo().Name(_T("auiPaneGraphs")).CenterPane().Caption(_("Graphs view")).Floatable().Movable(false));
     auiManager->Update();
@@ -140,13 +160,14 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id)
 	wxLog::SetVerbose(true);
 //	wxLog::SetVerbose(false);
 
-
 	wxFileConfig *config = new wxFileConfig("PnP_conv", "Antrax");
 
 }
 
 PnP_convFrame::~PnP_convFrame()
 {
+	WX_CLEAR_ARRAY(m_component_types_list);
+	WX_CLEAR_ARRAY(m_patterns_list);
 	auiManager->UnInit();
     //(*Destroy(PnP_convFrame)
     //*)
@@ -176,7 +197,10 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 {
 	wxString str, tmp_str;
 	wxFileDialog dlg_open(this);
+	t_component_type_descr *component_type;
+	t_pattern_descr *pattern;
 
+	int tmp_index;
 	double value;
 
 	dlg_open.SetWindowStyleFlag(wxFD_OPEN|wxFD_FILE_MUST_EXIST|wxFD_CHANGE_DIR|wxFD_PREVIEW);
@@ -204,7 +228,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 		component.pattern = RemoveQuotes(tmp_str);
 		tmp_str = str.BeforeFirst(CSV_DELIMITER);
 		str = str.AfterFirst(CSV_DELIMITER);
-		component.name = RemoveQuotes(tmp_str);
+		component.src_name = RemoveQuotes(tmp_str);
 		tmp_str = str.BeforeFirst(CSV_DELIMITER);
 		str = str.AfterFirst(CSV_DELIMITER);
 		component.value = RemoveQuotes(tmp_str);
@@ -240,8 +264,41 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.name
 		else
 			component.enabled = true;
 
+		if(component.value != wxEmptyString && component.value != "{Value}" && component.value != component.src_name)
+			component.name = component.src_name + " " + component.value;
+		else
+			component.name = component.src_name;
+		if(component.pattern != wxEmptyString && component.pattern != component.src_name)
+			component.name = component.pattern + " " + component.name;
+
+
 		m_components_list.Add(component);
+
+		component_type = new t_component_type_descr;
+		component_type->name = component.name;
+		component_type->pattern = component.pattern;
+		component_type->rename_to = component.name;
+		component_type->enabled = component.enabled; // Пока что отключаем компоненты только в случае DNP, которое приклеивается к name
+		tmp_index = m_component_types_list.Index(component_type);
+		if(wxNOT_FOUND == tmp_index)
+		{
+			m_component_types_list.Add(component_type);
+		} else {
+			m_component_types_list[tmp_index]->comp_count++;
+		}
+
+		pattern = new t_pattern_descr;
+		pattern->pattern = component.pattern;
+		tmp_index = m_patterns_list.Index(pattern);
+		if(wxNOT_FOUND == tmp_index)
+		{
+			m_patterns_list.Add(pattern);
+		} else {
+			m_patterns_list[tmp_index]->comp_count++;
+		}
 	}
+//	m_component_types_list.Sort(CmpCompTypeFunc);
+	ReInitLists();
 }
 
 wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
@@ -265,14 +322,7 @@ void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_
 
 	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Component");
 	node->AddAttribute("Ref", a_comp.designator);
-
-	if(a_comp.value != wxEmptyString && a_comp.value != "{Value}" && a_comp.value != a_comp.name)
-		str = a_comp.name + " " + a_comp.value;
-	else
-		str = a_comp.name;
-	if(a_comp.pattern != wxEmptyString && a_comp.pattern != a_comp.name)
-		str = a_comp.pattern + " " + str;
-	node->AddAttribute("Name", str);
+	node->AddAttribute("Name", a_comp.name);
 	str = wxString::Format("%d,%d", (int)(a_comp.location_x*1000), (int)(a_comp.location_y*1000));
 	node->AddAttribute("Position", str);
 	str = wxString::Format("%d", (int)(a_comp.angle*100));

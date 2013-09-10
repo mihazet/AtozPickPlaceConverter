@@ -7,8 +7,8 @@
  * License:
  **************************************************************/
 
-#ifndef IKZ_LOG_VIEWERAPP_H
-#define IKZ_LOG_VIEWERAPP_H
+#ifndef PNP_CONV_APP_H
+#define PNP_CONV_APP_H
 
 #include <wx/app.h>
 

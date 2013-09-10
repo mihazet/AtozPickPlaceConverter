@@ -1,29 +1,29 @@
-#ifndef EVENTS_TABLE_H
-#define EVENTS_TABLE_H
+#ifndef COMP_TABLE_H
+#define COMP_TABLE_H
 
 #include "common.h"
 #include <wx/wx.h>
 #include <wx/listctrl.h>
 
-#define USE_TIMESTAMP_WITH_DATE		1
-#define AUTOUPDATE_INTERVAL		500
+//#define USE_TIMESTAMP_WITH_DATE		1
+//#define AUTOUPDATE_INTERVAL		500
 
-class cEventsTable : public wxListCtrl
+class cCompTable : public wxListCtrl
 {
 public:
-	cEventsTable();
-	cEventsTable(tEventArray *a_data, wxWindow *parent, wxWindowID winid = wxID_ANY,
+	cCompTable();
+	cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID winid = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxLC_REPORT|wxLC_VIRTUAL|wxLC_SINGLE_SEL|wxLC_HRULES|wxLC_VRULES,
 		const wxValidator &validator = wxDefaultValidator,
 		const wxString &name = wxListCtrlNameStr);
-	virtual ~cEventsTable();
+	virtual ~cCompTable();
 	void ReInit();
 protected:
 private:
-	tEventArray		*m_events_data;
-	wxTimer			*m_Timer;
+	tComponentDescr		*m_comp_data;
+//	wxTimer			*m_Timer;
 
 	// Переопределяем виртуальные функции
 
@@ -56,7 +56,7 @@ private:
 	// ----------------------------------------------------------------------------
 	// Таймер
 	// ----------------------------------------------------------------------------
-	void OnTimer(wxTimerEvent& event);
+//	void OnTimer(wxTimerEvent& event);
 
 	DECLARE_EVENT_TABLE()
 };
