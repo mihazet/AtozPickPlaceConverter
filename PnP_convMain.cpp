@@ -298,9 +298,10 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 				component_type->pnp_name = component.full_name;
 				component_type->enabled = component.enabled;
 				wxConfigPathChanger cfg_cd_to(m_config, CFG_COMPONENT_SECTION + component_type->name+"/");
-				m_config->Write("pattern", component_type->pattern);
-				m_config->Write("pnp_name", component_type->pnp_name);
-				m_config->Write("enabled", component_type->enabled);
+				m_config->Write("enabled", true);
+//				m_config->Write("pattern", component_type->pattern);
+//				m_config->Write("pnp_name", component_type->pnp_name);
+//				m_config->Write("enabled", component_type->enabled);
 			}
 		} else {
 			delete component_type;
@@ -331,8 +332,9 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 				comp_pattern->pnp_package = component.pattern;
 				comp_pattern->pnp_footprint = component.pattern;
 				wxConfigPathChanger cfg_cd_to(m_config, CFG_PATTERN_SECTION + comp_pattern->pattern+"/");
-				m_config->Write("pnp_package", comp_pattern->pnp_package);
-				m_config->Write("pnp_footprint", comp_pattern->pnp_footprint);
+				m_config->Write("enabled", true);
+//				m_config->Write("pnp_package", comp_pattern->pnp_package);
+//				m_config->Write("pnp_footprint", comp_pattern->pnp_footprint);
 			}
 		} else {
 			delete comp_pattern;
@@ -340,14 +342,10 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 			comp_pattern->comp_count++;
 		}
 
-
-
 		m_components_list.Add(component);
-
-
-
 	}
 //	m_component_types_list.Sort(CmpCompTypeFunc);
+	UpdateComponents();
 	ReInitLists();
 }
 
@@ -367,8 +365,53 @@ wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
 
 void PnP_convFrame::UpdateComponents()
 {
-//Перенсчёт location и angle
+	size_t comp_count = m_components_list.Count();
+	for(size_t index = 0; index < comp_count; index++)
+	{
+		UpdateComponent(&m_components_list[index]);
+	}
+}
 
+void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
+{
+	t_component_type_descr *component_type;
+	t_pattern_descr *comp_pattern;
+	int tmp_index;
+//надо заполнить следующие поля:
+//pnp_name
+//pnp_package
+//pnp_footprint
+//pnp_location_x
+//pnp_location_y
+//pnp_angle
+
+	component_type = new t_component_type_descr;
+	component_type->name = a_component->full_name;
+	tmp_index = m_component_types_list.Index(component_type);
+	delete component_type;
+	if(wxNOT_FOUND == tmp_index)
+		return;
+	component_type = m_component_types_list[tmp_index];
+
+	comp_pattern = new t_pattern_descr;
+	comp_pattern->pattern = a_component->pattern;
+	tmp_index = m_patterns_list.Index(comp_pattern);
+	delete comp_pattern;
+	if(wxNOT_FOUND == tmp_index)
+		return;
+	comp_pattern = m_patterns_list[tmp_index];
+
+	a_component->pnp_name = component_type->pnp_name;
+	a_component->pnp_package = comp_pattern->pnp_package;
+	a_component->pnp_footprint = comp_pattern->pnp_footprint;
+
+//Перенсчёт location и angle
+	double sin_alpha = sin(a_component->cad_angle*(M_PI/180));
+	double cos_alpha = cos(a_component->cad_angle*(M_PI/180));
+	a_component->pnp_location_x = a_component->cad_location_x + ( comp_pattern->offset_x * cos_alpha + comp_pattern->offset_y * sin_alpha);
+	a_component->pnp_location_y = a_component->cad_location_y + (-comp_pattern->offset_x * sin_alpha + comp_pattern->offset_y * cos_alpha);
+	a_component->pnp_angle = a_component->cad_angle + comp_pattern->angle;
+	if(a_component->pnp_angle >= 360.0) a_component->pnp_angle -= 360.0;
 }
 
 void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
