@@ -211,7 +211,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	if(dlg_open.ShowModal() != wxID_OK)
 		return;
 
-#warning TODO (alatar#1#): Ñäåëàòü äèàëîã äëÿ âûáîðà òèïà âõîäíîãî ôàéëà, ïîêà òîëüêî P-CAD
+#warning TODO (alatar#1#): Ð¡Ð´ÐµÐ»Ð°Ñ‚ÑŒ Ð´Ð¸Ð°Ð»Ð¾Ð³ Ð´Ð»Ñ Ð²Ñ‹Ð±Ð¾Ñ€Ð° Ñ‚Ð¸Ð¿Ð° Ð²Ñ…Ð¾Ð´Ð½Ð¾Ð³Ð¾ Ñ„Ð°Ð¹Ð»Ð°, Ð¿Ð¾ÐºÐ° Ñ‚Ð¾Ð»ÑŒÐºÐ¾ P-CAD
 
 	wxTextFile file(dlg_open.GetPath());
 	m_filename = dlg_open.GetPath();
@@ -264,7 +264,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 			component.cad_angle = 0;
 wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_name, component.cad_location_x, component.cad_location_y, component.cad_angle);
 
-///Êîððåêòèðîâêà
+///ÐšÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð¸Ñ€Ð¾Ð²ÐºÐ°
 
 		if(component.cad_value == "DNP")
 			component.enabled = false;
@@ -278,7 +278,7 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 		if((!component.cad_pattern.IsEmpty()) && component.cad_pattern != component.cad_name)
 			component.full_name.Prepend(component.cad_pattern + " ");
 
-//Ïîèñê íàñòðîåê ïî êîìïîíåíòó
+//ÐŸÐ¾Ð¸ÑÐº Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐº Ð¿Ð¾ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ñƒ
 		component_type = new t_component_type_descr;
 		component_type->name = component.full_name;
 		tmp_index = m_component_types_list.Index(component_type);
@@ -309,7 +309,7 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 		}
 //Assign pattern
 		component.pattern = component_type->pattern;
-//Ïîèñê íàñòðîåê ïî êîðïóñó
+//ÐŸÐ¾Ð¸ÑÐº Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐº Ð¿Ð¾ ÐºÐ¾Ñ€Ð¿ÑƒÑÑƒ
 		comp_pattern = new t_pattern_descr;
 		comp_pattern->pattern = component.pattern;
 		tmp_index = m_patterns_list.Index(comp_pattern);
@@ -367,7 +367,7 @@ wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
 
 void PnP_convFrame::UpdateComponents()
 {
-//Ïåðåíñ÷¸ò location è angle
+//ÐŸÐµÑ€ÐµÐ½ÑÑ‡Ñ‘Ñ‚ location Ð¸ angle
 
 }
 
@@ -419,7 +419,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	if(dlg_save.ShowModal() != wxID_OK)
 		return;
 
-	wxXmlDocument doc; //âñå íîäû ðåêóðñèâíî óäàëÿþòñÿ â äåñòðóêòîðå äîêóìåíòà
+	wxXmlDocument doc; //Ð²ÑÐµ Ð½Ð¾Ð´Ñ‹ Ñ€ÐµÐºÑƒÑ€ÑÐ¸Ð²Ð½Ð¾ ÑƒÐ´Ð°Ð»ÑÑŽÑ‚ÑÑ Ð² Ð´ÐµÑÑ‚Ñ€ÑƒÐºÑ‚Ð¾Ñ€Ðµ Ð´Ð¾ÐºÑƒÐ¼ÐµÐ½Ñ‚Ð°
 	wxXmlNode *root_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Data");
 	wxXmlNode *node, *tmp_node, *last_child_node;
 	t_xml_node_ptrs nodes[INDEX_COUNT];
@@ -430,7 +430,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	nodes[INDEX_BOT_FID].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
 	nodes[INDEX_BOT_FID].parent->AddAttribute("LastFidIsBadmark", "no");
 
-// TODO (alatar#1#): Ïåðåíåñòè â êîíñòðóêòîð
+// TODO (alatar#1#): ÐŸÐµÑ€ÐµÐ½ÐµÑÑ‚Ð¸ Ð² ÐºÐ¾Ð½ÑÑ‚Ñ€ÑƒÐºÑ‚Ð¾Ñ€
 	nodes[INDEX_TOP_COMP].last_child = NULL;	nodes[INDEX_TOP_COMP].elemets_count = 0;
 	nodes[INDEX_TOP_FID].last_child = NULL;		nodes[INDEX_TOP_FID].elemets_count = 0;
 	nodes[INDEX_BOT_COMP].last_child = NULL;	nodes[INDEX_BOT_COMP].elemets_count = 0;
@@ -468,7 +468,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	tmp_node->AddAttribute("Position", "0,0");
 	tmp_node->AddAttribute("Angle", "0");
 
-//Ñïèñîê êîìïîíåíòîâ
+//Ð¡Ð¿Ð¸ÑÐ¾Ðº ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð²
 	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Templates");
 	node = new wxXmlNode(node, wxXML_ELEMENT_NODE, "Template");
 	node->AddAttribute("Name", "default");
