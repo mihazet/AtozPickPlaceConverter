@@ -30,7 +30,7 @@ int CmpCompTypeFunc(t_component_type_descr *a_arg1, t_component_type_descr *a_ar
 }
 int CmpPatternFunc(t_pattern_descr *a_arg1, t_pattern_descr *a_arg2)
 {
-   return (a_arg1->pattern).CmpNoCase(a_arg2->pattern);
+   return (a_arg1->package).CmpNoCase(a_arg2->package);
 }
 
 //helper functions
@@ -127,7 +127,7 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
     BoxSizer2->SetSizeHints(Panel2);
     auiMainNotebook->AddPage(Panel4, _("Componenets"));
     auiMainNotebook->AddPage(Panel1, _("Component Types"));
-    auiMainNotebook->AddPage(Panel2, _("Footprints"));
+    auiMainNotebook->AddPage(Panel2, _("Packages"));
     auiManager->AddPane(auiMainNotebook, wxAuiPaneInfo().Name(_T("auiPaneGraphs")).CenterPane().Caption(_("Graphs view")).Floatable().Movable(false));
     auiManager->Update();
     MenuBar1 = new wxMenuBar();
@@ -160,7 +160,7 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	wxLog::SetVerbose(true);
 //	wxLog::SetVerbose(false);
 
-	wxFileConfig *config = new wxFileConfig("PnP_conv", "Antrax");
+	m_config = new wxFileConfig("PnP_conv", "Antrax");
 
 }
 
@@ -168,6 +168,7 @@ PnP_convFrame::~PnP_convFrame()
 {
 	WX_CLEAR_ARRAY(m_component_types_list);
 	WX_CLEAR_ARRAY(m_patterns_list);
+	delete m_config;
 	auiManager->UnInit();
     //(*Destroy(PnP_convFrame)
     //*)
@@ -216,7 +217,10 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	if(!file.Open())
 		return;
 //wxLogMessage(_T("File opened"));
+	m_config->SetPath("/PCAD");
 	m_components_list.Clear();
+	WX_CLEAR_ARRAY(m_component_types_list);	m_component_types_list.Clear();
+	WX_CLEAR_ARRAY(m_patterns_list);	m_patterns_list.Clear();
 	for(str = file.GetFirstLine(); !file.Eof(); str = file.GetNextLine())
 	{
 		t_component_descr component;
@@ -259,6 +263,8 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 			component.angle = 0;
 wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.name, component.location_x, component.location_y, component.angle);
 
+///Корректировка
+
 		if(component.value == "DNP")
 			component.enabled = false;
 		else
@@ -270,6 +276,37 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.name
 			component.name = component.src_name;
 		if(component.pattern != wxEmptyString && component.pattern != component.src_name)
 			component.name = component.pattern + " " + component.name;
+
+//Поиск настроек по корпусу
+		pattern = new t_pattern_descr;
+		pattern->package = component.pattern;
+		pattern->footprint = component.pattern;
+		tmp_index = m_patterns_list.Index(pattern);
+		if(wxNOT_FOUND == tmp_index)
+		{
+			m_patterns_list.Add(pattern);
+			if(m_config->HasGroup(pattern->package))
+			{
+				pattern->is_new = 0;
+				wxConfigPathChanger cd_to_pattern(m_config, pattern->package+"/");
+				pattern->package = m_config->Read("package", pattern->package);
+				pattern->footprint = m_config->Read("footprint", pattern->footprint);
+				pattern->offset_x = m_config->ReadDouble("offset_x", 0.0);
+				pattern->offset_y = m_config->ReadDouble("offset_y", 0.0);
+				pattern->angle = m_config->ReadDouble("angle", 0.0);
+				pattern->enabled = m_config->ReadBool("enabled", true);
+			} else {
+				pattern->is_new = 1;
+				wxConfigPathChanger cd_to_pattern(m_config, pattern->package+"/");
+				m_config->Write("package", pattern->package);
+				m_config->Write("footprint", pattern->footprint);
+			}
+		} else {
+			delete pattern;
+			pattern = m_patterns_list[tmp_index];
+			pattern->comp_count++;
+		}
+
 
 
 		m_components_list.Add(component);
@@ -285,17 +322,9 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.name
 			m_component_types_list.Add(component_type);
 		} else {
 			m_component_types_list[tmp_index]->comp_count++;
+			delete component_type;
 		}
 
-		pattern = new t_pattern_descr;
-		pattern->pattern = component.pattern;
-		tmp_index = m_patterns_list.Index(pattern);
-		if(wxNOT_FOUND == tmp_index)
-		{
-			m_patterns_list.Add(pattern);
-		} else {
-			m_patterns_list[tmp_index]->comp_count++;
-		}
 	}
 //	m_component_types_list.Sort(CmpCompTypeFunc);
 	ReInitLists();

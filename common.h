@@ -31,7 +31,8 @@ struct t_component_type_descr {
 };
 
 struct t_pattern_descr {
-	wxString pattern;
+	wxString package;
+	wxString footprint;
 	double offset_x;
 	double offset_y;
 	double angle;

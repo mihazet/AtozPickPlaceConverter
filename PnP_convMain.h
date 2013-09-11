@@ -26,6 +26,7 @@
 
 #include "common.h"
 class wxXmlNode;
+class wxFileConfig;
 
 class PnP_convFrame: public wxFrame
 {
@@ -35,6 +36,7 @@ class PnP_convFrame: public wxFrame
 
     private:
     	wxString		m_filename;
+        wxFileConfig		*m_config;
 	tComponentDescr		m_components_list;
 	tComponentTypeDescr	m_component_types_list;
 	tPatternDescr		m_patterns_list;
