@@ -280,25 +280,23 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.name
 //Поиск настроек по корпусу
 		pattern = new t_pattern_descr;
 		pattern->package = component.pattern;
-		pattern->footprint = component.pattern;
 		tmp_index = m_patterns_list.Index(pattern);
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_patterns_list.Add(pattern);
-			if(m_config->HasGroup(pattern->package))
+			if(m_config->HasGroup("package/"+pattern->package))
 			{
 				pattern->is_new = 0;
-				wxConfigPathChanger cd_to_pattern(m_config, pattern->package+"/");
-				pattern->package = m_config->Read("package", pattern->package);
-				pattern->footprint = m_config->Read("footprint", pattern->footprint);
+				wxConfigPathChanger cfg_cd_to(m_config, "package/"+pattern->package+"/");
+				pattern->footprint = m_config->Read("footprint", component.pattern);
 				pattern->offset_x = m_config->ReadDouble("offset_x", 0.0);
 				pattern->offset_y = m_config->ReadDouble("offset_y", 0.0);
 				pattern->angle = m_config->ReadDouble("angle", 0.0);
 				pattern->enabled = m_config->ReadBool("enabled", true);
 			} else {
 				pattern->is_new = 1;
-				wxConfigPathChanger cd_to_pattern(m_config, pattern->package+"/");
-				m_config->Write("package", pattern->package);
+				pattern->footprint = component.pattern;
+				wxConfigPathChanger cfg_cd_to(m_config, "package/"+pattern->package+"/");
 				m_config->Write("footprint", pattern->footprint);
 			}
 		} else {
@@ -313,16 +311,32 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.name
 
 		component_type = new t_component_type_descr;
 		component_type->name = component.name;
-		component_type->pattern = component.pattern;
-		component_type->rename_to = component.name;
-		component_type->enabled = component.enabled; // Пока что отключаем компоненты только в случае DNP, которое приклеивается к name
 		tmp_index = m_component_types_list.Index(component_type);
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_component_types_list.Add(component_type);
+			if(m_config->HasGroup("component/"+component_type->name))
+			{
+				component_type->is_new = 0;
+				wxConfigPathChanger cfg_cd_to(m_config, "component/"+component_type->name+"/");
+				component_type->pattern = m_config->Read("pattern", component.pattern);
+				component_type->rename_to = m_config->Read("rename_to", component.name);
+				component_type->enabled = m_config->ReadBool("enabled", component.enabled);
+			} else {
+				component_type->is_new = 1;
+				component_type->pattern = component.pattern;
+				component_type->rename_to = component.name;
+				component_type->enabled = component.enabled;
+				wxConfigPathChanger cfg_cd_to(m_config, "component/"+component_type->name+"/");
+				m_config->Write("pattern", component_type->pattern);
+				m_config->Write("rename_to", component_type->rename_to);
+				m_config->Write("enabled", component_type->enabled);
+			}
+
 		} else {
-			m_component_types_list[tmp_index]->comp_count++;
 			delete component_type;
+			component_type = m_component_types_list[tmp_index];
+			component_type->comp_count++;
 		}
 
 	}
