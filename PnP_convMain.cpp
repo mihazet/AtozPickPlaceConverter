@@ -160,15 +160,25 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	wxLog::SetVerbose(true);
 //	wxLog::SetVerbose(false);
 
-	m_config = new wxFileConfig("PnP_conv", "Antrax");
-
+	wxFileConfig::GetLocalFile("test",wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR).Mkdir();
+	m_cfg_settings =		new wxFileConfig("PnP_conv", "Antrax", "settings",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
+	m_cfg_components_pcad =		new wxFileConfig("PnP_conv", "Antrax", "components_pcad",	wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
+	m_cfg_components_altium =	new wxFileConfig("PnP_conv", "Antrax", "components_altium",	wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
+	m_cfg_patterns_pcad =		new wxFileConfig("PnP_conv", "Antrax", "patterns_pcad",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
+	m_cfg_patterns_altium =		new wxFileConfig("PnP_conv", "Antrax", "patterns_altium",	wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
+	m_cfg_projects =		new wxFileConfig("PnP_conv", "Antrax", "projects",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 }
 
 PnP_convFrame::~PnP_convFrame()
 {
 	WX_CLEAR_ARRAY(m_component_types_list);
 	WX_CLEAR_ARRAY(m_patterns_list);
-	delete m_config;
+	delete m_cfg_settings;
+	delete m_cfg_components_pcad;
+	delete m_cfg_components_altium;
+	delete m_cfg_patterns_pcad;
+	delete m_cfg_patterns_altium;
+	delete m_cfg_projects;
 	auiManager->UnInit();
     //(*Destroy(PnP_convFrame)
     //*)
@@ -198,13 +208,15 @@ enum {
 
 void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 {
-	wxString str, tmp_str;
-	wxFileDialog dlg_open(this);
-	t_component_type_descr *component_type;
-	t_pattern_descr *comp_pattern;
+	wxString		str, tmp_str;
+	wxFileDialog		dlg_open(this);
+	wxFileConfig		*cfg_components = NULL;
+	wxFileConfig		*cfg_patterns = NULL;
+	t_component_type_descr	*component_type;
+	t_pattern_descr		*comp_pattern;
 
-	int tmp_index;
-	double value;
+	int			tmp_index;
+	double			value;
 
 	dlg_open.SetWindowStyleFlag(wxFD_OPEN|wxFD_FILE_MUST_EXIST|wxFD_CHANGE_DIR|wxFD_PREVIEW);
 	dlg_open.SetWildcard(_("PCAD PnP files (*.txt)|*.txt|All files (*)|*"));
@@ -212,6 +224,8 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 		return;
 
 #warning TODO (alatar#1#): Сделать диалог для выбора типа входного файла, пока только P-CAD
+	cfg_components = m_cfg_components_pcad;
+	cfg_patterns = m_cfg_patterns_pcad;
 
 	wxTextFile file(dlg_open.GetPath());
 	m_filename = dlg_open.GetPath();
@@ -219,7 +233,6 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	if(!file.Open())
 		return;
 //wxLogMessage(_T("File opened"));
-	m_config->SetPath("/PCAD");
 	m_components_list.Clear();
 	WX_CLEAR_ARRAY(m_component_types_list);	m_component_types_list.Clear();
 	WX_CLEAR_ARRAY(m_patterns_list);	m_patterns_list.Clear();
@@ -285,23 +298,23 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_component_types_list.Add(component_type);
-			if(m_config->HasGroup(CFG_COMPONENT_SECTION + component_type->name))
+			if(cfg_components->HasGroup(component_type->name))
 			{
 				component_type->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(m_config, CFG_COMPONENT_SECTION + component_type->name+"/");
-				component_type->pattern = m_config->Read("pattern", component.cad_pattern);
-				component_type->pnp_name = m_config->Read("pnp_name", component.full_name);
-				component_type->enabled = m_config->ReadBool("enabled", component.enabled);
+				wxConfigPathChanger cfg_cd_to(cfg_components, component_type->name+"/");
+				component_type->pattern = cfg_components->Read("pattern", component.cad_pattern);
+				component_type->pnp_name = cfg_components->Read("pnp_name", component.full_name);
+				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
 			} else {
 				component_type->is_new = 1;
 				component_type->pattern = component.cad_pattern;
 				component_type->pnp_name = component.full_name;
 				component_type->enabled = component.enabled;
-				wxConfigPathChanger cfg_cd_to(m_config, CFG_COMPONENT_SECTION + component_type->name+"/");
-				m_config->Write("enabled", true);
-//				m_config->Write("pattern", component_type->pattern);
-//				m_config->Write("pnp_name", component_type->pnp_name);
-//				m_config->Write("enabled", component_type->enabled);
+				wxConfigPathChanger cfg_cd_to(cfg_components, component_type->name+"/");
+				cfg_components->Write("enabled", true);
+//				cfg_components->Write("pattern", component_type->pattern);
+//				cfg_components->Write("pnp_name", component_type->pnp_name);
+//				cfg_components->Write("enabled", component_type->enabled);
 			}
 		} else {
 			delete component_type;
@@ -317,24 +330,24 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_patterns_list.Add(comp_pattern);
-			if(m_config->HasGroup(CFG_PATTERN_SECTION + comp_pattern->pattern))
+			if(cfg_patterns->HasGroup(comp_pattern->pattern))
 			{
 				comp_pattern->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(m_config, CFG_PATTERN_SECTION + comp_pattern->pattern+"/");
-				comp_pattern->pnp_package = m_config->Read("package", component.pattern);
-				comp_pattern->pnp_footprint = m_config->Read("footprint", component.pattern);
-				comp_pattern->offset_x = m_config->ReadDouble("offset_x", 0.0);
-				comp_pattern->offset_y = m_config->ReadDouble("offset_y", 0.0);
-				comp_pattern->angle = m_config->ReadDouble("angle", 0.0);
-				comp_pattern->enabled = m_config->ReadBool("enabled", true);
+				wxConfigPathChanger cfg_cd_to(cfg_patterns, comp_pattern->pattern+"/");
+				comp_pattern->pnp_package = cfg_patterns->Read("package", component.pattern);
+				comp_pattern->pnp_footprint = cfg_patterns->Read("footprint", component.pattern);
+				comp_pattern->offset_x = cfg_patterns->ReadDouble("offset_x", 0.0);
+				comp_pattern->offset_y = cfg_patterns->ReadDouble("offset_y", 0.0);
+				comp_pattern->angle = cfg_patterns->ReadDouble("angle", 0.0);
+				comp_pattern->enabled = cfg_patterns->ReadBool("enabled", true);
 			} else {
 				comp_pattern->is_new = 1;
 				comp_pattern->pnp_package = component.pattern;
 				comp_pattern->pnp_footprint = component.pattern;
-				wxConfigPathChanger cfg_cd_to(m_config, CFG_PATTERN_SECTION + comp_pattern->pattern+"/");
-				m_config->Write("enabled", true);
-//				m_config->Write("pnp_package", comp_pattern->pnp_package);
-//				m_config->Write("pnp_footprint", comp_pattern->pnp_footprint);
+				wxConfigPathChanger cfg_cd_to(cfg_patterns, comp_pattern->pattern+"/");
+				cfg_patterns->Write("enabled", true);
+//				cfg_patterns->Write("pnp_package", comp_pattern->pnp_package);
+//				cfg_patterns->Write("pnp_footprint", comp_pattern->pnp_footprint);
 			}
 		} else {
 			delete comp_pattern;

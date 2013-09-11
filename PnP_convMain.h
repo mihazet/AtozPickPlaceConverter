@@ -35,8 +35,14 @@ class PnP_convFrame: public wxFrame
 	virtual ~PnP_convFrame();
 
     private:
-    	wxString		m_filename;
-        wxFileConfig		*m_config;
+	wxString		m_filename;
+	wxFileConfig		*m_cfg_settings;
+	wxFileConfig		*m_cfg_components_pcad;
+	wxFileConfig		*m_cfg_components_altium;
+	wxFileConfig		*m_cfg_patterns_pcad;
+	wxFileConfig		*m_cfg_patterns_altium;
+	wxFileConfig		*m_cfg_projects;
+
 	tComponentDescr		m_components_list;
 	tComponentTypeDescr	m_component_types_list;
 	tPatternDescr		m_patterns_list;
