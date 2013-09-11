@@ -44,6 +44,7 @@ class PnP_convFrame: public wxFrame
 	wxString RemoveQuotes(const wxString a_str);
 	void PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp);
 	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp);
+	void UpdateComponents();
 	void ReInitLists() {m_comp_table->ReInit();m_comp_type_table->ReInit();m_pattern_table->ReInit();};
 
         //(*Handlers(PnP_convFrame)

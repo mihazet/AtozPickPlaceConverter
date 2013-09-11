@@ -15,14 +15,21 @@ END_EVENT_TABLE()
 enum {
 	COL_NUM = 0,
 	COL_DESIGNATOR,
-	COL_PATTERN,
-	COL_SRC_NAME,
-	COL_NAME,
-	COL_VALUE,
+	COL_CAD_NAME,
+	COL_CAD_PATTERN,
+	COL_CAD_VALUE,
+	COL_FULL_NAME,
 	COL_LAYER,
-	COL_LOCATION_X,
-	COL_LOCATION_Y,
-	COL_ANGLE,
+	COL_CAD_LOCATION_X,
+	COL_CAD_LOCATION_Y,
+	COL_CAD_ANGLE,
+	COL_PATTERN,
+	COL_PNP_NAME,
+	COL_PNP_PACKAGE,
+	COL_PNP_FOOTPRINT,
+	COL_PNP_LOCATION_X,
+	COL_PNP_LOCATION_Y,
+	COL_PNP_ANGLE,
 	COL_ENABLED,
 	COL_COUNT
 };
@@ -36,14 +43,21 @@ cCompTable::cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID win
 
 	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
 	InsertColumn(COL_DESIGNATOR,	_T("Des"),	wxLIST_FORMAT_LEFT, 60);
-	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_SRC_NAME,	_T("Name"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_NAME,		_T("New Name"),	wxLIST_FORMAT_LEFT, 110);
-	InsertColumn(COL_VALUE,		_T("Value"),	wxLIST_FORMAT_LEFT, 60);
+	InsertColumn(COL_CAD_NAME,	_T("Name"),	wxLIST_FORMAT_LEFT, 110);
+	InsertColumn(COL_CAD_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_CAD_VALUE,	_T("Value"),	wxLIST_FORMAT_LEFT, 60);
+	InsertColumn(COL_FULL_NAME,	_T("ID"),	wxLIST_FORMAT_LEFT, 120);
 	InsertColumn(COL_LAYER,		_T("Layer"),	wxLIST_FORMAT_LEFT, 40);
-	InsertColumn(COL_LOCATION_X,	_T("X"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_LOCATION_Y,	_T("Y"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_ANGLE,		_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_CAD_LOCATION_X,_T("X"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_CAD_LOCATION_Y,_T("Y"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_CAD_ANGLE,	_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 110);
+	InsertColumn(COL_PNP_NAME,	_T("Name"),	wxLIST_FORMAT_LEFT, 110);
+	InsertColumn(COL_PNP_PACKAGE,	_T("Pack"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_PNP_FOOTPRINT,	_T("Foot"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_PNP_LOCATION_X,_T("X"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_PNP_LOCATION_Y,_T("Y"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_PNP_ANGLE,	_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
 	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
 
 	ReInit();
@@ -59,36 +73,51 @@ cCompTable::~cCompTable()
 
 
 // ----------------------------------------------------------------------------
-// РўРµРєСЃС‚ РІ СЏС‡РµР№РєР°С…
+// Текст в ячейках
 // ----------------------------------------------------------------------------
 wxString cCompTable::OnGetItemText(long item, long column) const
 {
 	if (m_comp_data)
 	{
+		t_component_descr *data = &(m_comp_data->Item(item));
 		switch (column)
 		{
 			case COL_NUM:
 				return wxString::Format("%ld", item+1);
 			case COL_DESIGNATOR:
-				return m_comp_data->Item(item).designator;
-			case COL_PATTERN:
-				return m_comp_data->Item(item).pattern;
-			case COL_SRC_NAME:
-				return m_comp_data->Item(item).src_name;
-			case COL_NAME:
-				return m_comp_data->Item(item).name;
-			case COL_VALUE:
-				return m_comp_data->Item(item).value;
+				return data->designator;
+			case COL_CAD_NAME:
+				return data->cad_name;
+			case COL_CAD_PATTERN:
+				return data->cad_pattern;
+			case COL_CAD_VALUE:
+				return data->cad_value;
+			case COL_FULL_NAME:
+				return data->full_name;
 			case COL_LAYER:
-				return m_comp_data->Item(item).layer;
-			case COL_LOCATION_X:
-				return wxString::Format("%.3f", m_comp_data->Item(item).location_x);
-			case COL_LOCATION_Y:
-				return wxString::Format("%.3f", m_comp_data->Item(item).location_y);
-			case COL_ANGLE:
-				return wxString::Format("%.1f", m_comp_data->Item(item).angle);
+				return data->layer;
+			case COL_CAD_LOCATION_X:
+				return wxString::Format("%.3f", data->cad_location_x);
+			case COL_CAD_LOCATION_Y:
+				return wxString::Format("%.3f", data->cad_location_y);
+			case COL_CAD_ANGLE:
+				return wxString::Format("%.1f", data->cad_angle);
+			case COL_PATTERN:
+				return data->pattern;
+			case COL_PNP_NAME:
+				return data->pnp_name;
+			case COL_PNP_PACKAGE:
+				return data->pnp_package;
+			case COL_PNP_FOOTPRINT:
+				return data->pnp_footprint;
+			case COL_PNP_LOCATION_X:
+				return wxString::Format("%.3f", data->pnp_location_x);
+			case COL_PNP_LOCATION_Y:
+				return wxString::Format("%.3f", data->pnp_location_y);
+			case COL_PNP_ANGLE:
+				return wxString::Format("%.1f", data->pnp_angle);
 			case COL_ENABLED:
-				return wxString::Format("%d", m_comp_data->Item(item).enabled);;
+				return wxString::Format("%d", data->enabled);;
 			default:
 				return wxEmptyString;
 		}
@@ -98,7 +127,7 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 }
 
 // ----------------------------------------------------------------------------
-// РђС‚СЂРёР±СѓС‚С‹ СЃС‚СЂРѕРєРё
+// Атрибуты строки
 // ----------------------------------------------------------------------------
 wxListItemAttr *cCompTable::OnGetItemAttr(long item) const
 {
@@ -106,7 +135,7 @@ wxListItemAttr *cCompTable::OnGetItemAttr(long item) const
 }
 
 // ----------------------------------------------------------------------------
-// РљР°СЂС‚РёРЅРєРё РІ СЃС‚СЂРѕРєР°С…
+// Картинки в строках
 // ----------------------------------------------------------------------------
 int cCompTable::OnGetItemImage(long item) const
 {

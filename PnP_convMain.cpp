@@ -30,7 +30,7 @@ int CmpCompTypeFunc(t_component_type_descr *a_arg1, t_component_type_descr *a_ar
 }
 int CmpPatternFunc(t_pattern_descr *a_arg1, t_pattern_descr *a_arg2)
 {
-   return (a_arg1->package).CmpNoCase(a_arg2->package);
+   return (a_arg1->pattern).CmpNoCase(a_arg2->pattern);
 }
 
 //helper functions
@@ -186,6 +186,8 @@ void PnP_convFrame::OnAbout(wxCommandEvent& event)
 }
 
 #define CSV_DELIMITER				';'
+#define CFG_COMPONENT_SECTION			"component/"
+#define CFG_PATTERN_SECTION			"package/"
 enum {
 	INDEX_TOP_COMP,
 	INDEX_TOP_FID,
@@ -199,7 +201,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	wxString str, tmp_str;
 	wxFileDialog dlg_open(this);
 	t_component_type_descr *component_type;
-	t_pattern_descr *pattern;
+	t_pattern_descr *comp_pattern;
 
 	int tmp_index;
 	double value;
@@ -224,120 +226,125 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	for(str = file.GetFirstLine(); !file.Eof(); str = file.GetNextLine())
 	{
 		t_component_descr component;
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
+
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
 		component.designator = RemoveQuotes(tmp_str);
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
-		component.pattern = RemoveQuotes(tmp_str);
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
-		component.src_name = RemoveQuotes(tmp_str);
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
-		component.value = RemoveQuotes(tmp_str);
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
+
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		component.cad_pattern = RemoveQuotes(tmp_str);
+
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		component.cad_name = RemoveQuotes(tmp_str);
+
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		component.cad_value = RemoveQuotes(tmp_str);
+
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
 		component.layer = RemoveQuotes(tmp_str);
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
 		tmp_str = RemoveQuotes(tmp_str);
 		if(tmp_str.ToDouble(&value))
-			component.location_x = value;
+			component.cad_location_x = value;
 		else
-			component.location_x = 0;
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
+			component.cad_location_x = 0;
+
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
 		tmp_str = RemoveQuotes(tmp_str);
 		if(tmp_str.ToDouble(&value))
-			component.location_y = value;
+			component.cad_location_y = value;
 		else
-			component.location_y = 0;
-		tmp_str = str.BeforeFirst(CSV_DELIMITER);
-		str = str.AfterFirst(CSV_DELIMITER);
+			component.cad_location_y = 0;
+
+		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
 		tmp_str = RemoveQuotes(tmp_str);
 		if(tmp_str.ToDouble(&value))
-			component.angle = value;
+			component.cad_angle = value;
 		else
-			component.angle = 0;
-wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.name, component.location_x, component.location_y, component.angle);
+			component.cad_angle = 0;
+wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_name, component.cad_location_x, component.cad_location_y, component.cad_angle);
 
 ///Корректировка
 
-		if(component.value == "DNP")
+		if(component.cad_value == "DNP")
 			component.enabled = false;
 		else
 			component.enabled = true;
 
-		if(component.value != wxEmptyString && component.value != "{Value}" && component.value != component.src_name)
-			component.name = component.src_name + " " + component.value;
+		if((!component.cad_value.IsEmpty()) && component.cad_value != "{Value}" && component.cad_value != component.cad_name)
+			component.full_name = component.cad_name + " " + component.cad_value;
 		else
-			component.name = component.src_name;
-		if(component.pattern != wxEmptyString && component.pattern != component.src_name)
-			component.name = component.pattern + " " + component.name;
+			component.full_name = component.cad_name;
+		if((!component.cad_pattern.IsEmpty()) && component.cad_pattern != component.cad_name)
+			component.full_name.Prepend(component.cad_pattern + " ");
 
-//Поиск настроек по корпусу
-		pattern = new t_pattern_descr;
-		pattern->package = component.pattern;
-		tmp_index = m_patterns_list.Index(pattern);
+//Поиск настроек по компоненту
+		component_type = new t_component_type_descr;
+		component_type->name = component.full_name;
+		tmp_index = m_component_types_list.Index(component_type);
 		if(wxNOT_FOUND == tmp_index)
 		{
-			m_patterns_list.Add(pattern);
-			if(m_config->HasGroup("package/"+pattern->package))
+			m_component_types_list.Add(component_type);
+			if(m_config->HasGroup(CFG_COMPONENT_SECTION + component_type->name))
 			{
-				pattern->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(m_config, "package/"+pattern->package+"/");
-				pattern->footprint = m_config->Read("footprint", component.pattern);
-				pattern->offset_x = m_config->ReadDouble("offset_x", 0.0);
-				pattern->offset_y = m_config->ReadDouble("offset_y", 0.0);
-				pattern->angle = m_config->ReadDouble("angle", 0.0);
-				pattern->enabled = m_config->ReadBool("enabled", true);
+				component_type->is_new = 0;
+				wxConfigPathChanger cfg_cd_to(m_config, CFG_COMPONENT_SECTION + component_type->name+"/");
+				component_type->pattern = m_config->Read("pattern", component.cad_pattern);
+				component_type->pnp_name = m_config->Read("pnp_name", component.full_name);
+				component_type->enabled = m_config->ReadBool("enabled", component.enabled);
 			} else {
-				pattern->is_new = 1;
-				pattern->footprint = component.pattern;
-				wxConfigPathChanger cfg_cd_to(m_config, "package/"+pattern->package+"/");
-				m_config->Write("footprint", pattern->footprint);
+				component_type->is_new = 1;
+				component_type->pattern = component.cad_pattern;
+				component_type->pnp_name = component.full_name;
+				component_type->enabled = component.enabled;
+				wxConfigPathChanger cfg_cd_to(m_config, CFG_COMPONENT_SECTION + component_type->name+"/");
+				m_config->Write("pattern", component_type->pattern);
+				m_config->Write("pnp_name", component_type->pnp_name);
+				m_config->Write("enabled", component_type->enabled);
 			}
 		} else {
-			delete pattern;
-			pattern = m_patterns_list[tmp_index];
-			pattern->comp_count++;
+			delete component_type;
+			component_type = m_component_types_list[tmp_index];
+			component_type->comp_count++;
+		}
+//Assign pattern
+		component.pattern = component_type->pattern;
+//Поиск настроек по корпусу
+		comp_pattern = new t_pattern_descr;
+		comp_pattern->pattern = component.pattern;
+		tmp_index = m_patterns_list.Index(comp_pattern);
+		if(wxNOT_FOUND == tmp_index)
+		{
+			m_patterns_list.Add(comp_pattern);
+			if(m_config->HasGroup(CFG_PATTERN_SECTION + comp_pattern->pattern))
+			{
+				comp_pattern->is_new = 0;
+				wxConfigPathChanger cfg_cd_to(m_config, CFG_PATTERN_SECTION + comp_pattern->pattern+"/");
+				comp_pattern->pnp_package = m_config->Read("package", component.pattern);
+				comp_pattern->pnp_footprint = m_config->Read("footprint", component.pattern);
+				comp_pattern->offset_x = m_config->ReadDouble("offset_x", 0.0);
+				comp_pattern->offset_y = m_config->ReadDouble("offset_y", 0.0);
+				comp_pattern->angle = m_config->ReadDouble("angle", 0.0);
+				comp_pattern->enabled = m_config->ReadBool("enabled", true);
+			} else {
+				comp_pattern->is_new = 1;
+				comp_pattern->pnp_package = component.pattern;
+				comp_pattern->pnp_footprint = component.pattern;
+				wxConfigPathChanger cfg_cd_to(m_config, CFG_PATTERN_SECTION + comp_pattern->pattern+"/");
+				m_config->Write("pnp_package", comp_pattern->pnp_package);
+				m_config->Write("pnp_footprint", comp_pattern->pnp_footprint);
+			}
+		} else {
+			delete comp_pattern;
+			comp_pattern = m_patterns_list[tmp_index];
+			comp_pattern->comp_count++;
 		}
 
 
 
 		m_components_list.Add(component);
 
-		component_type = new t_component_type_descr;
-		component_type->name = component.name;
-		tmp_index = m_component_types_list.Index(component_type);
-		if(wxNOT_FOUND == tmp_index)
-		{
-			m_component_types_list.Add(component_type);
-			if(m_config->HasGroup("component/"+component_type->name))
-			{
-				component_type->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(m_config, "component/"+component_type->name+"/");
-				component_type->pattern = m_config->Read("pattern", component.pattern);
-				component_type->rename_to = m_config->Read("rename_to", component.name);
-				component_type->enabled = m_config->ReadBool("enabled", component.enabled);
-			} else {
-				component_type->is_new = 1;
-				component_type->pattern = component.pattern;
-				component_type->rename_to = component.name;
-				component_type->enabled = component.enabled;
-				wxConfigPathChanger cfg_cd_to(m_config, "component/"+component_type->name+"/");
-				m_config->Write("pattern", component_type->pattern);
-				m_config->Write("rename_to", component_type->rename_to);
-				m_config->Write("enabled", component_type->enabled);
-			}
 
-		} else {
-			delete component_type;
-			component_type = m_component_types_list[tmp_index];
-			component_type->comp_count++;
-		}
 
 	}
 //	m_component_types_list.Sort(CmpCompTypeFunc);
@@ -358,6 +365,12 @@ wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
 	return str;
 }
 
+void PnP_convFrame::UpdateComponents()
+{
+//Перенсчёт location и angle
+
+}
+
 void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
 {
 	wxString str;
@@ -365,10 +378,10 @@ void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_
 
 	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Component");
 	node->AddAttribute("Ref", a_comp.designator);
-	node->AddAttribute("Name", a_comp.name);
-	str = wxString::Format("%d,%d", (int)(a_comp.location_x*1000), (int)(a_comp.location_y*1000));
+	node->AddAttribute("Name", a_comp.pnp_name);
+	str = wxString::Format("%d,%d", (int)(a_comp.pnp_location_x*1000), (int)(a_comp.pnp_location_y*1000));
 	node->AddAttribute("Position", str);
-	str = wxString::Format("%d", (int)(a_comp.angle*100));
+	str = wxString::Format("%d", (int)(a_comp.pnp_angle*100));
 	node->AddAttribute("Angle", str);
 
 	a_node->parent->InsertChildAfter(node, a_node->last_child);
@@ -385,9 +398,9 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 	str = wxString::Format("%d", a_node->elemets_count + 1);
 	node->AddAttribute("Ref", str);
 	node->AddAttribute("CadRef", a_comp.designator);
-	str = wxString::Format("%d,%d", (int)(a_comp.location_x*1000), (int)(a_comp.location_y*1000));
+	str = wxString::Format("%d,%d", (int)(a_comp.pnp_location_x*1000), (int)(a_comp.pnp_location_y*1000));
 	node->AddAttribute("Position", str);
-	node->AddAttribute("Name", a_comp.pattern);
+	node->AddAttribute("Name", a_comp.pnp_name);
 
 	a_node->parent->InsertChildAfter(node, a_node->last_child);
 	a_node->last_child = node;
