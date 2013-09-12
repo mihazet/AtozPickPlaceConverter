@@ -27,6 +27,7 @@
 #include "common.h"
 class wxXmlNode;
 class wxFileConfig;
+class cPatternTable;
 
 class PnP_convFrame: public wxFrame
 {
@@ -46,6 +47,7 @@ class PnP_convFrame: public wxFrame
 	tComponentDescr		m_components_list;
 	tComponentTypeDescr	m_component_types_list;
 	tPatternDescr		m_patterns_list;
+	cPatternTable		*m_pattern_table;
 
 	wxString RemoveQuotes(const wxString a_str);
 	void PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp);

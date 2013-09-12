@@ -3,18 +3,18 @@
 
 #include "common.h"
 #include <wx/wx.h>
-#include <wx/listctrl.h>
 #include <wx/grid.h>
 
 //#define USE_TIMESTAMP_WITH_DATE		1
 //#define AUTOUPDATE_INTERVAL		500
+class wxFileConfig;
 
 class cPatternTable : public wxGridTableBase
 {
 public:
 	cPatternTable(tPatternDescr *a_data);
 	virtual ~cPatternTable();
-//	void ReInit();
+	void SetPatternsConfig(wxFileConfig *a_config) {m_config = a_config;};
 
 	// You must override these functions in a derived table class
 	//
@@ -94,6 +94,7 @@ public:
 protected:
 private:
 	tPatternDescr		*m_pattern_data;
+	wxFileConfig		*m_config;
 };
 
 #endif // EVENTS_TABLE_H

@@ -1,4 +1,5 @@
 #include "pattern_table.h"
+#include <wx/fileconf.h>
 
 //enum {
 //	ID_TIMER,
@@ -7,8 +8,7 @@
 //};
 
 enum ePatternTable {
-	COL_NUM = 0,
-	COL_PATTERN,
+	COL_PATTERN = 0,
 	COL_PNP_PACKAGE,
 	COL_PNP_FOOTPRINT,
 	COL_OFFSET_X,
@@ -24,10 +24,45 @@ cPatternTable::cPatternTable(tPatternDescr *a_data)
 	: wxGridTableBase()
 {
 	m_pattern_data = a_data;
-//	m_Timer = new wxTimer(this, ID_TIMER);
-//	m_Timer->Start(AUTOUPDATE_INTERVAL);
+	m_config = NULL;
 
-//	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
+	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
+	SetAttrProvider (attrProvider);
+
+	wxGridCellAttr *ro_attr = new wxGridCellAttr();
+	ro_attr->SetReadOnly();
+	SetColAttr (ro_attr, COL_PATTERN);
+	SetColAttr (ro_attr, COL_IS_NEW);
+
+	wxGridCellAttr *ro_num_attr = new wxGridCellAttr();
+	wxGridCellNumberRenderer *num_rend = new wxGridCellNumberRenderer();
+	ro_num_attr->SetRenderer(num_rend);
+	ro_num_attr->SetReadOnly();
+	SetColAttr (ro_num_attr, COL_COMP_COUNT);
+
+	wxGridCellAttr *float1_attr = new wxGridCellAttr();
+	wxGridCellFloatRenderer *float1_rend = new wxGridCellFloatRenderer(3, 1);
+	float1_attr->SetRenderer(float1_rend);
+	wxGridCellFloatEditor *float1_edit = new wxGridCellFloatEditor(3, 1);
+	float1_attr->SetEditor(float1_edit);
+	SetColAttr (float1_attr, COL_ANGLE);
+
+	wxGridCellAttr *float3_attr = new wxGridCellAttr();
+	wxGridCellFloatRenderer *float3_rend = new wxGridCellFloatRenderer(5, 3);
+	float3_attr->SetRenderer(float3_rend);
+	wxGridCellFloatEditor *float3_edit = new wxGridCellFloatEditor(5, 3);
+	float3_attr->SetEditor(float3_edit);
+	SetColAttr (float3_attr, COL_OFFSET_X);
+	SetColAttr (float3_attr, COL_OFFSET_Y);
+
+	wxGridCellAttr *bool_attr = new wxGridCellAttr();
+	wxGridCellBoolRenderer *bool_rend = new wxGridCellBoolRenderer();
+	bool_attr->SetRenderer(bool_rend);
+	wxGridCellBoolEditor *bool_edit = new wxGridCellBoolEditor();
+	bool_edit->UseStringValues("1", "0");
+	bool_attr->SetEditor(bool_edit);
+	SetColAttr (bool_attr, COL_ENABLED);
+
 //	InsertColumn(COL_PATTERN,	_T("Patt Name"),wxLIST_FORMAT_LEFT, 120);
 //	InsertColumn(COL_PNP_PACKAGE,	_T("Package"),	wxLIST_FORMAT_LEFT, 120);
 //	InsertColumn(COL_PNP_FOOTPRINT,	_T("Footprint"),wxLIST_FORMAT_LEFT, 120);
@@ -37,16 +72,10 @@ cPatternTable::cPatternTable(tPatternDescr *a_data)
 //	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
 //	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
 //	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
-
-//	ReInit();
-
 }
 
 cPatternTable::~cPatternTable()
 {
-//	m_Timer->Stop();
-//	delete m_Timer;
-//	delete m_PopupMenu;
 }
 
 int cPatternTable::GetNumberRows()
@@ -54,8 +83,6 @@ int cPatternTable::GetNumberRows()
 	if(NULL == m_pattern_data)
 		return 0;
 	return m_pattern_data->GetCount();
-//wxMessageBox(wxString::Format("%zu", m_pattern_data->GetCount()));
-//	return 10;
 }
 int cPatternTable::GetNumberCols()
 {
@@ -67,9 +94,6 @@ wxString cPatternTable::GetColLabelValue( int a_col )
 	wxString result = wxEmptyString;
 	switch (a_col)
 	{
-		case COL_NUM:
-			result = _T("#");
-			break;
 		case COL_PATTERN:
 			result = _T("Patt Name");
 			break;
@@ -114,9 +138,6 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 	t_pattern_descr *data = m_pattern_data->Item(a_row);
 	switch (a_col)
 	{
-		case COL_NUM:
-			result = wxString::Format("%d", a_row+1);
-			break;
 		case COL_PATTERN:
 			result = data->pattern;
 			break;
@@ -149,22 +170,24 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 }
 void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
 {
-	if((NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
+	if((NULL == m_config) || (NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
+		return;
+	if(a_value.IsEmpty())
 		return;
 
 	t_pattern_descr *data = m_pattern_data->Item(a_row);
+	wxConfigPathChanger cfg_cd_to(m_config, "/"+data->pattern+"/");
 	switch(a_col)
 	{
-		case COL_NUM:
-			break;
 		case COL_PATTERN:
-			data->pattern = a_value;
 			break;
 		case COL_PNP_PACKAGE:
 			data->pnp_package = a_value;
+			m_config->Write("pnp_package", a_value);
 			break;
 		case COL_PNP_FOOTPRINT:
 			data->pnp_footprint = a_value;
+			m_config->Write("pnp_footprint", a_value);
 			break;
 		case COL_OFFSET_X:
 //			return wxString::Format("%.3f", data->offset_x);

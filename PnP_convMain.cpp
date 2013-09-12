@@ -170,8 +170,8 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	m_cfg_patterns_altium =		new wxFileConfig("PnP_conv", "Antrax", "patterns_altium",	wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 	m_cfg_projects =		new wxFileConfig("PnP_conv", "Antrax", "projects",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 
-	cPatternTable *pattern_table = new cPatternTable(&m_patterns_list);
-	m_grd_pattern->SetTable(pattern_table, true);
+	m_pattern_table = new cPatternTable(&m_patterns_list);
+	m_grd_pattern->SetTable(m_pattern_table, true);
 }
 
 PnP_convFrame::~PnP_convFrame()
@@ -231,6 +231,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 #warning TODO (alatar#1#): Сделать диалог для выбора типа входного файла, пока только P-CAD
 	cfg_components = m_cfg_components_pcad;
 	cfg_patterns = m_cfg_patterns_pcad;
+	m_pattern_table->SetPatternsConfig(m_cfg_patterns_pcad);
 
 	wxTextFile file(dlg_open.GetPath());
 	m_filename = dlg_open.GetPath();
@@ -306,7 +307,7 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 			if(cfg_components->HasGroup(component_type->name))
 			{
 				component_type->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(cfg_components, component_type->name+"/");
+				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
 				component_type->pattern = cfg_components->Read("pattern", component.cad_pattern);
 				component_type->pnp_name = cfg_components->Read("pnp_name", component.full_name);
 				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
@@ -315,7 +316,7 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 				component_type->pattern = component.cad_pattern;
 				component_type->pnp_name = component.full_name;
 				component_type->enabled = component.enabled;
-				wxConfigPathChanger cfg_cd_to(cfg_components, component_type->name+"/");
+				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
 				cfg_components->Write("enabled", true);
 //				cfg_components->Write("pattern", component_type->pattern);
 //				cfg_components->Write("pnp_name", component_type->pnp_name);
@@ -338,9 +339,9 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 			if(cfg_patterns->HasGroup(comp_pattern->pattern))
 			{
 				comp_pattern->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(cfg_patterns, comp_pattern->pattern+"/");
-				comp_pattern->pnp_package = cfg_patterns->Read("package", component.pattern);
-				comp_pattern->pnp_footprint = cfg_patterns->Read("footprint", component.pattern);
+				wxConfigPathChanger cfg_cd_to(cfg_patterns, "/"+comp_pattern->pattern+"/");
+				comp_pattern->pnp_package = cfg_patterns->Read("pnp_package", component.pattern);
+				comp_pattern->pnp_footprint = cfg_patterns->Read("pnp_footprint", component.pattern);
 				comp_pattern->offset_x = cfg_patterns->ReadDouble("offset_x", 0.0);
 				comp_pattern->offset_y = cfg_patterns->ReadDouble("offset_y", 0.0);
 				comp_pattern->angle = cfg_patterns->ReadDouble("angle", 0.0);
@@ -349,7 +350,7 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 				comp_pattern->is_new = 1;
 				comp_pattern->pnp_package = component.pattern;
 				comp_pattern->pnp_footprint = component.pattern;
-				wxConfigPathChanger cfg_cd_to(cfg_patterns, comp_pattern->pattern+"/");
+				wxConfigPathChanger cfg_cd_to(cfg_patterns, "/"+comp_pattern->pattern+"/");
 				cfg_patterns->Write("enabled", true);
 //				cfg_patterns->Write("pnp_package", comp_pattern->pnp_package);
 //				cfg_patterns->Write("pnp_footprint", comp_pattern->pnp_footprint);
@@ -470,6 +471,11 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 
 void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 {
+
+	long	size_x = 295800,
+		size_y = 81700,
+		height = 1600;
+	wxString size_str = wxString::Format("%ld,%ld,%ld", size_x, size_y, height);
 	wxFileDialog dlg_save(this, "Enter target filename",
 			wxEmptyString, m_filename.BeforeLast('.') + ".prod",
 			"PP-050 files (*.prod)|*.prod|DD-500 files (*.pcb)|*.pcb", wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
@@ -501,7 +507,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Product"); last_child_node = NULL;
 
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "General");
-	tmp_node->AddAttribute("Size", "0,0,1600");
+	tmp_node->AddAttribute("Size", size_str);
 	tmp_node->AddAttribute("ActiveSide", "Top");
 	tmp_node->AddAttribute("PcbType", "Single");
 	tmp_node->AddAttribute("AutoSideDetect", "no");
@@ -533,7 +539,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Templates");
 	node = new wxXmlNode(node, wxXML_ELEMENT_NODE, "Template");
 	node->AddAttribute("Name", "default");
-	node->AddAttribute("Size", "0,0,1600");
+	node->AddAttribute("Size", size_str);
 //	node->AddAttribute("OriginOffset", "0,0");
 
 	size_t comp_count = m_components_list.Count();
