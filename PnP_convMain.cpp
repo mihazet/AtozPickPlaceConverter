@@ -8,6 +8,8 @@
  **************************************************************/
 
 #include "PnP_convMain.h"
+#include "pattern_table.h"
+
 #include <wx/msgdlg.h>
 #include <wx/fileconf.h>
 #include <wx/filedlg.h>
@@ -66,7 +68,7 @@ const long PnP_convFrame::ID_COMP_TABLE = wxNewId();
 const long PnP_convFrame::ID_PANEL4 = wxNewId();
 const long PnP_convFrame::ID_COMP_TYPE_TABLE = wxNewId();
 const long PnP_convFrame::ID_PANEL1 = wxNewId();
-const long PnP_convFrame::ID_PATTERNS_TABLE = wxNewId();
+const long PnP_convFrame::ID_GRID_PATTERN = wxNewId();
 const long PnP_convFrame::ID_PANEL2 = wxNewId();
 const long PnP_convFrame::ID_AUINOTEBOOK1 = wxNewId();
 const long PnP_convFrame::ID_OPEN = wxNewId();
@@ -120,8 +122,8 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
     BoxSizer1->SetSizeHints(Panel1);
     Panel2 = new wxPanel(auiMainNotebook, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL2"));
     BoxSizer2 = new wxBoxSizer(wxHORIZONTAL);
-    m_pattern_table = new cPatternTable(&m_patterns_list, Panel2,ID_PATTERNS_TABLE,wxDefaultPosition,wxDefaultSize);
-    BoxSizer2->Add(m_pattern_table, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    m_grd_pattern = new wxGrid(Panel2, ID_GRID_PATTERN, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID_PATTERN"));
+    BoxSizer2->Add(m_grd_pattern, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Panel2->SetSizer(BoxSizer2);
     BoxSizer2->Fit(Panel2);
     BoxSizer2->SetSizeHints(Panel2);
@@ -167,6 +169,9 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	m_cfg_patterns_pcad =		new wxFileConfig("PnP_conv", "Antrax", "patterns_pcad",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 	m_cfg_patterns_altium =		new wxFileConfig("PnP_conv", "Antrax", "patterns_altium",	wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 	m_cfg_projects =		new wxFileConfig("PnP_conv", "Antrax", "projects",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
+
+	cPatternTable *pattern_table = new cPatternTable(&m_patterns_list);
+	m_grd_pattern->SetTable(pattern_table, true);
 }
 
 PnP_convFrame::~PnP_convFrame()
@@ -568,4 +573,15 @@ wxLogMessage(_T("Inserted %s"), m_components_list[index].designator);
 
 	doc.Save(dlg_save.GetPath());
 wxLogMessage(_T("Saved to %s"), dlg_save.GetPath());
+}
+
+void PnP_convFrame::ReInitLists()
+{
+	m_comp_table->ReInit();
+	m_comp_type_table->ReInit();
+
+	wxGridTableMessage clr(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_pattern->GetNumberRows());
+	m_grd_pattern->ProcessTableMessage(clr);
+	wxGridTableMessage add(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_patterns_list.GetCount());
+	m_grd_pattern->ProcessTableMessage(add);
 }

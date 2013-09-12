@@ -11,6 +11,7 @@
 #define PNP_CONV_MAIN_H
 
 //(*Headers(PnP_convFrame)
+#include <wx/grid.h>
 #include "comp_table.h"
 #include <wx/sizer.h>
 #include <wx/menu.h>
@@ -20,7 +21,6 @@
 #include <wx/frame.h>
 #include <wx/aui/aui.h>
 #include <wx/textctrl.h>
-#include "pattern_table.h"
 #include <wx/propgrid/propgrid.h>
 //*)
 
@@ -52,7 +52,8 @@ class PnP_convFrame: public wxFrame
 	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp);
 	void UpdateComponents();
 	void UpdateComponent(t_component_descr *a_component);
-	void ReInitLists() {m_comp_table->ReInit();m_comp_type_table->ReInit();m_pattern_table->ReInit();};
+	void ReInitLists();
+
 
         //(*Handlers(PnP_convFrame)
         void OnQuit(wxCommandEvent& event);
@@ -74,7 +75,7 @@ class PnP_convFrame: public wxFrame
         static const long ID_PANEL4;
         static const long ID_COMP_TYPE_TABLE;
         static const long ID_PANEL1;
-        static const long ID_PATTERNS_TABLE;
+        static const long ID_GRID_PATTERN;
         static const long ID_PANEL2;
         static const long ID_AUINOTEBOOK1;
         static const long ID_OPEN;
@@ -86,6 +87,7 @@ class PnP_convFrame: public wxFrame
 
         //(*Declarations(PnP_convFrame)
         wxPanel* Panel1;
+        wxGrid* m_grd_pattern;
         wxStatusBar* StatusBar1;
         wxPropertyGrid* m_pgProps;
         wxAuiManager* auiManager;
@@ -94,7 +96,6 @@ class PnP_convFrame: public wxFrame
         wxPanel* Panel4;
         wxAuiNotebook* auiMainNotebook;
         cCompTypeTable* m_comp_type_table;
-        cPatternTable* m_pattern_table;
         cCompTable* m_comp_table;
         //*)
 

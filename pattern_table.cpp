@@ -1,18 +1,12 @@
 #include "pattern_table.h"
 
-enum {
-	ID_TIMER,
-	ID_MENU_AUTOSCROLL,
-	ID_MENU_AUTOUPDATE
-};
+//enum {
+//	ID_TIMER,
+//	ID_MENU_AUTOSCROLL,
+//	ID_MENU_AUTOUPDATE
+//};
 
-BEGIN_EVENT_TABLE(cPatternTable, wxListCtrl)
-//	EVT_CONTEXT_MENU(cPatternTable::OnContextMenu)
-//	EVT_MENU(ID_MENU_AUTOUPDATE, cPatternTable::OnAutoUpdate)
-//	EVT_TIMER(ID_TIMER, cPatternTable::OnTimer)
-END_EVENT_TABLE()
-
-enum {
+enum ePatternTable {
 	COL_NUM = 0,
 	COL_PATTERN,
 	COL_PNP_PACKAGE,
@@ -26,25 +20,25 @@ enum {
 	COL_COUNT
 };
 
-cPatternTable::cPatternTable(tPatternDescr *a_data, wxWindow *parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style, const wxValidator &validator, const wxString &name)
-	: wxListCtrl(parent, winid, pos, size, style | wxLC_VIRTUAL, validator, name)
+cPatternTable::cPatternTable(tPatternDescr *a_data)
+	: wxGridTableBase()
 {
 	m_pattern_data = a_data;
 //	m_Timer = new wxTimer(this, ID_TIMER);
 //	m_Timer->Start(AUTOUPDATE_INTERVAL);
 
-	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
-	InsertColumn(COL_PATTERN,	_T("Patt Name"),wxLIST_FORMAT_LEFT, 120);
-	InsertColumn(COL_PNP_PACKAGE,	_T("Package"),	wxLIST_FORMAT_LEFT, 120);
-	InsertColumn(COL_PNP_FOOTPRINT,	_T("Footprint"),wxLIST_FORMAT_LEFT, 120);
-	InsertColumn(COL_OFFSET_X,	_T("X"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_OFFSET_Y,	_T("Y"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_ANGLE,		_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
-	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
-	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
+//	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
+//	InsertColumn(COL_PATTERN,	_T("Patt Name"),wxLIST_FORMAT_LEFT, 120);
+//	InsertColumn(COL_PNP_PACKAGE,	_T("Package"),	wxLIST_FORMAT_LEFT, 120);
+//	InsertColumn(COL_PNP_FOOTPRINT,	_T("Footprint"),wxLIST_FORMAT_LEFT, 120);
+//	InsertColumn(COL_OFFSET_X,	_T("X"),	wxLIST_FORMAT_LEFT, 70);
+//	InsertColumn(COL_OFFSET_Y,	_T("Y"),	wxLIST_FORMAT_LEFT, 70);
+//	InsertColumn(COL_ANGLE,		_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
+//	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
+//	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
+//	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
 
-	ReInit();
+//	ReInit();
 
 }
 
@@ -55,78 +49,177 @@ cPatternTable::~cPatternTable()
 //	delete m_PopupMenu;
 }
 
+int cPatternTable::GetNumberRows()
+{
+	if(NULL == m_pattern_data)
+		return 0;
+	return m_pattern_data->GetCount();
+//wxMessageBox(wxString::Format("%zu", m_pattern_data->GetCount()));
+//	return 10;
+}
+int cPatternTable::GetNumberCols()
+{
+	return COL_COUNT;
+}
+
+wxString cPatternTable::GetColLabelValue( int a_col )
+{
+	wxString result = wxEmptyString;
+	switch (a_col)
+	{
+		case COL_NUM:
+			result = _T("#");
+			break;
+		case COL_PATTERN:
+			result = _T("Patt Name");
+			break;
+		case COL_PNP_PACKAGE:
+			result = _T("Package");
+			break;
+		case COL_PNP_FOOTPRINT:
+			result = _T("Footprint");
+			break;
+		case COL_OFFSET_X:
+			result = _T("X");
+			break;
+		case COL_OFFSET_Y:
+			result = _T("Y");
+			break;
+		case COL_ANGLE:
+			result = _T("Angle");
+			break;
+		case COL_COMP_COUNT:
+			result = _T("Count");
+			break;
+		case COL_ENABLED:
+			result = _T("To OUT");
+			break;
+		case COL_IS_NEW:
+			result = _T("New");
+			break;
+	}
+	return result;
+}
 
 // ----------------------------------------------------------------------------
 // Текст в ячейках
 // ----------------------------------------------------------------------------
-wxString cPatternTable::OnGetItemText(long item, long column) const
+//wxString cPatternTable::OnGetItemText(long item, long column) const
+wxString cPatternTable::GetValue(int a_row, int a_col)
 {
-	if (m_pattern_data)
-	{
-		t_pattern_descr *data = m_pattern_data->Item(item);
-		switch (column)
-		{
-			case COL_NUM:
-				return wxString::Format("%ld", item+1);
-			case COL_PATTERN:
-				return data->pattern;
-			case COL_PNP_PACKAGE:
-				return data->pnp_package;
-			case COL_PNP_FOOTPRINT:
-				return data->pnp_footprint;
-			case COL_OFFSET_X:
-				return wxString::Format("%.3f", data->offset_x);
-			case COL_OFFSET_Y:
-				return wxString::Format("%.3f", data->offset_y);
-			case COL_ANGLE:
-				return wxString::Format("%.1f", data->angle);
-			case COL_COMP_COUNT:
-				return wxString::Format("%zu", data->comp_count);;
-			case COL_ENABLED:
-				return wxString::Format("%d", data->enabled);;
-			case COL_IS_NEW:
-				return wxString::Format("%d", data->is_new);;
-			default:
-				return wxEmptyString;
-		}
-	} else {
+	if((NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
 		return wxEmptyString;
-	}
-}
 
-// ----------------------------------------------------------------------------
-// Атрибуты строки
-// ----------------------------------------------------------------------------
-wxListItemAttr *cPatternTable::OnGetItemAttr(long item) const
-{
-	return NULL;
-}
-
-// ----------------------------------------------------------------------------
-// Картинки в строках
-// ----------------------------------------------------------------------------
-int cPatternTable::OnGetItemImage(long item) const
-{
-	return -1;
-}
-// ----------------------------------------------------------------------------
-
-int cPatternTable::OnGetItemColumnImage(long item, long column) const
-{
-	return -1;
-}
-// ----------------------------------------------------------------------------
-
-void cPatternTable::ReInit()
-{
-	if (m_pattern_data)
+	wxString result = wxEmptyString;
+	t_pattern_descr *data = m_pattern_data->Item(a_row);
+	switch (a_col)
 	{
-		SetItemCount(m_pattern_data->GetCount());
-		Refresh();
-//		if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
-//			EnsureVisible(GetItemCount() - 1);
+		case COL_NUM:
+			result = wxString::Format("%d", a_row+1);
+			break;
+		case COL_PATTERN:
+			result = data->pattern;
+			break;
+		case COL_PNP_PACKAGE:
+			result = data->pnp_package;
+			break;
+		case COL_PNP_FOOTPRINT:
+			result = data->pnp_footprint;
+			break;
+		case COL_OFFSET_X:
+			result = wxString::Format("%.3f", data->offset_x);
+			break;
+		case COL_OFFSET_Y:
+			result = wxString::Format("%.3f", data->offset_y);
+			break;
+		case COL_ANGLE:
+			result = wxString::Format("%.1f", data->angle);
+			break;
+		case COL_COMP_COUNT:
+			result = wxString::Format("%zu", data->comp_count);
+			break;
+		case COL_ENABLED:
+			result = wxString::Format("%d", data->enabled);
+			break;
+		case COL_IS_NEW:
+			result = wxString::Format("%d", data->is_new);
+			break;
+	}
+	return result;
+}
+void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
+{
+	if((NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
+		return;
+
+	t_pattern_descr *data = m_pattern_data->Item(a_row);
+	switch(a_col)
+	{
+		case COL_NUM:
+			break;
+		case COL_PATTERN:
+			data->pattern = a_value;
+			break;
+		case COL_PNP_PACKAGE:
+			data->pnp_package = a_value;
+			break;
+		case COL_PNP_FOOTPRINT:
+			data->pnp_footprint = a_value;
+			break;
+		case COL_OFFSET_X:
+//			return wxString::Format("%.3f", data->offset_x);
+			break;
+		case COL_OFFSET_Y:
+//			return wxString::Format("%.3f", data->offset_y);
+			break;
+		case COL_ANGLE:
+//			return wxString::Format("%.1f", data->angle);
+			break;
+		case COL_COMP_COUNT:
+//			return wxString::Format("%zu", data->comp_count);
+			break;
+		case COL_ENABLED:
+//			return wxString::Format("%d", data->enabled);
+			break;
+		case COL_IS_NEW:
+//			return wxString::Format("%d", data->is_new);
+			break;
 	}
 }
+
+//// ----------------------------------------------------------------------------
+//// Атрибуты строки
+//// ----------------------------------------------------------------------------
+//wxListItemAttr *cPatternTable::OnGetItemAttr(long item) const
+//{
+//	return NULL;
+//}
+//
+//// ----------------------------------------------------------------------------
+//// Картинки в строках
+//// ----------------------------------------------------------------------------
+//int cPatternTable::OnGetItemImage(long item) const
+//{
+//	return -1;
+//}
+//// ----------------------------------------------------------------------------
+//
+//int cPatternTable::OnGetItemColumnImage(long item, long column) const
+//{
+//	return -1;
+//}
+//// ----------------------------------------------------------------------------
+//
+//void cPatternTable::ReInit()
+//{
+//	if (m_pattern_data)
+//	{
+//		SetItemCount(m_pattern_data->GetCount());
+//		Refresh();
+////		if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
+////			EnsureVisible(GetItemCount() - 1);
+//	}
+//}
 // ----------------------------------------------------------------------------
 //void cPatternTable::OnContextMenu(wxContextMenuEvent& event)
 //{
