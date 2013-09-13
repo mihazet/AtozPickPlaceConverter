@@ -171,11 +171,12 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	m_cfg_projects =		new wxFileConfig("PnP_conv", "Antrax", "projects",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 
 	m_pattern_table = new cPatternTable(&m_patterns_list);
-	m_grd_pattern->SetTable(m_pattern_table, true);
+	m_grd_pattern->SetTable(m_pattern_table, false);
 }
 
 PnP_convFrame::~PnP_convFrame()
 {
+//	delete m_pattern_table;  // TODO (alatar#1#): Внимание! Утечка памяти!
 	WX_CLEAR_ARRAY(m_component_types_list);
 	WX_CLEAR_ARRAY(m_patterns_list);
 	delete m_cfg_settings;

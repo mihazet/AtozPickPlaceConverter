@@ -148,13 +148,13 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 			result = data->pnp_footprint;
 			break;
 		case COL_OFFSET_X:
-			result = wxString::Format("%.3f", data->offset_x);
+			result = wxString::Format("%f", data->offset_x);
 			break;
 		case COL_OFFSET_Y:
-			result = wxString::Format("%.3f", data->offset_y);
+			result = wxString::Format("%f", data->offset_y);
 			break;
 		case COL_ANGLE:
-			result = wxString::Format("%.1f", data->angle);
+			result = wxString::Format("%f", data->angle);
 			break;
 		case COL_COMP_COUNT:
 			result = wxString::Format("%zu", data->comp_count);
@@ -170,6 +170,8 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 }
 void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
 {
+	double tmp_double;
+	long tmp_long;
 	if((NULL == m_config) || (NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
 		return;
 	if(a_value.IsEmpty())
@@ -179,8 +181,6 @@ void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
 	wxConfigPathChanger cfg_cd_to(m_config, "/"+data->pattern+"/");
 	switch(a_col)
 	{
-		case COL_PATTERN:
-			break;
 		case COL_PNP_PACKAGE:
 			data->pnp_package = a_value;
 			m_config->Write("pnp_package", a_value);
@@ -190,22 +190,24 @@ void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
 			m_config->Write("pnp_footprint", a_value);
 			break;
 		case COL_OFFSET_X:
-//			return wxString::Format("%.3f", data->offset_x);
+			a_value.ToDouble(&tmp_double);
+			data->offset_x = tmp_double;
+			m_config->Write("offset_x", a_value);
 			break;
 		case COL_OFFSET_Y:
-//			return wxString::Format("%.3f", data->offset_y);
+			a_value.ToDouble(&tmp_double);
+			data->offset_y = tmp_double;
+			m_config->Write("offset_y", a_value);
 			break;
 		case COL_ANGLE:
-//			return wxString::Format("%.1f", data->angle);
-			break;
-		case COL_COMP_COUNT:
-//			return wxString::Format("%zu", data->comp_count);
+			a_value.ToDouble(&tmp_double);
+			data->angle = tmp_double;
+			m_config->Write("angle", a_value);
 			break;
 		case COL_ENABLED:
-//			return wxString::Format("%d", data->enabled);
-			break;
-		case COL_IS_NEW:
-//			return wxString::Format("%d", data->is_new);
+			a_value.ToLong(&tmp_long);
+			data->enabled = tmp_long;
+			m_config->Write("enabled", a_value);
 			break;
 	}
 }
