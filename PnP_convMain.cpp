@@ -16,6 +16,7 @@
 #include <wx/filedlg.h>
 #include <wx/log.h>
 #include <wx/xml/xml.h>
+#include <wx/regex.h>
 
 //(*InternalHeaders(PnP_convFrame)
 #include <wx/string.h>
@@ -289,14 +290,18 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_name, component.cad_location_x, component.cad_location_y, component.cad_angle);
 
 ///Корректировка
-
-		if(component.cad_value == "DNP")
+		component.strip_value = component.cad_value;
+		if(component.strip_value.StartsWith("DNP") || component.strip_value.EndsWith("DNP"))
+		{
+			component.strip_value.Replace("DNP", wxEmptyString);
+			component.strip_value.Trim(true).Trim(false);
 			component.enabled = false;
-		else
+		} else {
 			component.enabled = true;
+		}
 
-		if((!component.cad_value.IsEmpty()) && component.cad_value != "{Value}" && component.cad_value != component.cad_name)
-			component.full_name = component.cad_name + " " + component.cad_value;
+		if((!component.strip_value.IsEmpty()) && component.strip_value != "{Value}" && component.strip_value != component.cad_name)
+			component.full_name = component.cad_name + " " + component.strip_value;
 		else
 			component.full_name = component.cad_name;
 		if((!component.cad_pattern.IsEmpty()) && component.cad_pattern != component.cad_name)
@@ -309,6 +314,7 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_component_types_list.Add(component_type);
+			ParseNominals(component_type, component.designator, component.strip_value);
 			if(cfg_components->HasGroup(component_type->name))
 			{
 				component_type->is_new = 0;
@@ -316,16 +322,17 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 				component_type->pattern = cfg_components->Read("pattern", component.cad_pattern);
 				component_type->pnp_name = cfg_components->Read("pnp_name", component.full_name);
 				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
+				component_type->value = cfg_components->ReadDouble("value", component_type->value);
+				component_type->unit = cfg_components->Read("unit", component_type->unit);
 			} else {
 				component_type->is_new = 1;
 				component_type->pattern = component.cad_pattern;
 				component_type->pnp_name = component.full_name;
-				component_type->enabled = component.enabled;
+//				component_type->enabled = component.enabled;
 				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
-				cfg_components->Write("enabled", true);
+				cfg_components->Write("enabled", component_type->enabled);
 //				cfg_components->Write("pattern", component_type->pattern);
 //				cfg_components->Write("pnp_name", component_type->pnp_name);
-//				cfg_components->Write("enabled", component_type->enabled);
 			}
 		} else {
 			delete component_type;
@@ -356,7 +363,7 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 				comp_pattern->pnp_package = component.pattern;
 				comp_pattern->pnp_footprint = component.pattern;
 				wxConfigPathChanger cfg_cd_to(cfg_patterns, "/"+comp_pattern->pattern+"/");
-				cfg_patterns->Write("enabled", true);
+				cfg_patterns->Write("enabled", comp_pattern->enabled);
 //				cfg_patterns->Write("pnp_package", comp_pattern->pnp_package);
 //				cfg_patterns->Write("pnp_footprint", comp_pattern->pnp_footprint);
 			}
@@ -387,6 +394,97 @@ wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
 	return str;
 }
 
+bool PnP_convFrame::ParseNominals(t_component_type_descr *a_component_type, wxString a_designator, wxString a_value)
+{
+	char ch;
+	double val_part;
+	long factor = 1;
+	wxString val, unit;
+
+	if(NULL == a_component_type)
+		return false;
+
+	ch = a_designator.Upper()[0];
+	switch(ch)
+	{
+	case 'R':
+		a_component_type->unit = "";
+		break;
+	case 'C':
+		a_component_type->unit = "F";
+		factor = 10e-3;
+		break;
+	case 'L':
+		a_component_type->unit = "H";
+		break;
+	default:
+		a_component_type->value = -1;
+		a_component_type->unit = wxEmptyString;
+		return true;
+	}
+
+	wxRegEx re_format1("^([:digit:]+)([pnumkKMrRfFhH]{1,2})([:digit:]+)(.*)$"); //1p1F bla-bla-bla
+	wxRegEx re_format2("^([:digit:]+[.,]?[:digit:]*)([pnumkKM]?)[fFhH]?(.*)$"); //1.1pF bla-bla-bla
+
+	if(re_format1.Matches(a_value))
+	{
+		wxString tmp_str = re_format1.GetMatch(a_value, 1)+"."+re_format1.GetMatch(a_value, 3)+re_format1.GetMatch(a_value, 2)+re_format1.GetMatch(a_value, 4);
+		a_value = tmp_str;
+
+	}
+	if(!re_format2.Matches(a_value))
+	{
+		a_component_type->value = -1;
+		return false;
+	}
+	val = re_format2.GetMatch(a_value, 1);
+	unit = re_format2.GetMatch(a_value, 2);
+	a_component_type->value_postfix = re_format2.GetMatch(a_value, 3);
+
+	if(!val.ToDouble(&val_part))
+	{
+		a_component_type->value = -1;
+		return false;
+	}
+	a_component_type->value = val_part;
+
+	ch = unit[0];
+	switch(ch)
+	{
+	case 'p':
+		factor = 10e-12;
+		break;
+	case 'n':
+		factor = 10e-9;
+		break;
+	case 'u':
+		factor = 10e-6;
+		break;
+	case 'm':
+		factor = 10e-3;
+		break;
+	case 'k':
+	case 'K':	//кривое название, но встречается часто
+		factor = 10e3;
+		break;
+	case 'M':
+		factor = 10e6;
+		break;
+	}
+	a_component_type->value *= factor;
+	NormalizeNominal(a_component_type);
+	return true;
+}
+
+bool PnP_convFrame::NormalizeNominal(t_component_type_descr *a_component_type)
+{
+	if(NULL == a_component_type)
+		return false;
+
+
+	return true;
+}
+
 void PnP_convFrame::UpdateComponents()
 {
 	size_t comp_count = m_components_list.Count();
@@ -408,6 +506,8 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
 //pnp_location_x
 //pnp_location_y
 //pnp_angle
+	if(NULL == a_component)
+		return;
 
 	component_type = new t_component_type_descr;
 	component_type->name = a_component->full_name;
@@ -442,6 +542,8 @@ void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_
 {
 	wxString str;
 	wxXmlNode *node;
+	if(NULL == a_node)
+		return;
 
 	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Component");
 	node->AddAttribute("Ref", a_comp.designator);
@@ -460,6 +562,8 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 {
 	wxString str;
 	wxXmlNode *node;
+	if(NULL == a_node)
+		return;
 
 	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducial");
 	str = wxString::Format("%d", a_node->elemets_count + 1);

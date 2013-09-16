@@ -18,6 +18,7 @@ struct t_component_descr {
 	double		cad_location_y;/**< координата реферной точки компонента в PCAD/Altium */
 	double		cad_angle;/**< угол поворота компонента в PCAD/Altium */
 ///рассчитанные значения
+	wxString	strip_value;/**< Номинал компонента, или его название после удаления маркера DNP*/
 	wxString	pattern;/**< Имя посадочного места в базе конвертора */
 	wxString	pnp_name;/**< Имя компонента в PP-050/DD-500 */
 	wxString	pnp_package;/**< Имя корпуса в PP-050 */
@@ -36,10 +37,13 @@ struct t_component_type_descr {
 	wxString	name;/**< Идентификатор, расчитанный на базе имён и номинала в PCAD/Altium */
 	wxString	pattern;/**< Имя посадочного места в базе конвертора */
 	wxString	pnp_name;/**< Имя компонента в PP-050/DD-500 */
+	double		value;/**< Номинальное значение для резисторов/еондёров/etc. */
+	wxString	unit;/**< Размерность номинального значения */
+	wxString	value_postfix;/**< Утточнение номинала (например вольтаж кондёра) */
 	size_t		comp_count;/**< Количество компонентов этого типа на плате */
 	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
 	bool		is_new;/**< Был ли этот компонент в базе конвертора */
-        t_component_type_descr() : comp_count(1), enabled(true), is_new(true) {}
+        t_component_type_descr() : value(0), comp_count(1), enabled(true), is_new(true) {}
 };
 
 struct t_pattern_descr {
