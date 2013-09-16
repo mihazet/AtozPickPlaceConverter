@@ -8,6 +8,7 @@
  **************************************************************/
 
 #include "PnP_convMain.h"
+#include "comp_type_table.h"
 #include "pattern_table.h"
 
 #include <wx/msgdlg.h>
@@ -66,7 +67,7 @@ const long PnP_convFrame::ID_TEXTCTRL1 = wxNewId();
 const long PnP_convFrame::ID_PROP = wxNewId();
 const long PnP_convFrame::ID_COMP_TABLE = wxNewId();
 const long PnP_convFrame::ID_PANEL4 = wxNewId();
-const long PnP_convFrame::ID_COMP_TYPE_TABLE = wxNewId();
+const long PnP_convFrame::ID_GRID_COMP_TYPE = wxNewId();
 const long PnP_convFrame::ID_PANEL1 = wxNewId();
 const long PnP_convFrame::ID_GRID_PATTERN = wxNewId();
 const long PnP_convFrame::ID_PANEL2 = wxNewId();
@@ -115,8 +116,8 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
     BoxSizer3->SetSizeHints(Panel4);
     Panel1 = new wxPanel(auiMainNotebook, ID_PANEL1, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL1"));
     BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
-    m_comp_type_table = new cCompTypeTable(&m_component_types_list, Panel1,ID_COMP_TYPE_TABLE,wxDefaultPosition,wxDefaultSize);
-    BoxSizer1->Add(m_comp_type_table, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    m_grd_comp_type = new wxGrid(Panel1, ID_GRID_COMP_TYPE, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID_COMP_TYPE"));
+    BoxSizer1->Add(m_grd_comp_type, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Panel1->SetSizer(BoxSizer1);
     BoxSizer1->Fit(Panel1);
     BoxSizer1->SetSizeHints(Panel1);
@@ -170,6 +171,8 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	m_cfg_patterns_altium =		new wxFileConfig("PnP_conv", "Antrax", "patterns_altium",	wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 	m_cfg_projects =		new wxFileConfig("PnP_conv", "Antrax", "projects",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 
+	m_component_types_table = new cCompTypeTable(&m_component_types_list);
+	m_grd_comp_type->SetTable(m_component_types_table, false);
 	m_pattern_table = new cPatternTable(&m_patterns_list);
 	m_grd_pattern->SetTable(m_pattern_table, false);
 }
@@ -232,6 +235,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 #warning TODO (alatar#1#): Сделать диалог для выбора типа входного файла, пока только P-CAD
 	cfg_components = m_cfg_components_pcad;
 	cfg_patterns = m_cfg_patterns_pcad;
+	m_component_types_table->SetCompTypesConfig(m_cfg_components_pcad);
 	m_pattern_table->SetPatternsConfig(m_cfg_patterns_pcad);
 
 	wxTextFile file(dlg_open.GetPath());
@@ -585,10 +589,14 @@ wxLogMessage(_T("Saved to %s"), dlg_save.GetPath());
 void PnP_convFrame::ReInitLists()
 {
 	m_comp_table->ReInit();
-	m_comp_type_table->ReInit();
 
-	wxGridTableMessage clr(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_pattern->GetNumberRows());
-	m_grd_pattern->ProcessTableMessage(clr);
-	wxGridTableMessage add(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_patterns_list.GetCount());
-	m_grd_pattern->ProcessTableMessage(add);
+	wxGridTableMessage clr1(m_grd_comp_type->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_comp_type->GetNumberRows());
+	m_grd_comp_type->ProcessTableMessage(clr1);
+	wxGridTableMessage add1(m_grd_comp_type->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_component_types_list.GetCount());
+	m_grd_comp_type->ProcessTableMessage(add1);
+
+	wxGridTableMessage clr2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_pattern->GetNumberRows());
+	m_grd_pattern->ProcessTableMessage(clr2);
+	wxGridTableMessage add2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_patterns_list.GetCount());
+	m_grd_pattern->ProcessTableMessage(add2);
 }

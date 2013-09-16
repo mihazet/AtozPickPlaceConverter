@@ -1,11 +1,6 @@
 #include "pattern_table.h"
 #include <wx/fileconf.h>
 
-//enum {
-//	ID_TIMER,
-//	ID_MENU_AUTOSCROLL,
-//	ID_MENU_AUTOUPDATE
-//};
 
 enum ePatternTable {
 	COL_PATTERN = 0,
@@ -128,7 +123,6 @@ wxString cPatternTable::GetColLabelValue( int a_col )
 // ----------------------------------------------------------------------------
 // Текст в ячейках
 // ----------------------------------------------------------------------------
-//wxString cPatternTable::OnGetItemText(long item, long column) const
 wxString cPatternTable::GetValue(int a_row, int a_col)
 {
 	if((NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
@@ -168,6 +162,7 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 	}
 	return result;
 }
+
 void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
 {
 	double tmp_double;
@@ -211,56 +206,3 @@ void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
 			break;
 	}
 }
-
-//// ----------------------------------------------------------------------------
-//// Атрибуты строки
-//// ----------------------------------------------------------------------------
-//wxListItemAttr *cPatternTable::OnGetItemAttr(long item) const
-//{
-//	return NULL;
-//}
-//
-//// ----------------------------------------------------------------------------
-//// Картинки в строках
-//// ----------------------------------------------------------------------------
-//int cPatternTable::OnGetItemImage(long item) const
-//{
-//	return -1;
-//}
-//// ----------------------------------------------------------------------------
-//
-//int cPatternTable::OnGetItemColumnImage(long item, long column) const
-//{
-//	return -1;
-//}
-//// ----------------------------------------------------------------------------
-//
-//void cPatternTable::ReInit()
-//{
-//	if (m_pattern_data)
-//	{
-//		SetItemCount(m_pattern_data->GetCount());
-//		Refresh();
-////		if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
-////			EnsureVisible(GetItemCount() - 1);
-//	}
-//}
-// ----------------------------------------------------------------------------
-//void cPatternTable::OnContextMenu(wxContextMenuEvent& event)
-//{
-//	PopupMenu(m_PopupMenu);
-//	return;
-//}
-//void cPatternTable::OnAutoUpdate(wxCommandEvent& event)
-//{
-//	if(event.IsChecked())
-//		m_Timer->Start(AUTOUPDATE_INTERVAL);
-//	else
-//		m_Timer->Stop();
-//}
-//void cPatternTable::OnTimer(wxTimerEvent& event)
-//{
-//	if((size_t)GetItemCount() != m_events_data->GetCount())
-//		ReInit();
-//}
-//

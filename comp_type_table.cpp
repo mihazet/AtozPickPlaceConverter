@@ -1,20 +1,10 @@
 #include "comp_type_table.h"
+#include <wx/fileconf.h>
+
+
 
 enum {
-	ID_TIMER,
-	ID_MENU_AUTOSCROLL,
-	ID_MENU_AUTOUPDATE
-};
-
-BEGIN_EVENT_TABLE(cCompTypeTable, wxListCtrl)
-//	EVT_CONTEXT_MENU(cCompTypeTable::OnContextMenu)
-//	EVT_MENU(ID_MENU_AUTOUPDATE, cCompTypeTable::OnAutoUpdate)
-//	EVT_TIMER(ID_TIMER, cCompTypeTable::OnTimer)
-END_EVENT_TABLE()
-
-enum {
-	COL_NUM = 0,
-	COL_NAME,
+	COL_NAME = 0,
 	COL_PATTERN,
 	COL_PNP_NAME,
 	COL_COMP_COUNT,
@@ -23,114 +13,142 @@ enum {
 	COL_COUNT
 };
 
-cCompTypeTable::cCompTypeTable(tComponentTypeDescr *a_data, wxWindow *parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style, const wxValidator &validator, const wxString &name)
-	: wxListCtrl(parent, winid, pos, size, style | wxLC_VIRTUAL, validator, name)
+cCompTypeTable::cCompTypeTable(tComponentTypeDescr *a_data)
+	: wxGridTableBase()
 {
 	m_comp_type_data = a_data;
-//	m_Timer = new wxTimer(this, ID_TIMER);
-//	m_Timer->Start(AUTOUPDATE_INTERVAL);
+	m_config = NULL;
 
-	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
-	InsertColumn(COL_NAME,		_T("Name"),	wxLIST_FORMAT_LEFT, 120);
-	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_PNP_NAME,	_T("PNP Name"),	wxLIST_FORMAT_LEFT, 110);
-	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
-	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
-	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
+	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
+	SetAttrProvider (attrProvider);
 
-	ReInit();
+	wxGridCellAttr *ro_attr = new wxGridCellAttr();
+	ro_attr->SetReadOnly();
+	SetColAttr (ro_attr, COL_NAME);
+	SetColAttr (ro_attr, COL_IS_NEW);
 
+	wxGridCellAttr *ro_num_attr = new wxGridCellAttr();
+	wxGridCellNumberRenderer *num_rend = new wxGridCellNumberRenderer();
+	ro_num_attr->SetRenderer(num_rend);
+	ro_num_attr->SetReadOnly();
+	SetColAttr (ro_num_attr, COL_COMP_COUNT);
+
+	wxGridCellAttr *bool_attr = new wxGridCellAttr();
+	wxGridCellBoolRenderer *bool_rend = new wxGridCellBoolRenderer();
+	bool_attr->SetRenderer(bool_rend);
+	wxGridCellBoolEditor *bool_edit = new wxGridCellBoolEditor();
+	bool_edit->UseStringValues("1", "0");
+	bool_attr->SetEditor(bool_edit);
+	SetColAttr (bool_attr, COL_ENABLED);
+
+//	InsertColumn(COL_NAME,		_T("Name"),	wxLIST_FORMAT_LEFT, 120);
+//	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
+//	InsertColumn(COL_PNP_NAME,	_T("PNP Name"),	wxLIST_FORMAT_LEFT, 110);
+//	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
+//	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
+//	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
 }
 
 cCompTypeTable::~cCompTypeTable()
 {
-//	m_Timer->Stop();
-//	delete m_Timer;
-//	delete m_PopupMenu;
 }
 
+int cCompTypeTable::GetNumberRows()
+{
+	if(NULL == m_comp_type_data)
+		return 0;
+	return m_comp_type_data->GetCount();
+}
+int cCompTypeTable::GetNumberCols()
+{
+	return COL_COUNT;
+}
+
+wxString cCompTypeTable::GetColLabelValue( int a_col )
+{
+	wxString result = wxEmptyString;
+	switch (a_col)
+	{
+		case COL_NAME:
+			result = _T("Name");
+			break;
+		case COL_PATTERN:
+			result = _T("Patt Name");
+			break;
+		case COL_PNP_NAME:
+			result = _T("Name in PnP");
+			break;
+		case COL_COMP_COUNT:
+			result = _T("Count");
+			break;
+		case COL_ENABLED:
+			result = _T("To OUT");
+			break;
+		case COL_IS_NEW:
+			result = _T("New");
+			break;
+	}
+	return result;
+}
 
 // ----------------------------------------------------------------------------
 // Текст в ячейках
 // ----------------------------------------------------------------------------
-wxString cCompTypeTable::OnGetItemText(long item, long column) const
+wxString cCompTypeTable::GetValue(int a_row, int a_col)
 {
-	if (m_comp_type_data)
-	{
-		t_component_type_descr *data = m_comp_type_data->Item(item);
-		switch (column)
-		{
-			case COL_NUM:
-				return wxString::Format("%ld", item+1);
-			case COL_NAME:
-				return data->name;
-			case COL_PATTERN:
-				return data->pattern;
-			case COL_PNP_NAME:
-				return data->pnp_name;
-			case COL_COMP_COUNT:
-				return wxString::Format("%zu", data->comp_count);;
-			case COL_ENABLED:
-				return wxString::Format("%d", data->enabled);;
-			case COL_IS_NEW:
-				return wxString::Format("%d", data->is_new);;
-			default:
-				return wxEmptyString;
-		}
-	} else {
+	if((NULL == m_comp_type_data) || (a_row >= (int)m_comp_type_data->GetCount()))
 		return wxEmptyString;
-	}
-}
 
-// ----------------------------------------------------------------------------
-// Атрибуты строки
-// ----------------------------------------------------------------------------
-wxListItemAttr *cCompTypeTable::OnGetItemAttr(long item) const
-{
-	return NULL;
-}
-
-// ----------------------------------------------------------------------------
-// Картинки в строках
-// ----------------------------------------------------------------------------
-int cCompTypeTable::OnGetItemImage(long item) const
-{
-	return -1;
-}
-// ----------------------------------------------------------------------------
-
-int cCompTypeTable::OnGetItemColumnImage(long item, long column) const
-{
-	return -1;
-}
-// ----------------------------------------------------------------------------
-
-void cCompTypeTable::ReInit()
-{
-	if (m_comp_type_data)
+	wxString result = wxEmptyString;
+	t_component_type_descr *data = m_comp_type_data->Item(a_row);
+	switch (a_col)
 	{
-		SetItemCount(m_comp_type_data->GetCount());
-		Refresh();
-//		if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
-//			EnsureVisible(GetItemCount() - 1);
+		case COL_NAME:
+			result = data->name;
+			break;
+		case COL_PATTERN:
+			result = data->pattern;
+			break;
+		case COL_PNP_NAME:
+			result = data->pnp_name;
+			break;
+		case COL_COMP_COUNT:
+			result = wxString::Format("%zu", data->comp_count);
+			break;
+		case COL_ENABLED:
+			result = wxString::Format("%d", data->enabled);
+			break;
+		case COL_IS_NEW:
+			result = wxString::Format("%d", data->is_new);
+			break;
+	}
+	return result;
+}
+
+void cCompTypeTable::SetValue(int a_row, int a_col, const wxString& a_value)
+{
+	long tmp_long;
+	if((NULL == m_config) || (NULL == m_comp_type_data) || (a_row >= (int)m_comp_type_data->GetCount()))
+		return;
+	if(a_value.IsEmpty())
+		return;
+
+	t_component_type_descr *data = m_comp_type_data->Item(a_row);
+	wxConfigPathChanger cfg_cd_to(m_config, "/"+data->name+"/");
+	switch(a_col)
+	{
+		case COL_PATTERN:
+			data->pattern = a_value;
+			m_config->Write("pattern", a_value);
+			break;
+		case COL_PNP_NAME:
+			data->pnp_name = a_value;
+			m_config->Write("pnp_name", a_value);
+			break;
+		case COL_ENABLED:
+			a_value.ToLong(&tmp_long);
+			data->enabled = tmp_long;
+			m_config->Write("enabled", a_value);
+			break;
 	}
 }
-// ----------------------------------------------------------------------------
-//void cCompTypeTable::OnContextMenu(wxContextMenuEvent& event)
-//{
-//	PopupMenu(m_PopupMenu);
-//	return;
-//}
-//void cCompTypeTable::OnAutoUpdate(wxCommandEvent& event)
-//{
-//	if(event.IsChecked())
-//		m_Timer->Start(AUTOUPDATE_INTERVAL);
-//	else
-//		m_Timer->Stop();
-//}
-//void cCompTypeTable::OnTimer(wxTimerEvent& event)
-//{
-//	if((size_t)GetItemCount() != m_events_data->GetCount())
-//		ReInit();
-//}
-//

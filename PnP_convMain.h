@@ -17,7 +17,6 @@
 #include <wx/menu.h>
 #include <wx/panel.h>
 #include <wx/statusbr.h>
-#include "comp_type_table.h"
 #include <wx/frame.h>
 #include <wx/aui/aui.h>
 #include <wx/textctrl.h>
@@ -27,6 +26,7 @@
 #include "common.h"
 class wxXmlNode;
 class wxFileConfig;
+class cCompTypeTable;
 class cPatternTable;
 
 class PnP_convFrame: public wxFrame
@@ -47,6 +47,7 @@ class PnP_convFrame: public wxFrame
 	tComponentDescr		m_components_list;
 	tComponentTypeDescr	m_component_types_list;
 	tPatternDescr		m_patterns_list;
+	cCompTypeTable		*m_component_types_table;
 	cPatternTable		*m_pattern_table;
 
 	wxString RemoveQuotes(const wxString a_str);
@@ -75,7 +76,7 @@ class PnP_convFrame: public wxFrame
         static const long ID_PROP;
         static const long ID_COMP_TABLE;
         static const long ID_PANEL4;
-        static const long ID_COMP_TYPE_TABLE;
+        static const long ID_GRID_COMP_TYPE;
         static const long ID_PANEL1;
         static const long ID_GRID_PATTERN;
         static const long ID_PANEL2;
@@ -96,8 +97,8 @@ class PnP_convFrame: public wxFrame
         wxPanel* Panel2;
         wxTextCtrl* m_txtLog;
         wxPanel* Panel4;
+        wxGrid* m_grd_comp_type;
         wxAuiNotebook* auiMainNotebook;
-        cCompTypeTable* m_comp_type_table;
         cCompTable* m_comp_table;
         //*)
 
