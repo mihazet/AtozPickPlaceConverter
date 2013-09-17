@@ -36,7 +36,6 @@ class PnP_convFrame: public wxFrame
 	virtual ~PnP_convFrame();
 
     private:
-	wxString		m_filename;
 	wxFileConfig		*m_cfg_settings;
 	wxFileConfig		*m_cfg_components_pcad;
 	wxFileConfig		*m_cfg_components_altium;
@@ -44,6 +43,7 @@ class PnP_convFrame: public wxFrame
 	wxFileConfig		*m_cfg_patterns_altium;
 	wxFileConfig		*m_cfg_projects;
 
+	t_board_descr		m_project;
 	tComponentDescr		m_components_list;
 	tComponentTypeDescr	m_component_types_list;
 	tPatternDescr		m_patterns_list;
@@ -58,6 +58,7 @@ class PnP_convFrame: public wxFrame
 	void UpdateComponents();
 	void UpdateComponent(t_component_descr *a_component);
 	void ReInitLists();
+	void SaveProjectInfo();
 
 
         //(*Handlers(PnP_convFrame)

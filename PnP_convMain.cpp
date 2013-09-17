@@ -26,6 +26,7 @@
 
 #include <wx/arrimpl.cpp> // This is a magic incantation which must be done!
 WX_DEFINE_OBJARRAY(tComponentDescr);
+WX_DEFINE_OBJARRAY(tSubPcbs);
 //WX_DEFINE_OBJARRAY(tComponentTypeDescr);
 //WX_DEFINE_OBJARRAY(tPatternDescr);
 
@@ -241,14 +242,69 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	m_pattern_table->SetPatternsConfig(m_cfg_patterns_pcad);
 
 	wxTextFile file(dlg_open.GetPath());
-	m_filename = dlg_open.GetPath();
 
 	if(!file.Open())
+	{
+		wxLogError(_T("File can`t be opened!"));
 		return;
-//wxLogMessage(_T("File opened"));
+	}
 	m_components_list.Clear();
 	WX_CLEAR_ARRAY(m_component_types_list);	m_component_types_list.Clear();
 	WX_CLEAR_ARRAY(m_patterns_list);	m_patterns_list.Clear();
+
+	m_project.filename = dlg_open.GetFilename();
+	m_project.fullfilename = dlg_open.GetPath();
+	m_project.pcbs.Clear();
+//				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
+//				component_type->pattern = cfg_components->Read("pattern", component_type->pattern);
+//				component_type->pnp_name = cfg_components->Read("pnp_name", component_type->pnp_name);
+//				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
+//				component_type->value = cfg_components->ReadDouble("value", component_type->value);
+//				component_type->unit = cfg_components->Read("unit", component_type->unit);
+	{
+		wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
+		m_project.project_name = m_cfg_projects->Read("project_name", m_project.filename.BeforeLast('.'));
+		m_project.height = m_cfg_projects->Read("pcb_height", m_project.height);
+		long subpcbs = m_cfg_projects->ReadLong("subpcb_count", -1);
+		if(subpcbs > 0)
+		{
+			wxString subpcb_name;
+			long dummy;
+			wxConfigPathChanger cfg_cd_to_sub_pcb(m_cfg_projects, "subpcb/");
+			for (bool have_group = m_cfg_projects->GetFirstGroup(subpcb_name, dummy);
+				have_group;
+				m_cfg_projects->GetNextGroup(subpcb_name, dummy)
+			)
+			{
+				t_subpcb_descr new_subpcb;
+				new_subpcb.subpcb_name = subpcb_name;
+				new_subpcb.size_x   = m_cfg_projects->ReadDouble(subpcb_name+"/size_x", 100);
+				new_subpcb.size_y   = m_cfg_projects->ReadDouble(subpcb_name+"/size_y", 100);
+				new_subpcb.offset_x = m_cfg_projects->ReadDouble(subpcb_name+"/offset_x", 0);
+				new_subpcb.offset_y = m_cfg_projects->ReadDouble(subpcb_name+"/offset_y", 0);
+				new_subpcb.ref_point1_x = new_subpcb.offset_x;
+				new_subpcb.ref_point1_y = new_subpcb.offset_y;
+				new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
+				new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+				m_project.pcbs.Add(new_subpcb);
+			}
+		} else {
+			t_subpcb_descr new_subpcb;
+			new_subpcb.subpcb_name = "default";
+			new_subpcb.size_x = 100;
+			new_subpcb.size_y = 100;
+			new_subpcb.offset_x = 0;
+			new_subpcb.offset_y = 0;
+			new_subpcb.ref_point1_x = new_subpcb.offset_x;
+			new_subpcb.ref_point1_y = new_subpcb.offset_y;
+			new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
+			new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+			m_project.pcbs.Add(new_subpcb);
+			SaveProjectInfo();
+		}
+	}
+
+
 	for(str = file.GetFirstLine(); !file.Eof(); str = file.GetNextLine())
 	{
 		t_component_descr component;
@@ -649,7 +705,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 		height = 1600;
 	wxString size_str = wxString::Format("%ld,%ld,%ld", size_x, size_y, height);
 	wxFileDialog dlg_save(this, "Enter target filename",
-			wxEmptyString, m_filename.BeforeLast('.') + ".prod",
+			wxEmptyString, m_project.fullfilename.BeforeLast('.') + ".prod",
 			"PP-050 files (*.prod)|*.prod|DD-500 files (*.pcb)|*.pcb", wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
 
 //	dlg_save.SetWindowStyleFlag(wxFD_SAVE);
@@ -766,4 +822,20 @@ void PnP_convFrame::ReInitLists()
 	m_grd_pattern->ProcessTableMessage(clr2);
 	wxGridTableMessage add2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_patterns_list.GetCount());
 	m_grd_pattern->ProcessTableMessage(add2);
+}
+
+void PnP_convFrame::SaveProjectInfo()
+{
+	long subpcbs = m_project.pcbs.GetCount();
+	wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
+	m_cfg_projects->Write("project_name", m_project.project_name);
+	m_cfg_projects->Write("pcb_height", m_project.height);
+	m_cfg_projects->Write("subpcb_count", subpcbs);
+	for (long index = 0; index < subpcbs; index++)
+	{
+		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/size_x", m_project.pcbs[index].size_x);
+		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/size_y", m_project.pcbs[index].size_y);
+		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_x", m_project.pcbs[index].offset_x);
+		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_y", m_project.pcbs[index].offset_y);
+	}
 }
