@@ -273,7 +273,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 			wxConfigPathChanger cfg_cd_to_sub_pcb(m_cfg_projects, "subpcb/");
 			for (bool have_group = m_cfg_projects->GetFirstGroup(subpcb_name, dummy);
 				have_group;
-				m_cfg_projects->GetNextGroup(subpcb_name, dummy)
+				have_group = m_cfg_projects->GetNextGroup(subpcb_name, dummy)
 			)
 			{
 				t_subpcb_descr new_subpcb;
@@ -302,6 +302,8 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 			m_project.pcbs.Add(new_subpcb);
 			SaveProjectInfo();
 		}
+//load to GUI
+//		m_pgProps->Append( new wxStringProperty("Project", wxPG_LABEL, m_project.project_name) );
 	}
 
 
