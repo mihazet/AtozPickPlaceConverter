@@ -89,7 +89,7 @@ struct t_board_descr {
 	wxString	filename;    /**< Имя файла, экспортированноего из CAD */
 	wxString	fullfilename;/**< Имя файла, экспортированноего из CAD */
 	double		height;  /**< толщина платы */
-	double		angle;  /**< Угол, под которым плата загружентся в машину */
+	int		angle;  /**< Угол, под которым плата загружентся в машину (0=0, 1=90, 2=180, 3=270) */
 	tSubPcbs	pcbs; /**< Габариты плат на листе */
 	t_board_descr() : height(1.6), angle(0) {}
 };

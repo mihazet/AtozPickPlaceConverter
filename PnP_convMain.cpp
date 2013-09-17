@@ -650,11 +650,6 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 
 void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 {
-
-	long	size_x = 295800,
-		size_y = 81700,
-		height = 1600;
-	wxString size_str = wxString::Format("%ld,%ld,%ld", size_x, size_y, height);
 	wxFileDialog dlg_save(this, "Enter target filename",
 			wxEmptyString, m_project.fullfilename.BeforeLast('.') + ".prod",
 			"PP-050 files (*.prod)|*.prod|DD-500 files (*.pcb)|*.pcb", wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
@@ -664,6 +659,23 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 //	dlg_save.SetFilename);
 	if(dlg_save.ShowModal() != wxID_OK)
 		return;
+
+	long	full_size_x,
+		full_size_y,
+		height = (int)(m_project.height*1000);
+
+	long subpcbs = m_project.pcbs.GetCount();
+	double x1_min = INFINITY, y1_min = INFINITY, x2_max = -INFINITY, y2_max = -INFINITY;
+	for (long index = 0; index < subpcbs; index++)
+	{
+		if(m_project.pcbs[index].ref_point1_x < x1_min) x1_min = m_project.pcbs[index].ref_point1_x;
+		if(m_project.pcbs[index].ref_point1_y < y1_min) y1_min = m_project.pcbs[index].ref_point1_y;
+		if(m_project.pcbs[index].ref_point2_x > x2_max) x2_max = m_project.pcbs[index].ref_point2_x;
+		if(m_project.pcbs[index].ref_point2_y > y2_max) y2_max = m_project.pcbs[index].ref_point2_y;
+	}
+	full_size_x = (int)((x2_max - x1_min)*1000);
+	full_size_y = (int)((y2_max - y1_min)*1000);
+	wxString full_size_str = wxString::Format("%ld,%ld,%ld", full_size_x, full_size_y, height);
 
 	wxXmlDocument doc; //все ноды рекурсивно удаляются в деструкторе документа
 	wxXmlNode *root_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Data");
@@ -686,18 +698,20 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Product"); last_child_node = NULL;
 
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "General");
-	tmp_node->AddAttribute("Size", size_str);
+	tmp_node->AddAttribute("Size", full_size_str);
 	tmp_node->AddAttribute("ActiveSide", "Top");
-	tmp_node->AddAttribute("PcbType", "Single");
+	tmp_node->AddAttribute("PcbType", subpcbs>1?"Multiple":"Single");
 	tmp_node->AddAttribute("AutoSideDetect", "no");
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
 
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "TopSide");
 	tmp_node->AddAttribute("Barcode", "");
-	new wxXmlNode(tmp_node, wxXML_ELEMENT_NODE, "Orientations");
+	wxXmlNode *prod_orientation_node = new wxXmlNode(tmp_node, wxXML_ELEMENT_NODE, "Orientations");
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
+	wxXmlNode *pp050_orientation = new wxXmlNode(prod_orientation_node, wxXML_ELEMENT_NODE, "Orientations");
+	pp050_orientation->AddAttribute("ProductOrientation", wxString::Format("%d", m_project.angle));
 
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "BottomSide");
 	tmp_node->AddAttribute("Barcode", "");
@@ -708,17 +722,21 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panels");
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
-	tmp_node = new wxXmlNode(tmp_node, wxXML_ELEMENT_NODE, "Panel");
-	tmp_node->AddAttribute("Ref", "1");
-	tmp_node->AddAttribute("Template", "default");
-	tmp_node->AddAttribute("Position", "0,0");
-	tmp_node->AddAttribute("Angle", "0");
+	for (long index = 0; index < subpcbs; index++)
+	{
+		wxXmlNode *panel_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panel");
+		panel_node->AddAttribute("Ref", wxString::Format("%d", index+1));
+		panel_node->AddAttribute("Template", m_project.pcbs[index].subpcb_name);
+		panel_node->AddAttribute("Position", wxString::Format("%d,%d", (int)(m_project.pcbs[index].offset_x*1000), (int)(m_project.pcbs[index].offset_y*1000)));
+		panel_node->AddAttribute("Angle", "0"); //относительный поворот пока не используется
+		tmp_node->AddChild(panel_node);
+	}
 
 //Список компонентов
 	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Templates");
 	node = new wxXmlNode(node, wxXML_ELEMENT_NODE, "Template");
 	node->AddAttribute("Name", "default");
-	node->AddAttribute("Size", size_str);
+	node->AddAttribute("Size", full_size_str);
 //	node->AddAttribute("OriginOffset", "0,0");
 
 	size_t comp_count = m_components_list.Count();
