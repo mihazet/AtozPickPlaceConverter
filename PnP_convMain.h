@@ -58,6 +58,7 @@ class PnP_convFrame: public wxFrame
 	void UpdateComponents();
 	void UpdateComponent(t_component_descr *a_component);
 	void ReInitLists();
+	void RedrawProjectInfo();
 	void SaveProjectInfo();
 
 
@@ -73,6 +74,7 @@ class PnP_convFrame: public wxFrame
         void On_mnuOpenSelected(wxCommandEvent& event);
         void On_mnuSaveProdSelected(wxCommandEvent& event);
         //*)
+	void OnPropertyGridChanged(wxPropertyGridEvent& a_event);
 
         //(*Identifiers(PnP_convFrame)
         static const long ID_TEXTCTRL1;

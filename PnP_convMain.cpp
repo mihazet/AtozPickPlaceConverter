@@ -85,6 +85,7 @@ const long PnP_convFrame::ID_STATUSBAR1 = wxNewId();
 BEGIN_EVENT_TABLE(PnP_convFrame,wxFrame)
     //(*EventTable(PnP_convFrame)
     //*)
+    EVT_PG_CHANGED(ID_PROP, PnP_convFrame::OnPropertyGridChanged)
 END_EVENT_TABLE()
 
 PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
@@ -303,7 +304,8 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 			SaveProjectInfo();
 		}
 //load to GUI
-//		m_pgProps->Append( new wxStringProperty("Project", wxPG_LABEL, m_project.project_name) );
+		RedrawProjectInfo();
+		m_pgProps->SetSplitterLeft();
 	}
 
 
@@ -839,5 +841,90 @@ void PnP_convFrame::SaveProjectInfo()
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/size_y", m_project.pcbs[index].size_y);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_x", m_project.pcbs[index].offset_x);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_y", m_project.pcbs[index].offset_y);
+	}
+}
+
+void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
+{
+	wxPGProperty* property = a_event.GetProperty();
+	// Do nothing if event did not have associated property
+	if ( !property )
+		return;
+	wxAny value = property->GetValue();
+	if ( value.IsNull() )
+	{
+		wxMessageBox("Value is NULL!", "Warning");
+		return;
+	}
+	// Handle changes in values, as needed
+	if ( property->GetName() == "Project" )
+	{
+		m_project.project_name = value.As<wxString>();
+	} else if ( property->GetName() == "Height" ) {
+		m_project.height = value.As<double>();
+	} else {
+		wxPGProperty* category = property->GetParent();
+		if(NULL == category)
+			return;
+		wxString subpcb_name = category->GetPropertyByName("SubPcb name")->GetValue().GetString();
+		wxString subpcb_index_str = category->GetName().AfterLast(' ');
+		long subpcb_index;
+		subpcb_index_str.ToLong(&subpcb_index);
+		t_subpcb_descr &subpcb = m_project.pcbs[subpcb_index];
+		if(property->GetName() == "SubPcb name")
+		{
+			subpcb.subpcb_name = value.As<wxString>();
+		} else if((property->GetName() == "size_x")||(property->GetName() == "size_y")||(property->GetName() == "offset_x")||(property->GetName() == "offset_y")) {
+			subpcb.size_x   = category->GetPropertyByName("size_x")->GetValue().GetDouble();
+			subpcb.size_y   = category->GetPropertyByName("size_y")->GetValue().GetDouble();
+			subpcb.offset_x = category->GetPropertyByName("offset_x")->GetValue().GetDouble();
+			subpcb.offset_y = category->GetPropertyByName("offset_y")->GetValue().GetDouble();
+			subpcb.ref_point1_x = subpcb.offset_x;
+			subpcb.ref_point1_y = subpcb.offset_y;
+			subpcb.ref_point2_x = subpcb.offset_x + subpcb.size_x;
+			subpcb.ref_point2_y = subpcb.offset_y + subpcb.size_y;
+		} else {
+			subpcb.ref_point1_x = category->GetPropertyByName("ref_point1_x")->GetValue().GetDouble();
+			subpcb.ref_point1_y = category->GetPropertyByName("ref_point1_y")->GetValue().GetDouble();
+			subpcb.ref_point2_x = category->GetPropertyByName("ref_point2_x")->GetValue().GetDouble();
+			subpcb.ref_point2_y = category->GetPropertyByName("ref_point2_y")->GetValue().GetDouble();
+			if((subpcb.ref_point2_x < subpcb.ref_point1_x)||(subpcb.ref_point2_y < subpcb.ref_point1_y))
+			{
+				wxMessageBox("Point 1 must be left-bottom and point 2 - right-top!", "Incorrect input");
+				subpcb.ref_point1_x = subpcb.offset_x;
+				subpcb.ref_point1_y = subpcb.offset_y;
+				subpcb.ref_point2_x = subpcb.offset_x + subpcb.size_x;
+				subpcb.ref_point2_y = subpcb.offset_y + subpcb.size_y;
+				RedrawProjectInfo();
+				return;
+			}
+			subpcb.size_x = subpcb.ref_point2_x - subpcb.ref_point1_x;
+			subpcb.size_y = subpcb.ref_point2_y - subpcb.ref_point1_y;
+			subpcb.offset_x = subpcb.ref_point1_x;
+			subpcb.offset_y = subpcb.ref_point1_y;
+		}
+	}
+	SaveProjectInfo();
+	RedrawProjectInfo();
+}
+void PnP_convFrame::RedrawProjectInfo()
+{
+	m_pgProps->Clear();
+	m_pgProps->Append( new wxStringProperty("Project", wxPG_LABEL, m_project.project_name) );
+	m_pgProps->Append( new wxStringProperty("Filename", wxPG_LABEL, m_project.filename) ); m_pgProps->SetPropertyReadOnly("Filename");
+	m_pgProps->Append( new wxFloatProperty("Height", wxPG_LABEL, m_project.height) );
+	long subpcbs = m_project.pcbs.GetCount();
+	for (long index = 0; index < subpcbs; index++)
+	{
+		m_pgProps->Append( new wxPropertyCategory(wxString::Format("SubPcb %ld", index)) );
+		m_pgProps->Append( new wxStringProperty("SubPcb name", wxPG_LABEL, m_project.pcbs[index].subpcb_name) );
+		m_pgProps->Append( new wxFloatProperty("size_x", wxPG_LABEL, m_project.pcbs[index].size_x) );
+		m_pgProps->Append( new wxFloatProperty("size_y", wxPG_LABEL, m_project.pcbs[index].size_y) );
+		m_pgProps->Append( new wxFloatProperty("offset_x", wxPG_LABEL, m_project.pcbs[index].offset_x) );
+		m_pgProps->Append( new wxFloatProperty("offset_y", wxPG_LABEL, m_project.pcbs[index].offset_y) );
+		m_pgProps->Append( new wxFloatProperty("ref_point1_x", wxPG_LABEL, m_project.pcbs[index].ref_point1_x) );
+		m_pgProps->Append( new wxFloatProperty("ref_point1_y", wxPG_LABEL, m_project.pcbs[index].ref_point1_y) );
+		m_pgProps->Append( new wxFloatProperty("ref_point2_x", wxPG_LABEL, m_project.pcbs[index].ref_point2_x) );
+		m_pgProps->Append( new wxFloatProperty("ref_point2_y", wxPG_LABEL, m_project.pcbs[index].ref_point2_y) );
 	}
 }
