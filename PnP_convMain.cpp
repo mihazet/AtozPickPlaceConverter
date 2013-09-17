@@ -17,6 +17,7 @@
 #include <wx/log.h>
 #include <wx/xml/xml.h>
 #include <wx/regex.h>
+#include <wx/numformatter.h>
 
 //(*InternalHeaders(PnP_convFrame)
 #include <wx/string.h>
@@ -287,7 +288,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 			component.cad_angle = value;
 		else
 			component.cad_angle = 0;
-wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_name, component.cad_location_x, component.cad_location_y, component.cad_angle);
+//wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_name, component.cad_location_x, component.cad_location_y, component.cad_angle);
 
 ///Корректировка
 		component.strip_value = component.cad_value;
@@ -314,20 +315,20 @@ wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_component_types_list.Add(component_type);
+			component_type->pattern = component.cad_pattern;
+			component_type->pnp_name = component.full_name;
 			ParseNominals(component_type, component.designator, component.strip_value);
 			if(cfg_components->HasGroup(component_type->name))
 			{
 				component_type->is_new = 0;
 				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
-				component_type->pattern = cfg_components->Read("pattern", component.cad_pattern);
-				component_type->pnp_name = cfg_components->Read("pnp_name", component.full_name);
+				component_type->pattern = cfg_components->Read("pattern", component_type->pattern);
+				component_type->pnp_name = cfg_components->Read("pnp_name", component_type->pnp_name);
 				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
 				component_type->value = cfg_components->ReadDouble("value", component_type->value);
 				component_type->unit = cfg_components->Read("unit", component_type->unit);
 			} else {
 				component_type->is_new = 1;
-				component_type->pattern = component.cad_pattern;
-				component_type->pnp_name = component.full_name;
 //				component_type->enabled = component.enabled;
 				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
 				cfg_components->Write("enabled", component_type->enabled);
@@ -398,12 +399,13 @@ bool PnP_convFrame::ParseNominals(t_component_type_descr *a_component_type, wxSt
 {
 	char ch;
 	double val_part;
-	long factor = 1;
+	double factor = 1;
 	wxString val, unit;
 
 	if(NULL == a_component_type)
 		return false;
 
+	a_component_type->value_postfix = wxEmptyString;
 	ch = a_designator.Upper()[0];
 	switch(ch)
 	{
@@ -412,7 +414,7 @@ bool PnP_convFrame::ParseNominals(t_component_type_descr *a_component_type, wxSt
 		break;
 	case 'C':
 		a_component_type->unit = "F";
-		factor = 10e-3;
+		factor = 1e-6;
 		break;
 	case 'L':
 		a_component_type->unit = "H";
@@ -422,28 +424,30 @@ bool PnP_convFrame::ParseNominals(t_component_type_descr *a_component_type, wxSt
 		a_component_type->unit = wxEmptyString;
 		return true;
 	}
+wxLogMessage(_T(">> Input is %s for %s, initial PnP name %s, pattern %s"), a_value, a_designator, a_component_type->pnp_name, a_component_type->pattern);
 
-	wxRegEx re_format1("^([:digit:]+)([pnumkKMrRfFhH]{1,2})([:digit:]+)(.*)$"); //1p1F bla-bla-bla
-	wxRegEx re_format2("^([:digit:]+[.,]?[:digit:]*)([pnumkKM]?)[fFhH]?(.*)$"); //1.1pF bla-bla-bla
-
+	wxRegEx re_format1("^([[:digit:]]+)([pnumkKMrRfFhH]{1,2})([[:digit:]]+)(.*)$"); //1p1F bla-bla-bla
+	wxRegEx re_format2("^([[:digit:]]+[.,]?[[:digit:]]*)([pnumkKM]?)[fFhH]?(.*)$"); //1.1pF bla-bla-bla
 	if(re_format1.Matches(a_value))
 	{
 		wxString tmp_str = re_format1.GetMatch(a_value, 1)+"."+re_format1.GetMatch(a_value, 3)+re_format1.GetMatch(a_value, 2)+re_format1.GetMatch(a_value, 4);
 		a_value = tmp_str;
-
 	}
 	if(!re_format2.Matches(a_value))
 	{
 		a_component_type->value = -1;
-		return false;
+	return false;
 	}
-	val = re_format2.GetMatch(a_value, 1);
+	val = re_format2.GetMatch(a_value, 1); val.Replace(",", ".");
 	unit = re_format2.GetMatch(a_value, 2);
 	a_component_type->value_postfix = re_format2.GetMatch(a_value, 3);
 
-	if(!val.ToDouble(&val_part))
+//wxLogMessage(_T(">> Input is %s, Val is %s, Unit is %s, Postfix is %s"), a_value, val, unit, a_component_type->value_postfix);
+
+	if(!val.ToCDouble(&val_part))
 	{
 		a_component_type->value = -1;
+//wxLogMessage(_T("Convert fail! Val is %s, converted val is %f"), val, val_part);
 		return false;
 	}
 	a_component_type->value = val_part;
@@ -452,36 +456,95 @@ bool PnP_convFrame::ParseNominals(t_component_type_descr *a_component_type, wxSt
 	switch(ch)
 	{
 	case 'p':
-		factor = 10e-12;
+		factor = 1e-12;
 		break;
 	case 'n':
-		factor = 10e-9;
+		factor = 1e-9;
 		break;
 	case 'u':
-		factor = 10e-6;
+		factor = 1e-6;
 		break;
 	case 'm':
-		factor = 10e-3;
+		factor = 1e-3;
 		break;
 	case 'k':
 	case 'K':	//кривое название, но встречается часто
-		factor = 10e3;
+		factor = 1e3;
 		break;
 	case 'M':
-		factor = 10e6;
+		factor = 1e6;
 		break;
 	}
+//wxLogMessage(_T("Scale: Val is %f, factor is %f"), a_component_type->value, factor);
 	a_component_type->value *= factor;
 	NormalizeNominal(a_component_type);
+	a_component_type->pnp_name = a_component_type->pattern + " " + wxNumberFormatter::ToString(a_component_type->value, 8, wxNumberFormatter::Style::Style_NoTrailingZeroes)/*.Replace(",", ".")*/ + a_component_type->unit + a_component_type->value_postfix;
+wxLogMessage(_T("<< Result is %s"), a_component_type->pnp_name);
 	return true;
 }
 
 bool PnP_convFrame::NormalizeNominal(t_component_type_descr *a_component_type)
 {
-	if(NULL == a_component_type)
+	if((NULL == a_component_type) || (a_component_type->value < 0))
+	{
+//wxLogMessage(_T("PnP_convFrame::NormalizeNominal fail on input check (%p, %d)"), a_component_type, (a_component_type==NULL)?0:a_component_type->value);
 		return false;
+	}
+	if(a_component_type->value == 0)
+	{
+//wxLogMessage(_T("PnP_convFrame::NormalizeNominal Zero on input: %f - %s"), a_component_type->value, a_component_type->unit);
+		return true;
+	}
+//wxLogMessage(_T("PnP_convFrame::NormalizeNominal %f - %s"), a_component_type->value, a_component_type->unit);
 
-
+	if(a_component_type->value < 1e-9)
+	{
+		a_component_type->value /= 1e-12;
+		a_component_type->unit.Prepend("p");
+//wxLogMessage(_T("Step 1e-9 -> %f - %s"), a_component_type->value, a_component_type->unit);
+	} else if (a_component_type->value < 1e-6) {
+		if("F" == a_component_type->unit)
+		{
+			if (a_component_type->value < 1e-8)
+			{
+				a_component_type->value /= 1e-12;
+				a_component_type->unit.Prepend("p");
+			} else {
+				a_component_type->value /= 1e-6;
+				a_component_type->unit.Prepend("u");
+			}
+		} else {
+			a_component_type->value /= 1e-9;
+			a_component_type->unit.Prepend("n");
+		}
+//wxLogMessage(_T("Step 1e-6 -> %f - %s"), a_component_type->value, a_component_type->unit);
+	} else if (a_component_type->value < 1e-3) {
+		a_component_type->value /= 1e-6;
+		a_component_type->unit.Prepend("u");
+//wxLogMessage(_T("Step 1e-3 -> %f - %s"), a_component_type->value, a_component_type->unit);
+	} else if (a_component_type->value < 1) {
+		if(("F" == a_component_type->unit) && (a_component_type->value < 1e-1))
+		{
+			a_component_type->value /= 1e-6;
+			a_component_type->unit.Prepend("u");
+		} else {
+			a_component_type->value /= 1e-3;
+			a_component_type->unit.Prepend("m");
+		}
+//wxLogMessage(_T("Step 1e-0 -> %f - %s"), a_component_type->value, a_component_type->unit);
+	} else if (a_component_type->value < 1e3) {
+//		a_component_type->value /= 1e0;
+//		a_component_type->unit.Prepend("");
+//wxLogMessage(_T("Step 1e3 -> %f - %s"), a_component_type->value, a_component_type->unit);
+	} else if (a_component_type->value < 1e6) {
+		a_component_type->value /= 1e3;
+		a_component_type->unit.Prepend("k");
+//wxLogMessage(_T("Step 1e6 -> %f - %s"), a_component_type->value, a_component_type->unit);
+	} else {
+		a_component_type->value /= 1e6;
+		a_component_type->unit.Prepend("M");
+//wxLogMessage(_T("Step 1e9 -> %f - %s"), a_component_type->value, a_component_type->unit);
+	}
 	return true;
 }
 
