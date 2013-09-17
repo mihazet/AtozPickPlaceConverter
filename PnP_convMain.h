@@ -59,6 +59,7 @@ class PnP_convFrame: public wxFrame
 	void UpdateComponent(t_component_descr *a_component);
 	void ReInitLists();
 	void RedrawProjectInfo();
+	void LoadProjectInfo(wxString a_filename);
 	void SaveProjectInfo();
 
 

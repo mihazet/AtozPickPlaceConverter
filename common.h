@@ -89,8 +89,9 @@ struct t_board_descr {
 	wxString	filename;    /**< Имя файла, экспортированноего из CAD */
 	wxString	fullfilename;/**< Имя файла, экспортированноего из CAD */
 	double		height;  /**< толщина платы */
+	double		angle;  /**< Угол, под которым плата загружентся в машину */
 	tSubPcbs	pcbs; /**< Габариты плат на листе */
-	t_board_descr() : height(1.6) {}
+	t_board_descr() : height(1.6), angle(0) {}
 };
 
 int CmpCompTypeFunc(t_component_type_descr *a_arg1, t_component_type_descr *a_arg2);

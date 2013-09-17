@@ -109,7 +109,7 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
     m_txtLog = new wxTextCtrl(this, ID_TEXTCTRL1, wxEmptyString, wxDefaultPosition, wxSize(-1,50), wxTE_MULTILINE, wxDefaultValidator, _T("ID_TEXTCTRL1"));
     auiManager->AddPane(m_txtLog, wxAuiPaneInfo().Name(_T("auiPaneLog")).DefaultPane().Caption(_("Pane caption")).CaptionVisible(false).Row(1).Bottom().BestSize(wxSize(-1,50)));
     m_pgProps = new wxPropertyGrid(this,ID_PROP);
-    auiManager->AddPane(m_pgProps, wxAuiPaneInfo().Name(_T("auiProperties")).DefaultPane().Caption(_("Pane caption")).CaptionVisible(false).Row(1).Right().BestSize(wxSize(100,-1)));
+    auiManager->AddPane(m_pgProps, wxAuiPaneInfo().Name(_T("auiProperties")).DefaultPane().Caption(_("Pane caption")).CaptionVisible(false).Row(1).Right().BestSize(wxSize(200,-1)));
     auiMainNotebook = new wxAuiNotebook(this, ID_AUINOTEBOOK1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TAB_SPLIT|wxAUI_NB_TAB_MOVE|wxAUI_NB_WINDOWLIST_BUTTON);
     Panel4 = new wxPanel(auiMainNotebook, ID_PANEL4, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL4"));
     BoxSizer3 = new wxBoxSizer(wxHORIZONTAL);
@@ -253,61 +253,8 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	WX_CLEAR_ARRAY(m_component_types_list);	m_component_types_list.Clear();
 	WX_CLEAR_ARRAY(m_patterns_list);	m_patterns_list.Clear();
 
-	m_project.filename = dlg_open.GetFilename();
+	LoadProjectInfo(dlg_open.GetFilename());
 	m_project.fullfilename = dlg_open.GetPath();
-	m_project.pcbs.Clear();
-//				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
-//				component_type->pattern = cfg_components->Read("pattern", component_type->pattern);
-//				component_type->pnp_name = cfg_components->Read("pnp_name", component_type->pnp_name);
-//				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
-//				component_type->value = cfg_components->ReadDouble("value", component_type->value);
-//				component_type->unit = cfg_components->Read("unit", component_type->unit);
-	{
-		wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
-		m_project.project_name = m_cfg_projects->Read("project_name", m_project.filename.BeforeLast('.'));
-		m_project.height = m_cfg_projects->Read("pcb_height", m_project.height);
-		long subpcbs = m_cfg_projects->ReadLong("subpcb_count", -1);
-		if(subpcbs > 0)
-		{
-			wxString subpcb_name;
-			long dummy;
-			wxConfigPathChanger cfg_cd_to_sub_pcb(m_cfg_projects, "subpcb/");
-			for (bool have_group = m_cfg_projects->GetFirstGroup(subpcb_name, dummy);
-				have_group;
-				have_group = m_cfg_projects->GetNextGroup(subpcb_name, dummy)
-			)
-			{
-				t_subpcb_descr new_subpcb;
-				new_subpcb.subpcb_name = subpcb_name;
-				new_subpcb.size_x   = m_cfg_projects->ReadDouble(subpcb_name+"/size_x", 100);
-				new_subpcb.size_y   = m_cfg_projects->ReadDouble(subpcb_name+"/size_y", 100);
-				new_subpcb.offset_x = m_cfg_projects->ReadDouble(subpcb_name+"/offset_x", 0);
-				new_subpcb.offset_y = m_cfg_projects->ReadDouble(subpcb_name+"/offset_y", 0);
-				new_subpcb.ref_point1_x = new_subpcb.offset_x;
-				new_subpcb.ref_point1_y = new_subpcb.offset_y;
-				new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
-				new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
-				m_project.pcbs.Add(new_subpcb);
-			}
-		} else {
-			t_subpcb_descr new_subpcb;
-			new_subpcb.subpcb_name = "default";
-			new_subpcb.size_x = 100;
-			new_subpcb.size_y = 100;
-			new_subpcb.offset_x = 0;
-			new_subpcb.offset_y = 0;
-			new_subpcb.ref_point1_x = new_subpcb.offset_x;
-			new_subpcb.ref_point1_y = new_subpcb.offset_y;
-			new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
-			new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
-			m_project.pcbs.Add(new_subpcb);
-			SaveProjectInfo();
-		}
-//load to GUI
-		RedrawProjectInfo();
-		m_pgProps->SetSplitterLeft();
-	}
-
 
 	for(str = file.GetFirstLine(); !file.Eof(); str = file.GetNextLine())
 	{
@@ -834,6 +781,7 @@ void PnP_convFrame::SaveProjectInfo()
 	wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
 	m_cfg_projects->Write("project_name", m_project.project_name);
 	m_cfg_projects->Write("pcb_height", m_project.height);
+	m_cfg_projects->Write("pnp_angle", m_project.angle);
 	m_cfg_projects->Write("subpcb_count", subpcbs);
 	for (long index = 0; index < subpcbs; index++)
 	{
@@ -841,6 +789,82 @@ void PnP_convFrame::SaveProjectInfo()
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/size_y", m_project.pcbs[index].size_y);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_x", m_project.pcbs[index].offset_x);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_y", m_project.pcbs[index].offset_y);
+	}
+}
+
+void PnP_convFrame::LoadProjectInfo(wxString a_filename)
+{
+	if(a_filename.IsEmpty())
+		return;
+	m_project.filename = a_filename;
+	m_project.pcbs.Clear();
+
+	wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
+	m_project.project_name = m_cfg_projects->Read("project_name", m_project.filename.BeforeLast('.'));
+	m_project.height = m_cfg_projects->ReadDouble("pcb_height", m_project.height);
+	m_project.angle = m_cfg_projects->ReadDouble("pnp_angle", m_project.angle);
+	long subpcbs = m_cfg_projects->ReadLong("subpcb_count", -1);
+	if(subpcbs > 0)
+	{
+		wxString subpcb_name;
+		long dummy;
+		wxConfigPathChanger cfg_cd_to_sub_pcb(m_cfg_projects, "subpcb/");
+		for (bool have_group = m_cfg_projects->GetFirstGroup(subpcb_name, dummy);
+			have_group;
+			have_group = m_cfg_projects->GetNextGroup(subpcb_name, dummy)
+		)
+		{
+			t_subpcb_descr new_subpcb;
+			new_subpcb.subpcb_name = subpcb_name;
+			new_subpcb.size_x   = m_cfg_projects->ReadDouble(subpcb_name+"/size_x", 100);
+			new_subpcb.size_y   = m_cfg_projects->ReadDouble(subpcb_name+"/size_y", 100);
+			new_subpcb.offset_x = m_cfg_projects->ReadDouble(subpcb_name+"/offset_x", 0);
+			new_subpcb.offset_y = m_cfg_projects->ReadDouble(subpcb_name+"/offset_y", 0);
+			new_subpcb.ref_point1_x = new_subpcb.offset_x;
+			new_subpcb.ref_point1_y = new_subpcb.offset_y;
+			new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
+			new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+			m_project.pcbs.Add(new_subpcb);
+		}
+	} else {
+		t_subpcb_descr new_subpcb;
+		new_subpcb.subpcb_name = "default";
+		new_subpcb.size_x = 100;
+		new_subpcb.size_y = 100;
+		new_subpcb.offset_x = 0;
+		new_subpcb.offset_y = 0;
+		new_subpcb.ref_point1_x = new_subpcb.offset_x;
+		new_subpcb.ref_point1_y = new_subpcb.offset_y;
+		new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
+		new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+		m_project.pcbs.Add(new_subpcb);
+		SaveProjectInfo();
+	}
+//load to GUI
+	RedrawProjectInfo();
+	m_pgProps->SetSplitterLeft();
+}
+
+void PnP_convFrame::RedrawProjectInfo()
+{
+	m_pgProps->Clear();
+	m_pgProps->Append( new wxStringProperty("Project", wxPG_LABEL, m_project.project_name) );
+	m_pgProps->Append( new wxStringProperty("Filename", wxPG_LABEL, m_project.filename) ); m_pgProps->SetPropertyReadOnly("Filename");
+	m_pgProps->Append( new wxFloatProperty("Height", wxPG_LABEL, m_project.height) );
+	m_pgProps->Append( new wxFloatProperty("Angle", wxPG_LABEL, m_project.angle) );
+	long subpcbs = m_project.pcbs.GetCount();
+	for (long index = 0; index < subpcbs; index++)
+	{
+		m_pgProps->Append( new wxPropertyCategory(wxString::Format("SubPcb %ld", index)) );
+		m_pgProps->Append( new wxStringProperty("SubPcb name", wxPG_LABEL, m_project.pcbs[index].subpcb_name) );
+		m_pgProps->Append( new wxFloatProperty("size_x", wxPG_LABEL, m_project.pcbs[index].size_x) );
+		m_pgProps->Append( new wxFloatProperty("size_y", wxPG_LABEL, m_project.pcbs[index].size_y) );
+		m_pgProps->Append( new wxFloatProperty("offset_x", wxPG_LABEL, m_project.pcbs[index].offset_x) );
+		m_pgProps->Append( new wxFloatProperty("offset_y", wxPG_LABEL, m_project.pcbs[index].offset_y) );
+		m_pgProps->Append( new wxFloatProperty("ref_point1_x", wxPG_LABEL, m_project.pcbs[index].ref_point1_x) );
+		m_pgProps->Append( new wxFloatProperty("ref_point1_y", wxPG_LABEL, m_project.pcbs[index].ref_point1_y) );
+		m_pgProps->Append( new wxFloatProperty("ref_point2_x", wxPG_LABEL, m_project.pcbs[index].ref_point2_x) );
+		m_pgProps->Append( new wxFloatProperty("ref_point2_y", wxPG_LABEL, m_project.pcbs[index].ref_point2_y) );
 	}
 }
 
@@ -862,6 +886,8 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 		m_project.project_name = value.As<wxString>();
 	} else if ( property->GetName() == "Height" ) {
 		m_project.height = value.As<double>();
+	} else if ( property->GetName() == "Angle" ) {
+		m_project.angle = value.As<double>();
 	} else {
 		wxPGProperty* category = property->GetParent();
 		if(NULL == category)
@@ -906,25 +932,4 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 	}
 	SaveProjectInfo();
 	RedrawProjectInfo();
-}
-void PnP_convFrame::RedrawProjectInfo()
-{
-	m_pgProps->Clear();
-	m_pgProps->Append( new wxStringProperty("Project", wxPG_LABEL, m_project.project_name) );
-	m_pgProps->Append( new wxStringProperty("Filename", wxPG_LABEL, m_project.filename) ); m_pgProps->SetPropertyReadOnly("Filename");
-	m_pgProps->Append( new wxFloatProperty("Height", wxPG_LABEL, m_project.height) );
-	long subpcbs = m_project.pcbs.GetCount();
-	for (long index = 0; index < subpcbs; index++)
-	{
-		m_pgProps->Append( new wxPropertyCategory(wxString::Format("SubPcb %ld", index)) );
-		m_pgProps->Append( new wxStringProperty("SubPcb name", wxPG_LABEL, m_project.pcbs[index].subpcb_name) );
-		m_pgProps->Append( new wxFloatProperty("size_x", wxPG_LABEL, m_project.pcbs[index].size_x) );
-		m_pgProps->Append( new wxFloatProperty("size_y", wxPG_LABEL, m_project.pcbs[index].size_y) );
-		m_pgProps->Append( new wxFloatProperty("offset_x", wxPG_LABEL, m_project.pcbs[index].offset_x) );
-		m_pgProps->Append( new wxFloatProperty("offset_y", wxPG_LABEL, m_project.pcbs[index].offset_y) );
-		m_pgProps->Append( new wxFloatProperty("ref_point1_x", wxPG_LABEL, m_project.pcbs[index].ref_point1_x) );
-		m_pgProps->Append( new wxFloatProperty("ref_point1_y", wxPG_LABEL, m_project.pcbs[index].ref_point1_y) );
-		m_pgProps->Append( new wxFloatProperty("ref_point2_x", wxPG_LABEL, m_project.pcbs[index].ref_point2_x) );
-		m_pgProps->Append( new wxFloatProperty("ref_point2_y", wxPG_LABEL, m_project.pcbs[index].ref_point2_y) );
-	}
 }
