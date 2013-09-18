@@ -26,11 +26,12 @@ struct t_component_descr {
 	double		pnp_location_x;/**< координата центра компонента в PP-050/DD-500 */
 	double		pnp_location_y;/**< координата центра компонента в PP-050/DD-500 */
 	double		pnp_angle;/**< угол поворота компонента в PP-050/DD-500 */
+	int		pnp_subpcb_index;/**< К какому куску платы относится */
 	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
 	t_component_descr() :
 		cad_location_x(0), cad_location_y(0), cad_angle(0),
 		pnp_location_x(0), pnp_location_y(0), pnp_angle(0),
-		enabled(true) {}
+		pnp_subpcb_index(0), enabled(true) {}
 };
 
 struct t_component_type_descr {
@@ -64,6 +65,7 @@ struct t_xml_node_ptrs {
 	wxXmlNode *parent;
 	wxXmlNode *last_child;
 	int elemets_count;
+	t_xml_node_ptrs() : parent(NULL), last_child(NULL), elemets_count(0) {}
 };
 
 WX_DECLARE_OBJARRAY(struct t_component_descr, tComponentDescr);
@@ -90,8 +92,15 @@ struct t_board_descr {
 	wxString	fullfilename;/**< Имя файла, экспортированноего из CAD */
 	double		height;  /**< толщина платы */
 	int		angle;  /**< Угол, под которым плата загружентся в машину (0=0, 1=90, 2=180, 3=270) */
+	double		size_x;  /**< полный размер платы */
+	double		size_y;  /**< полный размер платы */
+	double		offset_x;/**< глобальное смещение платы */
+	double		offset_y;/**< глобальное смещение платы */
+	bool		apply_offset;/**< координаты компонентов уже сдвинуты на offset - надо передвинуть обратно */
 	tSubPcbs	pcbs; /**< Габариты плат на листе */
-	t_board_descr() : height(1.6), angle(0) {}
+	t_board_descr() : height(1.6), angle(0),
+		size_x(0), size_y(0), offset_x(0), offset_y(0),
+		apply_offset(false) {}
 };
 
 int CmpCompTypeFunc(t_component_type_descr *a_arg1, t_component_type_descr *a_arg2);

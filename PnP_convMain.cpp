@@ -253,8 +253,9 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	WX_CLEAR_ARRAY(m_component_types_list);	m_component_types_list.Clear();
 	WX_CLEAR_ARRAY(m_patterns_list);	m_patterns_list.Clear();
 
-	LoadProjectInfo(dlg_open.GetFilename());
+	m_project.apply_offset = true; //for PCAD
 	m_project.fullfilename = dlg_open.GetPath();
+	LoadProjectInfo(dlg_open.GetFilename());
 
 	for(str = file.GetFirstLine(); !file.Eof(); str = file.GetNextLine())
 	{
@@ -385,7 +386,6 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	}
 //	m_component_types_list.Sort(CmpCompTypeFunc);
 	UpdateComponents();
-	ReInitLists();
 }
 
 wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
@@ -562,13 +562,14 @@ void PnP_convFrame::UpdateComponents()
 	{
 		UpdateComponent(&m_components_list[index]);
 	}
+	ReInitLists();
 }
 
 void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
 {
 	t_component_type_descr *component_type;
 	t_pattern_descr *comp_pattern;
-	int tmp_index;
+	int index;
 //надо заполнить следующие поля:
 //pnp_name
 //pnp_package
@@ -581,19 +582,19 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
 
 	component_type = new t_component_type_descr;
 	component_type->name = a_component->full_name;
-	tmp_index = m_component_types_list.Index(component_type);
+	index = m_component_types_list.Index(component_type);
 	delete component_type;
-	if(wxNOT_FOUND == tmp_index)
+	if(wxNOT_FOUND == index)
 		return;
-	component_type = m_component_types_list[tmp_index];
+	component_type = m_component_types_list[index];
 
 	comp_pattern = new t_pattern_descr;
 	comp_pattern->pattern = a_component->pattern;
-	tmp_index = m_patterns_list.Index(comp_pattern);
+	index = m_patterns_list.Index(comp_pattern);
 	delete comp_pattern;
-	if(wxNOT_FOUND == tmp_index)
+	if(wxNOT_FOUND == index)
 		return;
-	comp_pattern = m_patterns_list[tmp_index];
+	comp_pattern = m_patterns_list[index];
 
 	a_component->pnp_name = component_type->pnp_name;
 	a_component->pnp_package = comp_pattern->pnp_package;
@@ -606,6 +607,30 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
 	a_component->pnp_location_y = a_component->cad_location_y + (-comp_pattern->offset_x * sin_alpha + comp_pattern->offset_y * cos_alpha);
 	a_component->pnp_angle = a_component->cad_angle + comp_pattern->angle;
 	if(a_component->pnp_angle >= 360.0) a_component->pnp_angle -= 360.0;
+
+	if(m_project.apply_offset)
+	{
+		a_component->pnp_location_x += m_project.offset_x;
+		a_component->pnp_location_y += m_project.offset_y;
+	}
+	for (index = m_project.pcbs.GetCount()-1; index >= 0; index--)
+	{
+		if(IsInRoom(m_project.pcbs[index].ref_point1_x, m_project.pcbs[index].ref_point1_y,
+			    m_project.pcbs[index].ref_point2_x, m_project.pcbs[index].ref_point2_y,
+			    a_component->pnp_location_x, a_component->pnp_location_y)
+			)
+		{
+			break;
+		}
+	}
+	if(index < 0)
+	{
+		wxLogWarning("Component %s (%s at %.3f,%.3f) outside from all PCBs!", a_component->designator, a_component->full_name, a_component->pnp_location_x, a_component->pnp_location_y);
+		index = 0;
+	}
+	a_component->pnp_subpcb_index = index;
+	a_component->pnp_location_x -= m_project.pcbs[a_component->pnp_subpcb_index].offset_x;
+	a_component->pnp_location_y -= m_project.pcbs[a_component->pnp_subpcb_index].offset_y;
 }
 
 void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
@@ -663,6 +688,8 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	long	full_size_x,
 		full_size_y,
 		height = (int)(m_project.height*1000);
+	double	full_offset_x,
+		full_offset_y;
 
 	long subpcbs = m_project.pcbs.GetCount();
 	double x1_min = INFINITY, y1_min = INFINITY, x2_max = -INFINITY, y2_max = -INFINITY;
@@ -673,6 +700,8 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 		if(m_project.pcbs[index].ref_point2_x > x2_max) x2_max = m_project.pcbs[index].ref_point2_x;
 		if(m_project.pcbs[index].ref_point2_y > y2_max) y2_max = m_project.pcbs[index].ref_point2_y;
 	}
+	full_offset_x = x1_min;
+	full_offset_y = y1_min;
 	full_size_x = (int)((x2_max - x1_min)*1000);
 	full_size_y = (int)((y2_max - y1_min)*1000);
 	wxString full_size_str = wxString::Format("%ld,%ld,%ld", full_size_x, full_size_y, height);
@@ -687,12 +716,6 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	nodes[INDEX_BOT_COMP].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Components");
 	nodes[INDEX_BOT_FID].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
 	nodes[INDEX_BOT_FID].parent->AddAttribute("LastFidIsBadmark", "no");
-
-// TODO (alatar#1#): Перенести в конструктор
-	nodes[INDEX_TOP_COMP].last_child = NULL;	nodes[INDEX_TOP_COMP].elemets_count = 0;
-	nodes[INDEX_TOP_FID].last_child = NULL;		nodes[INDEX_TOP_FID].elemets_count = 0;
-	nodes[INDEX_BOT_COMP].last_child = NULL;	nodes[INDEX_BOT_COMP].elemets_count = 0;
-	nodes[INDEX_BOT_FID].last_child = NULL;		nodes[INDEX_BOT_FID].elemets_count = 0;
 
 	doc.SetRoot(root_node);
 	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Product"); last_child_node = NULL;
@@ -727,7 +750,8 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 		wxXmlNode *panel_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panel");
 		panel_node->AddAttribute("Ref", wxString::Format("%d", index+1));
 		panel_node->AddAttribute("Template", m_project.pcbs[index].subpcb_name);
-		panel_node->AddAttribute("Position", wxString::Format("%d,%d", (int)(m_project.pcbs[index].offset_x*1000), (int)(m_project.pcbs[index].offset_y*1000)));
+		panel_node->AddAttribute("Position", wxString::Format("%d,%d", (int)((m_project.pcbs[index].offset_x-full_offset_x)*1000),
+									       (int)((m_project.pcbs[index].offset_y-full_offset_y)*1000)));
 		panel_node->AddAttribute("Angle", "0"); //относительный поворот пока не используется
 		tmp_node->AddChild(panel_node);
 	}
@@ -879,6 +903,7 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 		SaveProjectInfo();
 	}
 //load to GUI
+	UpdatePCBFullSize();
 	RedrawProjectInfo();
 	m_pgProps->SetSplitterLeft();
 }
@@ -886,28 +911,38 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 void PnP_convFrame::RedrawProjectInfo()
 {
 	wxPGChoices arr_orientation;
+	wxBoolProperty *bool_prop;
 	arr_orientation.Add("0", 0);
 	arr_orientation.Add("90", 1);
 	arr_orientation.Add("180", 2);
 	arr_orientation.Add("270", 3);
 	m_pgProps->Clear();
 	m_pgProps->Append( new wxStringProperty("Project", wxPG_LABEL, m_project.project_name) );
-	m_pgProps->Append( new wxStringProperty("Filename", wxPG_LABEL, m_project.filename) ); m_pgProps->SetPropertyReadOnly("Filename");
+	m_pgProps->Append( new wxStringProperty("Filename", wxPG_LABEL, m_project.filename) );		m_pgProps->SetPropertyReadOnly("Filename");
 	m_pgProps->Append( new wxFloatProperty("Height", wxPG_LABEL, m_project.height) );
 	m_pgProps->Append( new wxEnumProperty("Angle", wxPG_LABEL, arr_orientation, m_project.angle) );
+	m_pgProps->Append( new wxFloatProperty("Size X",  wxPG_LABEL, m_project.size_x) );		m_pgProps->SetPropertyReadOnly("Size X");
+	m_pgProps->Append( new wxFloatProperty("Size Y", wxPG_LABEL, m_project.size_y) );		m_pgProps->SetPropertyReadOnly("Size Y");
+	m_pgProps->Append( new wxFloatProperty("Offset X", wxPG_LABEL, m_project.offset_x) );		m_pgProps->SetPropertyReadOnly("Offset X");
+	m_pgProps->Append( new wxFloatProperty("Offset Y", wxPG_LABEL, m_project.offset_y) );		m_pgProps->SetPropertyReadOnly("Offset Y");
+	bool_prop = new wxBoolProperty("Apply offset", wxPG_LABEL, m_project.apply_offset);
+	bool_prop->SetAttribute(wxPG_BOOL_USE_CHECKBOX, true);
+	m_pgProps->Append( bool_prop );									m_pgProps->SetPropertyReadOnly("Apply offset");
 	long subpcbs = m_project.pcbs.GetCount();
 	for (long index = 0; index < subpcbs; index++)
 	{
-		m_pgProps->Append( new wxPropertyCategory(wxString::Format("SubPcb %ld", index)) );
-		m_pgProps->Append( new wxStringProperty("SubPcb name", wxPG_LABEL, m_project.pcbs[index].subpcb_name) );
-		m_pgProps->Append( new wxFloatProperty("size_x", wxPG_LABEL, m_project.pcbs[index].size_x) );
-		m_pgProps->Append( new wxFloatProperty("size_y", wxPG_LABEL, m_project.pcbs[index].size_y) );
-		m_pgProps->Append( new wxFloatProperty("offset_x", wxPG_LABEL, m_project.pcbs[index].offset_x) );
-		m_pgProps->Append( new wxFloatProperty("offset_y", wxPG_LABEL, m_project.pcbs[index].offset_y) );
-		m_pgProps->Append( new wxFloatProperty("ref_point1_x", wxPG_LABEL, m_project.pcbs[index].ref_point1_x) );
-		m_pgProps->Append( new wxFloatProperty("ref_point1_y", wxPG_LABEL, m_project.pcbs[index].ref_point1_y) );
-		m_pgProps->Append( new wxFloatProperty("ref_point2_x", wxPG_LABEL, m_project.pcbs[index].ref_point2_x) );
-		m_pgProps->Append( new wxFloatProperty("ref_point2_y", wxPG_LABEL, m_project.pcbs[index].ref_point2_y) );
+		wxString cat_name = wxString::Format("SubPcb %ld", index);
+		wxPGProperty* subpcbProp = m_pgProps->Append( new wxStringProperty(cat_name, wxPG_LABEL, wxEmptyString) );
+		m_pgProps->SetPropertyReadOnly(cat_name);
+		m_pgProps->AppendIn(subpcbProp, new wxStringProperty("PCB name", wxPG_LABEL, m_project.pcbs[index].subpcb_name) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("size_x", wxPG_LABEL, m_project.pcbs[index].size_x) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("size_y", wxPG_LABEL, m_project.pcbs[index].size_y) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("offset_x", wxPG_LABEL, m_project.pcbs[index].offset_x) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("offset_y", wxPG_LABEL, m_project.pcbs[index].offset_y) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("ref_point1_x", wxPG_LABEL, m_project.pcbs[index].ref_point1_x) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("ref_point1_y", wxPG_LABEL, m_project.pcbs[index].ref_point1_y) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("ref_point2_x", wxPG_LABEL, m_project.pcbs[index].ref_point2_x) );
+		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("ref_point2_y", wxPG_LABEL, m_project.pcbs[index].ref_point2_y) );
 	}
 }
 
@@ -917,6 +952,7 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 	// Do nothing if event did not have associated property
 	if ( !property )
 		return;
+	wxString prop_name = property->GetName();
 	wxAny value = property->GetValue();
 	if ( value.IsNull() )
 	{
@@ -924,26 +960,29 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 		return;
 	}
 	// Handle changes in values, as needed
-	if ( property->GetName() == "Project" )
+	if ( prop_name == "Project" )
 	{
 		m_project.project_name = value.As<wxString>();
-	} else if ( property->GetName() == "Height" ) {
+	} else if ( prop_name == "Height" ) {
 		m_project.height = value.As<double>();
-	} else if ( property->GetName() == "Angle" ) {
+	} else if ( prop_name == "Angle" ) {
 		m_project.angle = value.As<long>();
-	} else {
+	} else if ( prop_name.StartsWith("SubPcb ") ) {
+		prop_name = prop_name.AfterFirst('.');
 		wxPGProperty* category = property->GetParent();
 		if(NULL == category)
 			return;
-		wxString subpcb_name = category->GetPropertyByName("SubPcb name")->GetValue().GetString();
-		wxString subpcb_index_str = category->GetName().AfterLast(' ');
+		wxString category_name = category->GetName();
+		wxString subpcb_index_str = category_name.AfterLast(' ');
+		wxString subpcb_name;
 		long subpcb_index;
 		subpcb_index_str.ToLong(&subpcb_index);
 		t_subpcb_descr &subpcb = m_project.pcbs[subpcb_index];
-		if(property->GetName() == "SubPcb name")
+
+		if(prop_name == "PCB name")
 		{
 			subpcb.subpcb_name = value.As<wxString>();
-		} else if((property->GetName() == "size_x")||(property->GetName() == "size_y")||(property->GetName() == "offset_x")||(property->GetName() == "offset_y")) {
+		} else if((prop_name == "size_x")||(prop_name == "size_y")||(prop_name == "offset_x")||(prop_name == "offset_y")) {
 			subpcb.size_x   = category->GetPropertyByName("size_x")->GetValue().GetDouble();
 			subpcb.size_y   = category->GetPropertyByName("size_y")->GetValue().GetDouble();
 			subpcb.offset_x = category->GetPropertyByName("offset_x")->GetValue().GetDouble();
@@ -952,6 +991,7 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 			subpcb.ref_point1_y = subpcb.offset_y;
 			subpcb.ref_point2_x = subpcb.offset_x + subpcb.size_x;
 			subpcb.ref_point2_y = subpcb.offset_y + subpcb.size_y;
+			UpdatePCBFullSize();
 		} else {
 			subpcb.ref_point1_x = category->GetPropertyByName("ref_point1_x")->GetValue().GetDouble();
 			subpcb.ref_point1_y = category->GetPropertyByName("ref_point1_y")->GetValue().GetDouble();
@@ -971,8 +1011,47 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 			subpcb.size_y = subpcb.ref_point2_y - subpcb.ref_point1_y;
 			subpcb.offset_x = subpcb.ref_point1_x;
 			subpcb.offset_y = subpcb.ref_point1_y;
+			UpdatePCBFullSize();
 		}
 	}
 	SaveProjectInfo();
 	RedrawProjectInfo();
+	UpdateComponents();
+}
+void PnP_convFrame::UpdatePCBFullSize()
+{
+	long subpcbs = m_project.pcbs.GetCount();
+	double x1_min = INFINITY, y1_min = INFINITY, x2_max = -INFINITY, y2_max = -INFINITY;
+
+	for (long index = 0; index < subpcbs; index++)
+	{
+		if(m_project.pcbs[index].ref_point1_x < x1_min) x1_min = m_project.pcbs[index].ref_point1_x;
+		if(m_project.pcbs[index].ref_point1_y < y1_min) y1_min = m_project.pcbs[index].ref_point1_y;
+		if(m_project.pcbs[index].ref_point2_x > x2_max) x2_max = m_project.pcbs[index].ref_point2_x;
+		if(m_project.pcbs[index].ref_point2_y > y2_max) y2_max = m_project.pcbs[index].ref_point2_y;
+	}
+	m_project.size_x = x2_max - x1_min;
+	m_project.size_y = y2_max - y1_min;
+	m_project.offset_x = x1_min;
+	m_project.offset_y = y1_min;
+}
+bool PnP_convFrame::IsInRoom(double a_ref1_x, double a_ref1_y, double a_ref2_x, double a_ref2_y, double a_ptr_x, double a_ptr_y)
+{
+	double tmp;
+	bool res;
+	if(a_ref1_x > a_ref2_x)
+	{
+		tmp = a_ref2_x;
+		a_ref2_x = a_ref1_x;
+		a_ref1_x = tmp;
+	}
+	if(a_ref1_y > a_ref2_y)
+	{
+		tmp = a_ref2_y;
+		a_ref2_y = a_ref1_y;
+		a_ref1_y = tmp;
+	}
+	res   = (a_ptr_x >= a_ref1_x) && (a_ptr_x <= a_ref2_x) &&
+		(a_ptr_y >= a_ref1_y) && (a_ptr_y <= a_ref2_y);
+	return res;
 }
