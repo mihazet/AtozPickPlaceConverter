@@ -820,7 +820,27 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 	wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
 	m_project.project_name = m_cfg_projects->Read("project_name", m_project.filename.BeforeLast('.'));
 	m_project.height = m_cfg_projects->ReadDouble("pcb_height", m_project.height);
-	m_project.angle = m_cfg_projects->ReadDouble("pnp_angle", m_project.angle);
+	m_project.angle = m_cfg_projects->ReadLong("pnp_angle", m_project.angle);
+	switch(m_project.angle)
+	{
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+		break;
+	case 90:
+		m_project.angle = 1;
+		break;
+	case 180:
+		m_project.angle = 2;
+		break;
+	case 270:
+		m_project.angle = 3;
+		break;
+	default:
+		m_project.angle = 0;
+		break;
+	}
 	long subpcbs = m_cfg_projects->ReadLong("subpcb_count", -1);
 	if(subpcbs > 0)
 	{
@@ -865,11 +885,16 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 
 void PnP_convFrame::RedrawProjectInfo()
 {
+	wxPGChoices arr_orientation;
+	arr_orientation.Add("0", 0);
+	arr_orientation.Add("90", 1);
+	arr_orientation.Add("180", 2);
+	arr_orientation.Add("270", 3);
 	m_pgProps->Clear();
 	m_pgProps->Append( new wxStringProperty("Project", wxPG_LABEL, m_project.project_name) );
 	m_pgProps->Append( new wxStringProperty("Filename", wxPG_LABEL, m_project.filename) ); m_pgProps->SetPropertyReadOnly("Filename");
 	m_pgProps->Append( new wxFloatProperty("Height", wxPG_LABEL, m_project.height) );
-	m_pgProps->Append( new wxFloatProperty("Angle", wxPG_LABEL, m_project.angle) );
+	m_pgProps->Append( new wxEnumProperty("Angle", wxPG_LABEL, arr_orientation, m_project.angle) );
 	long subpcbs = m_project.pcbs.GetCount();
 	for (long index = 0; index < subpcbs; index++)
 	{
@@ -905,7 +930,7 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 	} else if ( property->GetName() == "Height" ) {
 		m_project.height = value.As<double>();
 	} else if ( property->GetName() == "Angle" ) {
-		m_project.angle = value.As<double>();
+		m_project.angle = value.As<long>();
 	} else {
 		wxPGProperty* category = property->GetParent();
 		if(NULL == category)
