@@ -18,6 +18,7 @@ struct t_component_descr {
 	double		cad_location_y;/**< координата реферной точки компонента в PCAD/Altium */
 	double		cad_angle;/**< угол поворота компонента в PCAD/Altium */
 ///рассчитанные значения
+	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
 	wxString	strip_value;/**< Номинал компонента, или его название после удаления маркера DNP*/
 	wxString	pattern;/**< Имя посадочного места в базе конвертора */
 	wxString	pnp_name;/**< Имя компонента в PP-050/DD-500 */
@@ -26,12 +27,12 @@ struct t_component_descr {
 	double		pnp_location_x;/**< координата центра компонента в PP-050/DD-500 */
 	double		pnp_location_y;/**< координата центра компонента в PP-050/DD-500 */
 	double		pnp_angle;/**< угол поворота компонента в PP-050/DD-500 */
+	bool		pnp_enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
 	int		pnp_subpcb_index;/**< К какому куску платы относится */
-	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
 	t_component_descr() :
-		cad_location_x(0), cad_location_y(0), cad_angle(0),
-		pnp_location_x(0), pnp_location_y(0), pnp_angle(0),
-		pnp_subpcb_index(0), enabled(true) {}
+		cad_location_x(0), cad_location_y(0), cad_angle(0), enabled(true),
+		pnp_location_x(0), pnp_location_y(0), pnp_angle(0), pnp_enabled(true),
+		pnp_subpcb_index(0) {}
 };
 
 struct t_component_type_descr {
@@ -82,8 +83,10 @@ struct t_subpcb_descr {
 	double		size_y;  /**< размер платы */
 	double		offset_x;/**< смещение платы */
 	double		offset_y;/**< смещение платы */
+	bool		enabled; /**< не собирать эту плату */
 	t_subpcb_descr() : ref_point1_x(0), ref_point1_y(0), ref_point2_x(0), ref_point2_y(0),
-		size_x(0), size_y(0), offset_x(0), offset_y(0) {}
+		size_x(0), size_y(0), offset_x(0), offset_y(0),
+		enabled(true) {}
 };
 WX_DECLARE_OBJARRAY(struct t_subpcb_descr, tSubPcbs);
 struct t_board_descr {

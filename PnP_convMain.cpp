@@ -629,8 +629,9 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
 		index = 0;
 	}
 	a_component->pnp_subpcb_index = index;
-	a_component->pnp_location_x -= m_project.pcbs[a_component->pnp_subpcb_index].offset_x;
-	a_component->pnp_location_y -= m_project.pcbs[a_component->pnp_subpcb_index].offset_y;
+	a_component->pnp_location_x -= m_project.pcbs[index].offset_x;
+	a_component->pnp_location_y -= m_project.pcbs[index].offset_y;
+	a_component->pnp_enabled = a_component->enabled && component_type->enabled && comp_pattern->enabled && m_project.pcbs[index].enabled;
 }
 
 void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
@@ -643,7 +644,7 @@ void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_
 	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Component");
 	node->AddAttribute("Ref", a_comp.designator);
 	node->AddAttribute("Name", a_comp.pnp_name);
-	str = wxString::Format("%d,%d", (int)(a_comp.pnp_location_x*1000), (int)(a_comp.pnp_location_y*1000));
+	str = wxString::Format("%ld,%ld", (long)(a_comp.pnp_location_x*1000), (long)(a_comp.pnp_location_y*1000));
 	node->AddAttribute("Position", str);
 	str = wxString::Format("%d", (int)(a_comp.pnp_angle*100));
 	node->AddAttribute("Angle", str);
@@ -664,7 +665,7 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 	str = wxString::Format("%d", a_node->elemets_count + 1);
 	node->AddAttribute("Ref", str);
 	node->AddAttribute("CadRef", a_comp.designator);
-	str = wxString::Format("%d,%d", (int)(a_comp.pnp_location_x*1000), (int)(a_comp.pnp_location_y*1000));
+	str = wxString::Format("%ld,%ld", (long)(a_comp.pnp_location_x*1000), (long)(a_comp.pnp_location_y*1000));
 	node->AddAttribute("Position", str);
 	node->AddAttribute("Name", a_comp.pnp_name);
 
@@ -672,6 +673,8 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 	a_node->last_child = node;
 	a_node->elemets_count ++;
 }
+
+#define FID_ARRAY_OFFSET	1
 
 void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 {
@@ -685,43 +688,20 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	if(dlg_save.ShowModal() != wxID_OK)
 		return;
 
-	long	full_size_x,
-		full_size_y,
-		height = (int)(m_project.height*1000);
-	double	full_offset_x,
-		full_offset_y;
-
+	long	full_size_x = (long)(m_project.size_x*1000),
+		full_size_y = (long)(m_project.size_y*1000),
+		height = (long)(m_project.height*1000);
 	long subpcbs = m_project.pcbs.GetCount();
-	double x1_min = INFINITY, y1_min = INFINITY, x2_max = -INFINITY, y2_max = -INFINITY;
-	for (long index = 0; index < subpcbs; index++)
-	{
-		if(m_project.pcbs[index].ref_point1_x < x1_min) x1_min = m_project.pcbs[index].ref_point1_x;
-		if(m_project.pcbs[index].ref_point1_y < y1_min) y1_min = m_project.pcbs[index].ref_point1_y;
-		if(m_project.pcbs[index].ref_point2_x > x2_max) x2_max = m_project.pcbs[index].ref_point2_x;
-		if(m_project.pcbs[index].ref_point2_y > y2_max) y2_max = m_project.pcbs[index].ref_point2_y;
-	}
-	full_offset_x = x1_min;
-	full_offset_y = y1_min;
-	full_size_x = (int)((x2_max - x1_min)*1000);
-	full_size_y = (int)((y2_max - y1_min)*1000);
-	wxString full_size_str = wxString::Format("%ld,%ld,%ld", full_size_x, full_size_y, height);
 
 	wxXmlDocument doc; //все ноды рекурсивно удаляются в деструкторе документа
 	wxXmlNode *root_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Data");
 	wxXmlNode *node, *tmp_node, *last_child_node;
-	t_xml_node_ptrs nodes[INDEX_COUNT];
-	nodes[INDEX_TOP_COMP].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Components");
-	nodes[INDEX_TOP_FID].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
-	nodes[INDEX_TOP_FID].parent->AddAttribute("LastFidIsBadmark", "no");
-	nodes[INDEX_BOT_COMP].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Components");
-	nodes[INDEX_BOT_FID].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
-	nodes[INDEX_BOT_FID].parent->AddAttribute("LastFidIsBadmark", "no");
 
 	doc.SetRoot(root_node);
 	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Product"); last_child_node = NULL;
 
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "General");
-	tmp_node->AddAttribute("Size", full_size_str);
+	tmp_node->AddAttribute("Size",  wxString::Format("%ld,%ld,%ld", full_size_x, full_size_y, height));
 	tmp_node->AddAttribute("ActiveSide", "Top");
 	tmp_node->AddAttribute("PcbType", subpcbs>1?"Multiple":"Single");
 	tmp_node->AddAttribute("AutoSideDetect", "no");
@@ -733,7 +713,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	wxXmlNode *prod_orientation_node = new wxXmlNode(tmp_node, wxXML_ELEMENT_NODE, "Orientations");
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
-	wxXmlNode *pp050_orientation = new wxXmlNode(prod_orientation_node, wxXML_ELEMENT_NODE, "Orientations");
+	wxXmlNode *pp050_orientation = new wxXmlNode(prod_orientation_node, wxXML_ELEMENT_NODE, "PP050");
 	pp050_orientation->AddAttribute("ProductOrientation", wxString::Format("%d", m_project.angle));
 
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "BottomSide");
@@ -742,61 +722,74 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
 
-	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panels");
-	node->InsertChildAfter(tmp_node, last_child_node);
-	last_child_node = tmp_node;
-	for (long index = 0; index < subpcbs; index++)
-	{
-		wxXmlNode *panel_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panel");
-		panel_node->AddAttribute("Ref", wxString::Format("%d", index+1));
-		panel_node->AddAttribute("Template", m_project.pcbs[index].subpcb_name);
-		panel_node->AddAttribute("Position", wxString::Format("%d,%d", (int)((m_project.pcbs[index].offset_x-full_offset_x)*1000),
-									       (int)((m_project.pcbs[index].offset_y-full_offset_y)*1000)));
-		panel_node->AddAttribute("Angle", "0"); //относительный поворот пока не используется
-		tmp_node->AddChild(panel_node);
-	}
+	wxXmlNode *panels_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panels");
+	node->InsertChildAfter(panels_node, last_child_node);
 
 //Список компонентов
-	node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Templates");
-	node = new wxXmlNode(node, wxXML_ELEMENT_NODE, "Template");
-	node->AddAttribute("Name", "default");
-	node->AddAttribute("Size", full_size_str);
-//	node->AddAttribute("OriginOffset", "0,0");
+	wxXmlNode *templates_node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Templates");
 
 	size_t comp_count = m_components_list.Count();
-wxLogMessage(_T("Fount %zu comps"), comp_count);
-	for(size_t index = 0; index < comp_count; index++)
+	for (long subpcb_index = 0; subpcb_index < subpcbs; subpcb_index++)
 	{
-		int tmp_ind;
-		if(!m_components_list[index].enabled)
-			continue;
-wxLogMessage(_T("Inserted %s"), m_components_list[index].designator);
-		if(m_components_list[index].layer.Upper() == "TOP")
+		wxXmlNode *panel_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panel");
+		panels_node->AddChild(panel_node);
+		panel_node->AddAttribute("Ref", wxString::Format("%ld", subpcb_index+1));
+		panel_node->AddAttribute("Template", m_project.pcbs[subpcb_index].subpcb_name);
+		panel_node->AddAttribute("Position", wxString::Format("%ld,%ld", (long)((m_project.pcbs[subpcb_index].offset_x-m_project.offset_x)*1000),
+										 (long)((m_project.pcbs[subpcb_index].offset_y-m_project.offset_y)*1000)));
+		panel_node->AddAttribute("Angle", "0"); //относительный поворот пока не используется
+
+		wxXmlNode *template_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Template");
+		templates_node->AddChild(template_node);
+		template_node->AddAttribute("Name", m_project.pcbs[subpcb_index].subpcb_name);
+		template_node->AddAttribute("Size",  wxString::Format("%ld,%ld,%ld",
+									(long)((m_project.pcbs[subpcb_index].size_x)*1000),
+									(long)((m_project.pcbs[subpcb_index].size_y)*1000),
+									height));
+
+		t_xml_node_ptrs nodes[INDEX_COUNT];
+		nodes[INDEX_TOP_COMP].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Components");
+		nodes[INDEX_TOP_FID].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
+		nodes[INDEX_TOP_FID].parent->AddAttribute("LastFidIsBadmark", "no");
+		nodes[INDEX_BOT_COMP].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Components");
+		nodes[INDEX_BOT_FID].parent = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
+		nodes[INDEX_BOT_FID].parent->AddAttribute("LastFidIsBadmark", "no");
+
+		for(size_t index = 0; index < comp_count; index++)
 		{
-			tmp_ind = INDEX_TOP_COMP;
-		} else if(m_components_list[index].layer.Upper() == "BOTTOM") {
-			tmp_ind = INDEX_BOT_COMP;
-		} else {
-			continue;
+			int tmp_ind;
+			if(!(m_components_list[index].pnp_enabled && (m_components_list[index].pnp_subpcb_index == subpcb_index)))
+				continue;
+			if(m_components_list[index].layer.Upper() == "TOP")
+			{
+				tmp_ind = INDEX_TOP_COMP;
+			} else if(m_components_list[index].layer.Upper() == "BOTTOM") {
+				tmp_ind = INDEX_BOT_COMP;
+			} else {
+				continue;
+			}
+			if(m_components_list[index].designator.StartsWith("FM"))
+			{
+				PrintFiducial(&nodes[tmp_ind + FID_ARRAY_OFFSET], m_components_list[index]);
+			} else {
+				PrintComponent(&nodes[tmp_ind], m_components_list[index]);
+			}
+wxLogVerbose(_T("Inserted %s to board %s"), m_components_list[index].designator, m_project.pcbs[subpcb_index].subpcb_name);
 		}
-		if(m_components_list[index].designator.StartsWith("FM"))
-		{
-			PrintFiducial(&nodes[tmp_ind + 1], m_components_list[index]);
-		} else {
-			PrintComponent(&nodes[tmp_ind], m_components_list[index]);
-		}
+
+		tmp_node = new wxXmlNode(template_node, wxXML_ELEMENT_NODE, "Variants");
+		tmp_node = new wxXmlNode(template_node, wxXML_ELEMENT_NODE, "BottomSide");
+		tmp_node->AddAttribute("VariantsOnly", "no");
+		tmp_node->AddChild(nodes[INDEX_BOT_FID].parent);
+		tmp_node->AddChild(nodes[INDEX_BOT_COMP].parent);
+
+		tmp_node = new wxXmlNode(template_node, wxXML_ELEMENT_NODE, "TopSide");
+		tmp_node->AddAttribute("VariantsOnly", "no");
+		tmp_node->AddChild(nodes[INDEX_TOP_FID].parent);
+		tmp_node->AddChild(nodes[INDEX_TOP_COMP].parent);
+
 	}
 
-	tmp_node = new wxXmlNode(node, wxXML_ELEMENT_NODE, "Variants");
-	tmp_node = new wxXmlNode(node, wxXML_ELEMENT_NODE, "BottomSide");
-	tmp_node->AddAttribute("VariantsOnly", "no");
-	tmp_node->AddChild(nodes[INDEX_BOT_FID].parent);
-	tmp_node->AddChild(nodes[INDEX_BOT_COMP].parent);
-
-	tmp_node = new wxXmlNode(node, wxXML_ELEMENT_NODE, "TopSide");
-	tmp_node->AddAttribute("VariantsOnly", "no");
-	tmp_node->AddChild(nodes[INDEX_TOP_FID].parent);
-	tmp_node->AddChild(nodes[INDEX_TOP_COMP].parent);
 
 	doc.Save(dlg_save.GetPath());
 wxLogMessage(_T("Saved to %s"), dlg_save.GetPath());
