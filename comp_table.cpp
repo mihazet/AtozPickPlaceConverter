@@ -23,6 +23,7 @@ enum {
 	COL_CAD_LOCATION_X,
 	COL_CAD_LOCATION_Y,
 	COL_CAD_ANGLE,
+	COL_ENABLED,
 	COL_PATTERN,
 	COL_PNP_NAME,
 	COL_PNP_PACKAGE,
@@ -31,7 +32,7 @@ enum {
 	COL_PNP_LOCATION_Y,
 	COL_PNP_ANGLE,
 	COL_PNP_SUBPCB,
-	COL_ENABLED,
+	COL_PNP_ENABLED,
 	COL_COUNT
 };
 
@@ -52,6 +53,7 @@ cCompTable::cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID win
 	InsertColumn(COL_CAD_LOCATION_X,_T("X"),	wxLIST_FORMAT_LEFT, 70);
 	InsertColumn(COL_CAD_LOCATION_Y,_T("Y"),	wxLIST_FORMAT_LEFT, 70);
 	InsertColumn(COL_CAD_ANGLE,	_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
+	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
 	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 110);
 	InsertColumn(COL_PNP_NAME,	_T("PNP Comp"),	wxLIST_FORMAT_LEFT, 110);
 	InsertColumn(COL_PNP_PACKAGE,	_T("PNP Pack"),	wxLIST_FORMAT_LEFT, 70);
@@ -60,7 +62,7 @@ cCompTable::cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID win
 	InsertColumn(COL_PNP_LOCATION_Y,_T("PNP Y"),	wxLIST_FORMAT_LEFT, 70);
 	InsertColumn(COL_PNP_ANGLE,	_T("PNP Angle"),wxLIST_FORMAT_LEFT, 70);
 	InsertColumn(COL_PNP_SUBPCB,	_T("PNP pcb"),	wxLIST_FORMAT_LEFT, 50);
-	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
+	InsertColumn(COL_PNP_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
 
 	ReInit();
 
@@ -104,6 +106,8 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 				return wxString::Format("%.3f", data->cad_location_y);
 			case COL_CAD_ANGLE:
 				return wxString::Format("%.1f", data->cad_angle);
+			case COL_ENABLED:
+				return wxString::Format("%d", data->enabled);;
 			case COL_PATTERN:
 				return data->pattern;
 			case COL_PNP_NAME:
@@ -120,8 +124,8 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 				return wxString::Format("%.1f", data->pnp_angle);
 			case COL_PNP_SUBPCB:
 				return wxString::Format("%d", data->pnp_subpcb_index);
-			case COL_ENABLED:
-				return wxString::Format("%d", data->enabled);;
+			case COL_PNP_ENABLED:
+				return wxString::Format("%d", data->pnp_enabled);;
 			default:
 				return wxEmptyString;
 		}

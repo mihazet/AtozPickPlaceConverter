@@ -53,6 +53,7 @@ class PnP_convFrame: public wxFrame
 	wxString RemoveQuotes(const wxString a_str);
 	void PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp);
 	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp);
+	wxXmlNode *CreateProductSideDescr(wxString a_side);
 	bool ParseNominals(t_component_type_descr *a_component_type, wxString a_designator, wxString a_value);
 	bool NormalizeNominal(t_component_type_descr *a_component_type);
 	void UpdateComponents();

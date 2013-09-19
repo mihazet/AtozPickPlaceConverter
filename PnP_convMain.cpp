@@ -134,7 +134,7 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
     BoxSizer2->SetSizeHints(Panel2);
     auiMainNotebook->AddPage(Panel4, _("Componenets"));
     auiMainNotebook->AddPage(Panel1, _("Component Types"));
-    auiMainNotebook->AddPage(Panel2, _("Packages"));
+    auiMainNotebook->AddPage(Panel2, _("Patterns"));
     auiManager->AddPane(auiMainNotebook, wxAuiPaneInfo().Name(_T("auiPaneGraphs")).CenterPane().Caption(_("Graphs view")).Floatable().Movable(false));
     auiManager->Update();
     MenuBar1 = new wxMenuBar();
@@ -674,6 +674,32 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 	a_node->elemets_count ++;
 }
 
+wxXmlNode *PnP_convFrame::CreateProductSideDescr(wxString a_side)
+{
+	wxString str;
+	wxXmlNode *side_node, *tmp_node;
+
+	side_node = new wxXmlNode(wxXML_ELEMENT_NODE, (a_side.Upper() == "BOT")?"BottomSide":"TopSide");
+	side_node->AddAttribute("Barcode", "");
+
+	wxXmlNode *prod_orientation_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Orientations");
+	side_node->AddChild(prod_orientation_node);
+	tmp_node = new wxXmlNode(prod_orientation_node, wxXML_ELEMENT_NODE, "PP050");
+	tmp_node->AddAttribute("ProductOrientation", wxString::Format("%d", m_project.angle));
+
+	wxXmlNode *prod_fiducials_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
+	side_node->AddChild(prod_fiducials_node);
+	prod_fiducials_node->AddAttribute("BadmarkSupport", "no");
+	tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "PP050");
+	tmp_node->AddAttribute("UseGlobalRefs", "yes");
+	tmp_node->AddAttribute("CheckPanelRefs", (m_project.pcbs.GetCount() > 1)?"yes":"no");
+	tmp_node->AddAttribute("CheckLocalRefs", "yes");
+	tmp_node->AddAttribute("HighAccuracy", "yes");
+
+// TODO (alatar#1#): Добавление глобальных реперов
+	return side_node;
+}
+
 #define FID_ARRAY_OFFSET	1
 
 void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
@@ -703,22 +729,15 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "General");
 	tmp_node->AddAttribute("Size",  wxString::Format("%ld,%ld,%ld", full_size_x, full_size_y, height));
 	tmp_node->AddAttribute("ActiveSide", "Top");
-	tmp_node->AddAttribute("PcbType", subpcbs>1?"Multiple":"Single");
+	tmp_node->AddAttribute("PcbType", (subpcbs > 1)?"Multiple":"Single");
 	tmp_node->AddAttribute("AutoSideDetect", "no");
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
 
-	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "TopSide");
-	tmp_node->AddAttribute("Barcode", "");
-	wxXmlNode *prod_orientation_node = new wxXmlNode(tmp_node, wxXML_ELEMENT_NODE, "Orientations");
+	tmp_node = CreateProductSideDescr("TOP");
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
-	wxXmlNode *pp050_orientation = new wxXmlNode(prod_orientation_node, wxXML_ELEMENT_NODE, "PP050");
-	pp050_orientation->AddAttribute("ProductOrientation", wxString::Format("%d", m_project.angle));
-
-	tmp_node = new wxXmlNode(wxXML_ELEMENT_NODE, "BottomSide");
-	tmp_node->AddAttribute("Barcode", "");
-	new wxXmlNode(tmp_node, wxXML_ELEMENT_NODE, "Orientations");
+	tmp_node = CreateProductSideDescr("BOT");
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
 
@@ -803,11 +822,13 @@ void PnP_convFrame::ReInitLists()
 	m_grd_comp_type->ProcessTableMessage(clr1);
 	wxGridTableMessage add1(m_grd_comp_type->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_component_types_list.GetCount());
 	m_grd_comp_type->ProcessTableMessage(add1);
+	m_grd_comp_type->AutoSize();
 
 	wxGridTableMessage clr2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_pattern->GetNumberRows());
 	m_grd_pattern->ProcessTableMessage(clr2);
 	wxGridTableMessage add2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_patterns_list.GetCount());
 	m_grd_pattern->ProcessTableMessage(add2);
+	m_grd_pattern->AutoSize();
 }
 
 void PnP_convFrame::SaveProjectInfo()
@@ -817,13 +838,16 @@ void PnP_convFrame::SaveProjectInfo()
 	m_cfg_projects->Write("project_name", m_project.project_name);
 	m_cfg_projects->Write("pcb_height", m_project.height);
 	m_cfg_projects->Write("pnp_angle", m_project.angle);
+	m_cfg_projects->Write("apply_offset", m_project.apply_offset);
 	m_cfg_projects->Write("subpcb_count", subpcbs);
+	m_cfg_projects->DeleteGroup("subpcb");
 	for (long index = 0; index < subpcbs; index++)
 	{
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/size_x", m_project.pcbs[index].size_x);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/size_y", m_project.pcbs[index].size_y);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_x", m_project.pcbs[index].offset_x);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_y", m_project.pcbs[index].offset_y);
+		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/enabled", m_project.pcbs[index].enabled);
 	}
 }
 
@@ -838,6 +862,7 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 	m_project.project_name = m_cfg_projects->Read("project_name", m_project.filename.BeforeLast('.'));
 	m_project.height = m_cfg_projects->ReadDouble("pcb_height", m_project.height);
 	m_project.angle = m_cfg_projects->ReadLong("pnp_angle", m_project.angle);
+	m_project.apply_offset = m_cfg_projects->ReadBool("apply_offset", m_project.apply_offset);
 	switch(m_project.angle)
 	{
 	case 0:
@@ -879,6 +904,7 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 			new_subpcb.ref_point1_y = new_subpcb.offset_y;
 			new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
 			new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+			new_subpcb.enabled = m_cfg_projects->ReadBool(subpcb_name+"enabled", 1);
 			m_project.pcbs.Add(new_subpcb);
 		}
 	} else {
@@ -892,6 +918,7 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 		new_subpcb.ref_point1_y = new_subpcb.offset_y;
 		new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
 		new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+		new_subpcb.enabled = 1;
 		m_project.pcbs.Add(new_subpcb);
 		SaveProjectInfo();
 	}
@@ -920,8 +947,9 @@ void PnP_convFrame::RedrawProjectInfo()
 	m_pgProps->Append( new wxFloatProperty("Offset Y", wxPG_LABEL, m_project.offset_y) );		m_pgProps->SetPropertyReadOnly("Offset Y");
 	bool_prop = new wxBoolProperty("Apply offset", wxPG_LABEL, m_project.apply_offset);
 	bool_prop->SetAttribute(wxPG_BOOL_USE_CHECKBOX, true);
-	m_pgProps->Append( bool_prop );									m_pgProps->SetPropertyReadOnly("Apply offset");
+	m_pgProps->Append( bool_prop );
 	long subpcbs = m_project.pcbs.GetCount();
+	m_pgProps->Append( new wxIntProperty("SubPCB count", wxPG_LABEL, subpcbs) );
 	for (long index = 0; index < subpcbs; index++)
 	{
 		wxString cat_name = wxString::Format("SubPcb %ld", index);
@@ -936,6 +964,9 @@ void PnP_convFrame::RedrawProjectInfo()
 		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("ref_point1_y", wxPG_LABEL, m_project.pcbs[index].ref_point1_y) );
 		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("ref_point2_x", wxPG_LABEL, m_project.pcbs[index].ref_point2_x) );
 		m_pgProps->AppendIn(subpcbProp, new wxFloatProperty ("ref_point2_y", wxPG_LABEL, m_project.pcbs[index].ref_point2_y) );
+		bool_prop = new wxBoolProperty("Enabled", wxPG_LABEL, m_project.pcbs[index].enabled);
+		bool_prop->SetAttribute(wxPG_BOOL_USE_CHECKBOX, true);
+		m_pgProps->AppendIn(subpcbProp, bool_prop );
 	}
 }
 
@@ -960,6 +991,43 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 		m_project.height = value.As<double>();
 	} else if ( prop_name == "Angle" ) {
 		m_project.angle = value.As<long>();
+	} else if ( prop_name == "Apply offset" ) {
+		m_project.apply_offset = value.As<bool>();
+	} else if ( prop_name == "SubPCB count" ) {
+		int new_subpcb_count = value.As<int>();
+		int subpcbs = m_project.pcbs.GetCount();
+		if(new_subpcb_count < 1)
+		{
+			wxMessageBox("SubPcb count must be grater then 0!", "Input error");
+			property->SetValue(subpcbs);
+			return;
+		}
+		if(new_subpcb_count < subpcbs)
+		{
+			if(wxYES != wxMessageBox(wxString::Format("Are you shure that you want to delete %d last subcpbs?", subpcbs - new_subpcb_count), "Warning", wxYES_NO|wxCENTRE))
+			{
+				property->SetValue(subpcbs);
+				return;
+			}
+			m_project.pcbs.RemoveAt(new_subpcb_count, subpcbs - new_subpcb_count);
+		} else {
+			for(int index = new_subpcb_count - subpcbs; index > 0; index--)
+			{
+				t_subpcb_descr new_subpcb;
+				new_subpcb.subpcb_name = wxString::Format("SubPCB %d", (int)m_project.pcbs.GetCount());
+				new_subpcb.size_x = 100;
+				new_subpcb.size_y = 100;
+				new_subpcb.offset_x = 0;
+				new_subpcb.offset_y = 0;
+				new_subpcb.ref_point1_x = new_subpcb.offset_x;
+				new_subpcb.ref_point1_y = new_subpcb.offset_y;
+				new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
+				new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+				new_subpcb.enabled = 1;
+				m_project.pcbs.Add(new_subpcb);
+			}
+		}
+
 	} else if ( prop_name.StartsWith("SubPcb ") ) {
 		prop_name = prop_name.AfterFirst('.');
 		wxPGProperty* category = property->GetParent();
@@ -975,6 +1043,8 @@ void PnP_convFrame::OnPropertyGridChanged(wxPropertyGridEvent& a_event)
 		if(prop_name == "PCB name")
 		{
 			subpcb.subpcb_name = value.As<wxString>();
+		} else if(prop_name == "enabled") {
+			subpcb.enabled = value.As<bool>();
 		} else if((prop_name == "size_x")||(prop_name == "size_y")||(prop_name == "offset_x")||(prop_name == "offset_y")) {
 			subpcb.size_x   = category->GetPropertyByName("size_x")->GetValue().GetDouble();
 			subpcb.size_y   = category->GetPropertyByName("size_y")->GetValue().GetDouble();

@@ -73,7 +73,7 @@ wxString cCompTypeTable::GetColLabelValue( int a_col )
 			result = _T("Name");
 			break;
 		case COL_PATTERN:
-			result = _T("Patt Name");
+			result = _T("Pattern");
 			break;
 		case COL_PNP_NAME:
 			result = _T("Name in PnP");

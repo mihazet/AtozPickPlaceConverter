@@ -90,7 +90,7 @@ wxString cPatternTable::GetColLabelValue( int a_col )
 	switch (a_col)
 	{
 		case COL_PATTERN:
-			result = _T("Patt Name");
+			result = _T("Pattern");
 			break;
 		case COL_PNP_PACKAGE:
 			result = _T("Package");
