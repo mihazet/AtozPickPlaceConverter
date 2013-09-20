@@ -28,7 +28,7 @@ struct t_component_descr {
 	double		pnp_location_y;/**< координата центра компонента в PP-050/DD-500 */
 	double		pnp_angle;/**< угол поворота компонента в PP-050/DD-500 */
 	bool		pnp_enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
-	int		pnp_subpcb_index;/**< К какому куску платы относится */
+	size_t		pnp_subpcb_index;/**< К какому куску платы относится */
 	t_component_descr() :
 		cad_location_x(0), cad_location_y(0), cad_angle(0), enabled(true),
 		pnp_location_x(0), pnp_location_y(0), pnp_angle(0), pnp_enabled(true),
@@ -62,6 +62,21 @@ struct t_pattern_descr {
 		comp_count(1), enabled(true), is_new(true) {}
 };
 
+#define FID_MARK_USE_IGNORE		0
+#define FID_MARK_USE_FM1		1
+#define FID_MARK_USE_FM2		2
+#define FID_MARK_USE_FM3		3
+#define FID_MARK_USE_LOCAL		4
+
+struct t_fid_mark_descr {
+	int		component_index;/**< Индекс реперной точки в списке компонентов */
+	int		usage_type;/**< Как использовать */
+	int		use_as_global;/**< Глобальный репер (для всей панели) */
+	wxStringArray	local_for_comps;/**< Список компонентов, с которыми ассоциирован этот локальный репер (через ";") */
+	t_fid_mark_descr() :
+		component_index(0), usage_type(FID_MARK_USE_IGNORE), use_as_global(FID_MARK_USE_IGNORE) {}
+};
+
 struct t_xml_node_ptrs {
 	wxXmlNode *parent;
 	wxXmlNode *last_child;
@@ -72,6 +87,7 @@ struct t_xml_node_ptrs {
 WX_DECLARE_OBJARRAY(struct t_component_descr, tComponentDescr);
 WX_DEFINE_SORTED_ARRAY(struct t_component_type_descr *, tComponentTypeDescr);
 WX_DEFINE_SORTED_ARRAY(struct t_pattern_descr *, tPatternDescr);
+WX_DEFINE_SORTED_ARRAY(struct t_fid_mark_descr *, tFidMarkDescr);
 
 struct t_subpcb_descr {
 	wxString	subpcb_name; /**< Имя платы */

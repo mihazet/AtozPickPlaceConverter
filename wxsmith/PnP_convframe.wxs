@@ -27,7 +27,7 @@
 					<creating_code>$(THIS) = new $(CLASS)($(PARENT),$(ID));</creating_code>
 					<include_file>wx/propgrid/propgrid.h</include_file>
 					<style></style>
-					<size>100,-1</size>
+					<size>200,-1</size>
 				</object>
 				<name>auiProperties</name>
 				<caption>Pane caption</caption>
@@ -87,7 +87,7 @@
 								</object>
 							</object>
 						</object>
-						<label>Packages</label>
+						<label>Patterns</label>
 					</object>
 				</object>
 				<name>auiPaneGraphs</name>

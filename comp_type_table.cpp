@@ -1,9 +1,7 @@
 #include "comp_type_table.h"
 #include <wx/fileconf.h>
 
-
-
-enum {
+enum eCompTypeTable {
 	COL_NAME = 0,
 	COL_PATTERN,
 	COL_PNP_NAME,

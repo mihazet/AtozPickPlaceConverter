@@ -748,11 +748,11 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	wxXmlNode *templates_node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Templates");
 
 	size_t comp_count = m_components_list.Count();
-	for (long subpcb_index = 0; subpcb_index < subpcbs; subpcb_index++)
+	for (size_t subpcb_index = 0; subpcb_index < subpcbs; subpcb_index++)
 	{
 		wxXmlNode *panel_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panel");
 		panels_node->AddChild(panel_node);
-		panel_node->AddAttribute("Ref", wxString::Format("%ld", subpcb_index+1));
+		panel_node->AddAttribute("Ref", wxString::Format("%zu", subpcb_index+1));
 		panel_node->AddAttribute("Template", m_project.pcbs[subpcb_index].subpcb_name);
 		panel_node->AddAttribute("Position", wxString::Format("%ld,%ld", (long)((m_project.pcbs[subpcb_index].offset_x-m_project.offset_x)*1000),
 										 (long)((m_project.pcbs[subpcb_index].offset_y-m_project.offset_y)*1000)));

@@ -1,5 +1,5 @@
-#ifndef COMP_TYPE_TABLE_H
-#define COMP_TYPE_TABLE_H
+#ifndef FID_MARK_TABLE_H
+#define FID_MARK_TABLE_H
 
 #include "common.h"
 #include <wx/wx.h>
@@ -7,12 +7,12 @@
 
 class wxFileConfig;
 
-class cCompTypeTable : public wxGridTableBase
+class cFidMarkTable : public wxGridTableBase
 {
 public:
-	cCompTypeTable(tComponentTypeDescr *a_data);
-	virtual ~cCompTypeTable();
-	void SetCompTypesConfig(wxFileConfig *a_config) {m_config = a_config;};
+	cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks);
+	virtual ~cFidMarkTable();
+	void SetProjectsConfig(wxFileConfig *a_config) {m_config = a_config;};
 
 	// You must override these functions in a derived table class
 	//
@@ -91,8 +91,11 @@ public:
 
 protected:
 private:
-	tComponentTypeDescr	*m_comp_type_data;
+	tComponentDescr		*m_component_data;
+	tFidMarkDescr		*m_fid_mark_data;
 	wxFileConfig		*m_config;
+	wxArrayString		m_array_on_subpcb;
+	wxArrayString		m_array_global;
 };
 
 #endif // EVENTS_TABLE_H

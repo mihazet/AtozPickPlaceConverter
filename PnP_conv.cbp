@@ -51,6 +51,8 @@
 		<Unit filename="comp_table.h" />
 		<Unit filename="comp_type_table.cpp" />
 		<Unit filename="comp_type_table.h" />
+		<Unit filename="fid_mark_table.cpp" />
+		<Unit filename="fid_mark_table.h" />
 		<Unit filename="pattern_table.cpp" />
 		<Unit filename="pattern_table.h" />
 		<Unit filename="resource.rc">

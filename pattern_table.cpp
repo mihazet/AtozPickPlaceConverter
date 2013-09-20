@@ -1,7 +1,6 @@
 #include "pattern_table.h"
 #include <wx/fileconf.h>
 
-
 enum ePatternTable {
 	COL_PATTERN = 0,
 	COL_PNP_PACKAGE,
@@ -140,6 +139,12 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 			break;
 		case COL_PNP_FOOTPRINT:
 			result = data->pnp_footprint;
+			break;
+		case COL_OFFSET_X:
+			result = wxString::Format("%f", data->offset_x);
+			break;
+		case COL_OFFSET_Y:
+			result = wxString::Format("%f", data->offset_y);
 			break;
 		case COL_OFFSET_X:
 			result = wxString::Format("%f", data->offset_x);

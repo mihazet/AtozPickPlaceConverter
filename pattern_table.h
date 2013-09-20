@@ -5,8 +5,6 @@
 #include <wx/wx.h>
 #include <wx/grid.h>
 
-//#define USE_TIMESTAMP_WITH_DATE		1
-//#define AUTOUPDATE_INTERVAL		500
 class wxFileConfig;
 
 class cPatternTable : public wxGridTableBase

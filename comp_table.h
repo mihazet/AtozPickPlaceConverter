@@ -5,9 +5,6 @@
 #include <wx/wx.h>
 #include <wx/listctrl.h>
 
-//#define USE_TIMESTAMP_WITH_DATE		1
-//#define AUTOUPDATE_INTERVAL		500
-
 class cCompTable : public wxListCtrl
 {
 public:

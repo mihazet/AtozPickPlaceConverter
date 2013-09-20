@@ -1,11 +1,5 @@
 #include "comp_table.h"
 
-enum {
-	ID_TIMER,
-	ID_MENU_AUTOSCROLL,
-	ID_MENU_AUTOUPDATE
-};
-
 BEGIN_EVENT_TABLE(cCompTable, wxListCtrl)
 //	EVT_CONTEXT_MENU(cCompTable::OnContextMenu)
 //	EVT_MENU(ID_MENU_AUTOUPDATE, cCompTable::OnAutoUpdate)
@@ -123,7 +117,7 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 			case COL_PNP_ANGLE:
 				return wxString::Format("%.1f", data->pnp_angle);
 			case COL_PNP_SUBPCB:
-				return wxString::Format("%d", data->pnp_subpcb_index);
+				return wxString::Format("%zu", data->pnp_subpcb_index);
 			case COL_PNP_ENABLED:
 				return wxString::Format("%d", data->pnp_enabled);;
 			default:
