@@ -8,28 +8,28 @@
 class wxXmlNode;
 
 struct t_component_descr {
-///исходные данные
-	wxString	designator;/**< Обозначение компонента */
-	wxString	cad_name;/**< Имя компонента в PCAD/Altium */
-	wxString	cad_pattern;/**< Имя посадочного места в PCAD/Altium */
-	wxString	cad_value;/**< Номинал компонента, или его название */
-	wxString	full_name;/**< Идентификатор, расчитанный на базе имён и номинала */
-	wxString	layer;/**< Слой, в котором находится компонент */
-	double		cad_location_x;/**< координата реферной точки компонента в PCAD/Altium */
-	double		cad_location_y;/**< координата реферной точки компонента в PCAD/Altium */
-	double		cad_angle;/**< угол поворота компонента в PCAD/Altium */
-///рассчитанные значения
-	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
-	wxString	strip_value;/**< Номинал компонента, или его название после удаления маркера DNP*/
-	wxString	pattern;/**< Имя посадочного места в базе конвертора */
-	wxString	pnp_name;/**< Имя компонента в PP-050/DD-500 */
-	wxString	pnp_package;/**< Имя корпуса в PP-050 */
-	wxString	pnp_footprint;/**< Имя футпринта в DD-500 */
-	double		pnp_location_x;/**< координата центра компонента в PP-050/DD-500 */
-	double		pnp_location_y;/**< координата центра компонента в PP-050/DD-500 */
-	double		pnp_angle;/**< угол поворота компонента в PP-050/DD-500 */
-	bool		pnp_enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
-	size_t		pnp_subpcb_index;/**< К какому куску платы относится */
+///РёСЃС…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
+	wxString	designator;/**< РћР±РѕР·РЅР°С‡РµРЅРёРµ РєРѕРјРїРѕРЅРµРЅС‚Р° */
+	wxString	cad_name;/**< РРјСЏ РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PCAD/Altium */
+	wxString	cad_pattern;/**< РРјСЏ РїРѕСЃР°РґРѕС‡РЅРѕРіРѕ РјРµСЃС‚Р° РІ PCAD/Altium */
+	wxString	cad_value;/**< РќРѕРјРёРЅР°Р» РєРѕРјРїРѕРЅРµРЅС‚Р°, РёР»Рё РµРіРѕ РЅР°Р·РІР°РЅРёРµ */
+	wxString	full_name;/**< РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ, СЂР°СЃС‡РёС‚Р°РЅРЅС‹Р№ РЅР° Р±Р°Р·Рµ РёРјС‘РЅ Рё РЅРѕРјРёРЅР°Р»Р° */
+	wxString	layer;/**< РЎР»РѕР№, РІ РєРѕС‚РѕСЂРѕРј РЅР°С…РѕРґРёС‚СЃСЏ РєРѕРјРїРѕРЅРµРЅС‚ */
+	double		cad_location_x;/**< РєРѕРѕСЂРґРёРЅР°С‚Р° СЂРµС„РµСЂРЅРѕР№ С‚РѕС‡РєРё РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PCAD/Altium */
+	double		cad_location_y;/**< РєРѕРѕСЂРґРёРЅР°С‚Р° СЂРµС„РµСЂРЅРѕР№ С‚РѕС‡РєРё РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PCAD/Altium */
+	double		cad_angle;/**< СѓРіРѕР» РїРѕРІРѕСЂРѕС‚Р° РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PCAD/Altium */
+///СЂР°СЃСЃС‡РёС‚Р°РЅРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ
+	bool		enabled;/**< РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ Р»Рё РєРѕРјРїРѕРЅРµРЅС‚ РІ PP-050/DD-500 */
+	wxString	strip_value;/**< РќРѕРјРёРЅР°Р» РєРѕРјРїРѕРЅРµРЅС‚Р°, РёР»Рё РµРіРѕ РЅР°Р·РІР°РЅРёРµ РїРѕСЃР»Рµ СѓРґР°Р»РµРЅРёСЏ РјР°СЂРєРµСЂР° DNP*/
+	wxString	pattern;/**< РРјСЏ РїРѕСЃР°РґРѕС‡РЅРѕРіРѕ РјРµСЃС‚Р° РІ Р±Р°Р·Рµ РєРѕРЅРІРµСЂС‚РѕСЂР° */
+	wxString	pnp_name;/**< РРјСЏ РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PP-050/DD-500 */
+	wxString	pnp_package;/**< РРјСЏ РєРѕСЂРїСѓСЃР° РІ PP-050 */
+	wxString	pnp_footprint;/**< РРјСЏ С„СѓС‚РїСЂРёРЅС‚Р° РІ DD-500 */
+	double		pnp_location_x;/**< РєРѕРѕСЂРґРёРЅР°С‚Р° С†РµРЅС‚СЂР° РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PP-050/DD-500 */
+	double		pnp_location_y;/**< РєРѕРѕСЂРґРёРЅР°С‚Р° С†РµРЅС‚СЂР° РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PP-050/DD-500 */
+	double		pnp_angle;/**< СѓРіРѕР» РїРѕРІРѕСЂРѕС‚Р° РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PP-050/DD-500 */
+	bool		pnp_enabled;/**< РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ Р»Рё РєРѕРјРїРѕРЅРµРЅС‚ РІ PP-050/DD-500 */
+	size_t		pnp_subpcb_index;/**< Рљ РєР°РєРѕРјСѓ РєСѓСЃРєСѓ РїР»Р°С‚С‹ РѕС‚РЅРѕСЃРёС‚СЃСЏ */
 	t_component_descr() :
 		cad_location_x(0), cad_location_y(0), cad_angle(0), enabled(true),
 		pnp_location_x(0), pnp_location_y(0), pnp_angle(0), pnp_enabled(true),
@@ -37,45 +37,49 @@ struct t_component_descr {
 };
 
 struct t_component_type_descr {
-	wxString	name;/**< Идентификатор, расчитанный на базе имён и номинала в PCAD/Altium */
-	wxString	pattern;/**< Имя посадочного места в базе конвертора */
-	wxString	pnp_name;/**< Имя компонента в PP-050/DD-500 */
-	double		value;/**< Номинальное значение для резисторов/еондёров/etc. */
-	wxString	unit;/**< Размерность номинального значения */
-	wxString	value_postfix;/**< Утточнение номинала (например вольтаж кондёра) */
-	size_t		comp_count;/**< Количество компонентов этого типа на плате */
-	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
-	bool		is_new;/**< Был ли этот компонент в базе конвертора */
+	wxString	name;/**< РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ, СЂР°СЃС‡РёС‚Р°РЅРЅС‹Р№ РЅР° Р±Р°Р·Рµ РёРјС‘РЅ Рё РЅРѕРјРёРЅР°Р»Р° РІ PCAD/Altium */
+	wxString	pattern;/**< РРјСЏ РїРѕСЃР°РґРѕС‡РЅРѕРіРѕ РјРµСЃС‚Р° РІ Р±Р°Р·Рµ РєРѕРЅРІРµСЂС‚РѕСЂР° */
+	wxString	pnp_name;/**< РРјСЏ РєРѕРјРїРѕРЅРµРЅС‚Р° РІ PP-050/DD-500 */
+	double		value;/**< РќРѕРјРёРЅР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РґР»СЏ СЂРµР·РёСЃС‚РѕСЂРѕРІ/РµРѕРЅРґС‘СЂРѕРІ/etc. */
+	wxString	unit;/**< Р Р°Р·РјРµСЂРЅРѕСЃС‚СЊ РЅРѕРјРёРЅР°Р»СЊРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ */
+	wxString	value_postfix;/**< РЈС‚С‚РѕС‡РЅРµРЅРёРµ РЅРѕРјРёРЅР°Р»Р° (РЅР°РїСЂРёРјРµСЂ РІРѕР»СЊС‚Р°Р¶ РєРѕРЅРґС‘СЂР°) */
+	size_t		comp_count;/**< РљРѕР»РёС‡РµСЃС‚РІРѕ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ СЌС‚РѕРіРѕ С‚РёРїР° РЅР° РїР»Р°С‚Рµ */
+	bool		enabled;/**< РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ Р»Рё РєРѕРјРїРѕРЅРµРЅС‚ РІ PP-050/DD-500 */
+	bool		is_new;/**< Р‘С‹Р» Р»Рё СЌС‚РѕС‚ РєРѕРјРїРѕРЅРµРЅС‚ РІ Р±Р°Р·Рµ РєРѕРЅРІРµСЂС‚РѕСЂР° */
 	t_component_type_descr() : value(0), comp_count(1), enabled(true), is_new(true) {}
 };
 
 struct t_pattern_descr {
-	wxString	pattern;/**< Имя посадочного места в базе конвертора */
-	wxString	pnp_package;/**< Имя корпуса в PP-050 */
-	wxString	pnp_footprint;/**< Имя футпринта в DD-500 */
-	double		offset_x;/**< смещение центра компонента от реферной точки */
-	double		offset_y;/**< смещение центра компонента от реферной точки */
-	double		angle;/**< угол поворота компонента в базе PCAD/Altium относительно PP-050/DD-500 */
-	size_t		comp_count;/**< Количество компонентов с таким корпусом на плате */
-	bool		enabled;/**< Устанавливается ли компонент с таким корпусом в PP-050/DD-500 */
-	bool		is_new;/**< Был ли этот корпус в базе конвертора */
+	wxString	pattern;/**< РРјСЏ РїРѕСЃР°РґРѕС‡РЅРѕРіРѕ РјРµСЃС‚Р° РІ Р±Р°Р·Рµ РєРѕРЅРІРµСЂС‚РѕСЂР° */
+	wxString	pnp_package;/**< РРјСЏ РєРѕСЂРїСѓСЃР° РІ PP-050 */
+	wxString	pnp_footprint;/**< РРјСЏ С„СѓС‚РїСЂРёРЅС‚Р° РІ DD-500 */
+	double		offset_x;/**< СЃРјРµС‰РµРЅРёРµ С†РµРЅС‚СЂР° РєРѕРјРїРѕРЅРµРЅС‚Р° РѕС‚ СЂРµС„РµСЂРЅРѕР№ С‚РѕС‡РєРё */
+	double		offset_y;/**< СЃРјРµС‰РµРЅРёРµ С†РµРЅС‚СЂР° РєРѕРјРїРѕРЅРµРЅС‚Р° РѕС‚ СЂРµС„РµСЂРЅРѕР№ С‚РѕС‡РєРё */
+	double		angle;/**< СѓРіРѕР» РїРѕРІРѕСЂРѕС‚Р° РєРѕРјРїРѕРЅРµРЅС‚Р° РІ Р±Р°Р·Рµ PCAD/Altium РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ PP-050/DD-500 */
+	size_t		comp_count;/**< РљРѕР»РёС‡РµСЃС‚РІРѕ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ СЃ С‚Р°РєРёРј РєРѕСЂРїСѓСЃРѕРј РЅР° РїР»Р°С‚Рµ */
+	bool		enabled;/**< РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ Р»Рё РєРѕРјРїРѕРЅРµРЅС‚ СЃ С‚Р°РєРёРј РєРѕСЂРїСѓСЃРѕРј РІ PP-050/DD-500 */
+	bool		is_new;/**< Р‘С‹Р» Р»Рё СЌС‚РѕС‚ РєРѕСЂРїСѓСЃ РІ Р±Р°Р·Рµ РєРѕРЅРІРµСЂС‚РѕСЂР° */
 	t_pattern_descr() : offset_x(0), offset_y(0), angle(0),
 		comp_count(1), enabled(true), is_new(true) {}
 };
 
-#define FID_MARK_USE_IGNORE		0
-#define FID_MARK_USE_FM1		1
-#define FID_MARK_USE_FM2		2
-#define FID_MARK_USE_FM3		3
-#define FID_MARK_USE_LOCAL		4
+enum eFidMarkUse {
+	FID_MARK_USE_UNKNOWN = 0,
+	FID_MARK_USE_IGNORE,
+	FID_MARK_USE_FM1,
+	FID_MARK_USE_FM2,
+	FID_MARK_USE_FM3,
+	FID_MARK_USE_LOCAL
+};
 
 struct t_fid_mark_descr {
-	int		component_index;/**< Индекс реперной точки в списке компонентов */
-	int		usage_type;/**< Как использовать */
-	int		usage_as_global;/**< Глобальный репер (для всей панели) */
-	wxArrayString	local_for_comps;/**< Список компонентов, с которыми ассоциирован этот локальный репер (через ";") */
+	wxString	designator;/**< Р”РµСЃРёРіРЅР°С‚РѕСЂ СЂРµРїРµСЂРЅРѕР№ С‚РѕС‡РєРё ()РґСѓР±Р»РёСЂРѕРІР°РЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё, РЅРѕ РЅСѓР¶РЅРѕ */
+	int		component_index;/**< РРЅРґРµРєСЃ СЂРµРїРµСЂРЅРѕР№ С‚РѕС‡РєРё РІ СЃРїРёСЃРєРµ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ */
+	int		usage_type;/**< РљР°Рє РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ */
+	int		usage_as_global;/**< Р“Р»РѕР±Р°Р»СЊРЅС‹Р№ СЂРµРїРµСЂ (РґР»СЏ РІСЃРµР№ РїР°РЅРµР»Рё) */
+//	wxArrayString	local_for_comps;/**< РЎРїРёСЃРѕРє РєРѕРјРїРѕРЅРµРЅС‚РѕРІ, СЃ РєРѕС‚РѕСЂС‹РјРё Р°СЃСЃРѕС†РёРёСЂРѕРІР°РЅ СЌС‚РѕС‚ Р»РѕРєР°Р»СЊРЅС‹Р№ СЂРµРїРµСЂ (С‡РµСЂРµР· ";") */
 	t_fid_mark_descr() :
-		component_index(0), usage_type(FID_MARK_USE_IGNORE), usage_as_global(FID_MARK_USE_IGNORE) {}
+		component_index(0), usage_type(FID_MARK_USE_UNKNOWN), usage_as_global(FID_MARK_USE_UNKNOWN) {}
 };
 
 struct t_xml_node_ptrs {
@@ -90,33 +94,33 @@ WX_DEFINE_SORTED_ARRAY(struct t_pattern_descr *, tPatternDescr);
 WX_DEFINE_SORTED_ARRAY(struct t_fid_mark_descr *, tFidMarkDescr);
 
 struct t_subpcb_descr {
-	wxString	subpcb_name; /**< Имя платы */
-	double		ref_point1_x;/**< Координаты угла платы */
-	double		ref_point1_y;/**< Координаты угла платы */
-	double		ref_point2_x;/**< Координаты угла платы */
-	double		ref_point2_y;/**< Координаты угла платы */
-	double		size_x;  /**< размер платы */
-	double		size_y;  /**< размер платы */
-	double		offset_x;/**< смещение платы */
-	double		offset_y;/**< смещение платы */
-	bool		enabled; /**< не собирать эту плату */
+	wxString	subpcb_name; /**< РРјСЏ РїР»Р°С‚С‹ */
+	double		ref_point1_x;/**< РљРѕРѕСЂРґРёРЅР°С‚С‹ СѓРіР»Р° РїР»Р°С‚С‹ */
+	double		ref_point1_y;/**< РљРѕРѕСЂРґРёРЅР°С‚С‹ СѓРіР»Р° РїР»Р°С‚С‹ */
+	double		ref_point2_x;/**< РљРѕРѕСЂРґРёРЅР°С‚С‹ СѓРіР»Р° РїР»Р°С‚С‹ */
+	double		ref_point2_y;/**< РљРѕРѕСЂРґРёРЅР°С‚С‹ СѓРіР»Р° РїР»Р°С‚С‹ */
+	double		size_x;  /**< СЂР°Р·РјРµСЂ РїР»Р°С‚С‹ */
+	double		size_y;  /**< СЂР°Р·РјРµСЂ РїР»Р°С‚С‹ */
+	double		offset_x;/**< СЃРјРµС‰РµРЅРёРµ РїР»Р°С‚С‹ */
+	double		offset_y;/**< СЃРјРµС‰РµРЅРёРµ РїР»Р°С‚С‹ */
+	bool		enabled; /**< РЅРµ СЃРѕР±РёСЂР°С‚СЊ СЌС‚Сѓ РїР»Р°С‚Сѓ */
 	t_subpcb_descr() : ref_point1_x(0), ref_point1_y(0), ref_point2_x(0), ref_point2_y(0),
 		size_x(0), size_y(0), offset_x(0), offset_y(0),
 		enabled(true) {}
 };
 WX_DECLARE_OBJARRAY(struct t_subpcb_descr, tSubPcbs);
 struct t_board_descr {
-	wxString	project_name;/**< Имя проекта (пока не используем) */
-	wxString	filename;    /**< Имя файла, экспортированноего из CAD */
-	wxString	fullfilename;/**< Имя файла, экспортированноего из CAD */
-	double		height;  /**< толщина платы */
-	int		angle;  /**< Угол, под которым плата загружентся в машину (0=0, 1=90, 2=180, 3=270) */
-	double		size_x;  /**< полный размер платы */
-	double		size_y;  /**< полный размер платы */
-	double		offset_x;/**< глобальное смещение платы */
-	double		offset_y;/**< глобальное смещение платы */
-	bool		apply_offset;/**< координаты компонентов уже сдвинуты на offset - надо передвинуть обратно */
-	tSubPcbs	pcbs; /**< Габариты плат на листе */
+	wxString	project_name;/**< РРјСЏ РїСЂРѕРµРєС‚Р° (РїРѕРєР° РЅРµ РёСЃРїРѕР»СЊР·СѓРµРј) */
+	wxString	filename;    /**< РРјСЏ С„Р°Р№Р»Р°, СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°РЅРЅРѕРµРіРѕ РёР· CAD */
+	wxString	fullfilename;/**< РРјСЏ С„Р°Р№Р»Р°, СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°РЅРЅРѕРµРіРѕ РёР· CAD */
+	double		height;  /**< С‚РѕР»С‰РёРЅР° РїР»Р°С‚С‹ */
+	int		angle;  /**< РЈРіРѕР», РїРѕРґ РєРѕС‚РѕСЂС‹Рј РїР»Р°С‚Р° Р·Р°РіСЂСѓР¶РµРЅС‚СЃСЏ РІ РјР°С€РёРЅСѓ (0=0, 1=90, 2=180, 3=270) */
+	double		size_x;  /**< РїРѕР»РЅС‹Р№ СЂР°Р·РјРµСЂ РїР»Р°С‚С‹ */
+	double		size_y;  /**< РїРѕР»РЅС‹Р№ СЂР°Р·РјРµСЂ РїР»Р°С‚С‹ */
+	double		offset_x;/**< РіР»РѕР±Р°Р»СЊРЅРѕРµ СЃРјРµС‰РµРЅРёРµ РїР»Р°С‚С‹ */
+	double		offset_y;/**< РіР»РѕР±Р°Р»СЊРЅРѕРµ СЃРјРµС‰РµРЅРёРµ РїР»Р°С‚С‹ */
+	bool		apply_offset;/**< РєРѕРѕСЂРґРёРЅР°С‚С‹ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ СѓР¶Рµ СЃРґРІРёРЅСѓС‚С‹ РЅР° offset - РЅР°РґРѕ РїРµСЂРµРґРІРёРЅСѓС‚СЊ РѕР±СЂР°С‚РЅРѕ */
+	tSubPcbs	pcbs; /**< Р“Р°Р±Р°СЂРёС‚С‹ РїР»Р°С‚ РЅР° Р»РёСЃС‚Рµ */
 	t_board_descr() : height(1.6), angle(0),
 		size_x(0), size_y(0), offset_x(0), offset_y(0),
 		apply_offset(false) {}

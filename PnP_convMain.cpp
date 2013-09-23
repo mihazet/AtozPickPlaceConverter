@@ -41,11 +41,7 @@ int CmpPatternFunc(t_pattern_descr *a_arg1, t_pattern_descr *a_arg2)
 }
 int CmpFidMarkFunc(t_fid_mark_descr *a_arg1, t_fid_mark_descr *a_arg2)
 {
-	if(a_arg1->component_index == a_arg2->component_index)
-		return 0;
-	if(a_arg1->component_index < a_arg2->component_index)
-		return -1;
-	return 1;
+	return (a_arg1->designator).CmpNoCase(a_arg2->designator);
 }
 
 //helper functions
@@ -585,7 +581,6 @@ bool PnP_convFrame::NormalizeNominal(t_component_type_descr *a_component_type)
 
 void PnP_convFrame::UpdateComponents()
 {
-	WX_CLEAR_ARRAY(m_fid_marks_list);	m_fid_marks_list.Clear();
 	size_t comp_count = m_components_list.GetCount();
 	for(size_t index = 0; index < comp_count; index++)
 	{
@@ -668,37 +663,56 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 	{
 		int index_local  = 0;
 		int index_global = 0;
+
 		fid_mark = new t_fid_mark_descr;
+		fid_mark->designator = a_component->designator;
+		long fm_descr_index = m_fid_marks_list.Index(fid_mark);
+		if(wxNOT_FOUND == fm_descr_index)
+		{
+			fid_mark->designator = a_component->designator;
+			m_fid_marks_list.Add(fid_mark);
+		} else {
+			delete fid_mark;
+			fid_mark = m_fid_marks_list[fm_descr_index];
+		}
+
 		fid_mark->component_index = a_comp_index;
 		for(int fm_index = m_fid_marks_list.GetCount()-1; fm_index >= 0; fm_index--)
 		{
 			t_component_descr *tmp_fm_comp = &m_components_list[m_fid_marks_list[fm_index]->component_index];
+			if(tmp_fm_comp->layer != a_component->layer)
+				continue;
 			index_global |= 1<<(m_fid_marks_list[fm_index]->usage_as_global);
-			if((tmp_fm_comp->pnp_subpcb_index != a_component->pnp_subpcb_index) || (tmp_fm_comp->layer != a_component->layer))
+			if(tmp_fm_comp->pnp_subpcb_index != a_component->pnp_subpcb_index)
 				continue;
 			index_local |= 1<<(m_fid_marks_list[fm_index]->usage_type);
 		}
-		if(!(index_local & (1<<FID_MARK_USE_FM1)))
+		if(FID_MARK_USE_UNKNOWN == fid_mark->usage_type)
 		{
-			fid_mark->usage_type = FID_MARK_USE_FM1;
-		} else if(!(index_local & (1<<FID_MARK_USE_FM2))) {
-			fid_mark->usage_type = FID_MARK_USE_FM2;
-		} else if(!(index_local & (1<<FID_MARK_USE_FM3))) {
-			fid_mark->usage_type = FID_MARK_USE_FM3;
-		} else {
-			fid_mark->usage_type = FID_MARK_USE_IGNORE;
+			if(!(index_local & (1<<FID_MARK_USE_FM1)))
+			{
+				fid_mark->usage_type = FID_MARK_USE_FM1;
+			} else if(!(index_local & (1<<FID_MARK_USE_FM2))) {
+				fid_mark->usage_type = FID_MARK_USE_FM2;
+			} else if(!(index_local & (1<<FID_MARK_USE_FM3))) {
+				fid_mark->usage_type = FID_MARK_USE_FM3;
+			} else {
+				fid_mark->usage_type = FID_MARK_USE_IGNORE;
+			}
 		}
-		if(!(index_global & (1<<FID_MARK_USE_FM1)))
+		if(FID_MARK_USE_UNKNOWN == fid_mark->usage_as_global)
 		{
-			fid_mark->usage_as_global = FID_MARK_USE_FM1;
-		} else if(!(index_global & (1<<FID_MARK_USE_FM2))) {
-			fid_mark->usage_as_global = FID_MARK_USE_FM2;
-		} else if(!(index_global & (1<<FID_MARK_USE_FM3))) {
-			fid_mark->usage_as_global = FID_MARK_USE_FM3;
-		} else {
-			fid_mark->usage_as_global = FID_MARK_USE_IGNORE;
+			if(!(index_global & (1<<FID_MARK_USE_FM1)))
+			{
+				fid_mark->usage_as_global = FID_MARK_USE_FM1;
+			} else if(!(index_global & (1<<FID_MARK_USE_FM2))) {
+				fid_mark->usage_as_global = FID_MARK_USE_FM2;
+			} else if(!(index_global & (1<<FID_MARK_USE_FM3))) {
+				fid_mark->usage_as_global = FID_MARK_USE_FM3;
+			} else {
+				fid_mark->usage_as_global = FID_MARK_USE_IGNORE;
+			}
 		}
-		m_fid_marks_list.Add(fid_mark);
 	}
 
 }
@@ -792,7 +806,7 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 			}
 			if(m_components_list[index].designator.StartsWith("FM"))
 			{
-				PrintFiducial(&nodes[tmp_ind + FID_ARRAY_OFFSET], m_components_list[index], index);
+				PrintFiducial(&nodes[tmp_ind + FID_ARRAY_OFFSET], m_components_list[index]);
 			} else {
 				PrintComponent(&nodes[tmp_ind], m_components_list[index]);
 			}
@@ -836,7 +850,7 @@ void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_
 	a_node->last_child = node;
 }
 
-void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp, size_t a_comp_index)
+void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp)
 {
 	wxString ref_str;
 	wxXmlNode *node;
@@ -844,7 +858,7 @@ void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_c
 	if(NULL == a_node)
 		return;
 	fm_descr = new t_fid_mark_descr;
-	fm_descr->component_index = a_comp_index;
+	fm_descr->designator = a_comp.designator;
 	long fm_descr_index = m_fid_marks_list.Index(fm_descr);
 	delete fm_descr;
 	if(wxNOT_FOUND == fm_descr_index)

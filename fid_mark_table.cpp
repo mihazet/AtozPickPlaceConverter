@@ -38,6 +38,7 @@ cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks
 	SetColAttr (ro_float_attr, COL_LOCATION_X);
 	SetColAttr (ro_float_attr, COL_LOCATION_Y);
 
+	m_array_on_subpcb.Add("Unknown");
 	m_array_on_subpcb.Add("Not use");
 	m_array_on_subpcb.Add("Mark 1");
 	m_array_on_subpcb.Add("Mark 2");
@@ -48,6 +49,7 @@ cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks
 	choise_on_subpcb_attr->SetEditor(choise_on_subpcb_edit);
 	SetColAttr (choise_on_subpcb_attr, COL_USE_ON_SUBPCB);
 
+	m_array_global.Add("Unknown");
 	m_array_global.Add("Not use");
 	m_array_global.Add("Mark 1");
 	m_array_global.Add("Mark 2");
@@ -110,7 +112,7 @@ wxString cFidMarkTable::GetColLabelValue( int a_col )
 }
 
 // ----------------------------------------------------------------------------
-// “ÂÍÒÚ ‚ ˇ˜ÂÈÍ‡ı
+// –¢–µ–∫—Å—Ç –≤ —è—á–µ–π–∫–∞—Ö
 // ----------------------------------------------------------------------------
 wxString cFidMarkTable::GetValue(int a_row, int a_col)
 {
@@ -121,7 +123,7 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 	wxString result = wxEmptyString;
 	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
 	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
-	size_t local_for_count;
+//	size_t local_for_count;
 	switch (a_col)
 	{
 		case COL_DESIGNATOR:
@@ -149,12 +151,12 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 			result = wxString::Format("%f", data_comp->pnp_location_y);
 			break;
 		case COL_LOCAL_FOR:
-			local_for_count = data_fidmark->local_for_comps.GetCount();
-			for(size_t index = 0; index < local_for_count; index++)
-			{
-				result += data_fidmark->local_for_comps[index] + ";";
-			}
-			result = result.BeforeLast(';');//FIXME ÌÂ Ò‡Ï˚È Í‡ÒË‚˚È ÏÂÚÓ‰ Û·‡Ú¸ ÔÓÒÎÂ‰ÌËÈ ÒËÏ‚ÓÎ
+//			local_for_count = data_fidmark->local_for_comps.GetCount();
+//			for(size_t index = 0; index < local_for_count; index++)
+//			{
+//				result += data_fidmark->local_for_comps[index] + ";";
+//			}
+//			result = result.BeforeLast(';');//FIXME –Ω–µ —Å–∞–º—ã–π –∫—Ä–∞—Å–∏–≤—ã–π –º–µ—Ç–æ–¥ —É–±—Ä–∞—Ç—å –ø–æ—Å–ª–µ–¥–Ω–∏–π —Å–∏–º–≤–æ–ª
 			break;
 	}
 	return result;
