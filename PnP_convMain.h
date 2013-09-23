@@ -28,6 +28,7 @@ class wxXmlNode;
 class wxFileConfig;
 class cCompTypeTable;
 class cPatternTable;
+class cFidMarkTable;
 
 class PnP_convFrame: public wxFrame
 {
@@ -47,17 +48,19 @@ class PnP_convFrame: public wxFrame
 	tComponentDescr		m_components_list;
 	tComponentTypeDescr	m_component_types_list;
 	tPatternDescr		m_patterns_list;
+	tFidMarkDescr		m_fid_marks_list;
 	cCompTypeTable		*m_component_types_table;
 	cPatternTable		*m_pattern_table;
+	cFidMarkTable		*m_fid_marks_table;
 
 	wxString RemoveQuotes(const wxString a_str);
 	void PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp);
-	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp);
+	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp, size_t a_comp_index);
 	wxXmlNode *CreateProductSideDescr(wxString a_side);
 	bool ParseNominals(t_component_type_descr *a_component_type, wxString a_designator, wxString a_value);
 	bool NormalizeNominal(t_component_type_descr *a_component_type);
 	void UpdateComponents();
-	void UpdateComponent(t_component_descr *a_component);
+	void UpdateComponent(t_component_descr *a_component, size_t a_comp_index);
 	void ReInitLists();
 	void RedrawProjectInfo();
 	void LoadProjectInfo(wxString a_filename);
@@ -84,11 +87,13 @@ class PnP_convFrame: public wxFrame
         static const long ID_TEXTCTRL1;
         static const long ID_PROP;
         static const long ID_COMP_TABLE;
-        static const long ID_PANEL4;
+        static const long ID_PANEL_COMP;
         static const long ID_GRID_COMP_TYPE;
-        static const long ID_PANEL1;
+        static const long ID_PANEL_COMP_TYPE;
         static const long ID_GRID_PATTERN;
-        static const long ID_PANEL2;
+        static const long ID_PANEL_PAT;
+        static const long ID_GRID_FID_MARKS;
+        static const long ID_PANEL_FID;
         static const long ID_AUINOTEBOOK1;
         static const long ID_OPEN;
         static const long ID_SAVE_PROD;
@@ -98,14 +103,12 @@ class PnP_convFrame: public wxFrame
         //*)
 
         //(*Declarations(PnP_convFrame)
-        wxPanel* Panel1;
         wxGrid* m_grd_pattern;
         wxStatusBar* StatusBar1;
+        wxGrid* m_grd_fid_mark;
         wxPropertyGrid* m_pgProps;
         wxAuiManager* auiManager;
-        wxPanel* Panel2;
         wxTextCtrl* m_txtLog;
-        wxPanel* Panel4;
         wxGrid* m_grd_comp_type;
         wxAuiNotebook* auiMainNotebook;
         cCompTable* m_comp_table;

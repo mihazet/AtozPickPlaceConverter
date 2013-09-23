@@ -4,6 +4,7 @@
 enum eFidMarkTable {
 	COL_DESIGNATOR = 0,
 	COL_NAME,
+	COL_LAYER,
 	COL_SUBPCB_INDEX,
 	COL_USE_ON_SUBPCB,
 	COL_USE_GLOBAL,
@@ -13,11 +14,11 @@ enum eFidMarkTable {
 	COL_COUNT
 };
 
-cCompTypeTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks)
+cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks)
 	: wxGridTableBase()
 {
-	m_component_data = a_data;
-	m_fid_mark_data = a_data;
+	m_component_data = a_comps;
+	m_fid_mark_data = a_fidmarks;
 	m_config = NULL;
 
 	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
@@ -27,6 +28,7 @@ cCompTypeTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmark
 	ro_attr->SetReadOnly();
 	SetColAttr (ro_attr, COL_DESIGNATOR);
 	SetColAttr (ro_attr, COL_NAME);
+	SetColAttr (ro_attr, COL_LAYER);
 	SetColAttr (ro_attr, COL_SUBPCB_INDEX);
 
 	wxGridCellAttr *ro_float_attr = new wxGridCellAttr();
@@ -82,6 +84,9 @@ wxString cFidMarkTable::GetColLabelValue( int a_col )
 		case COL_NAME:
 			result = _T("Name");
 			break;
+		case COL_LAYER:
+			result = _T("Layer");
+			break;
 		case COL_SUBPCB_INDEX:
 			result = _T("SubPCB");
 			break;
@@ -105,7 +110,7 @@ wxString cFidMarkTable::GetColLabelValue( int a_col )
 }
 
 // ----------------------------------------------------------------------------
-// Ð¢ÐµÐºÑÑ‚ Ð² ÑÑ‡ÐµÐ¹ÐºÐ°Ñ…
+// Òåêñò â ÿ÷åéêàõ
 // ----------------------------------------------------------------------------
 wxString cFidMarkTable::GetValue(int a_row, int a_col)
 {
@@ -115,7 +120,8 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 	;
 	wxString result = wxEmptyString;
 	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
-	t_component_descr *data_comp = m_component_data->Item(data_fidmark->component_index);
+	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
+	size_t local_for_count;
 	switch (a_col)
 	{
 		case COL_DESIGNATOR:
@@ -124,27 +130,31 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 		case COL_NAME:
 			result = data_comp->pnp_name;
 			break;
+		case COL_LAYER:
+			result = data_comp->layer;
+			break;
 		case COL_SUBPCB_INDEX:
 			result = wxString::Format("%zu", data_comp->pnp_subpcb_index);
 			break;
 		case COL_USE_ON_SUBPCB:
-			result = m_array_on_subpcb[m_fid_mark_data->usage_type];
+			result = m_array_on_subpcb[data_fidmark->usage_type];
 			break;
 		case COL_USE_GLOBAL:
-			result = m_array_on_subpcb[m_fid_mark_data->usage_as_global];
+			result = m_array_global[data_fidmark->usage_as_global];
 			break;
 		case COL_LOCATION_X:
-			result = wxString::Format("%f", m_fid_mark_data->pnp_location_x);
+			result = wxString::Format("%f", data_comp->pnp_location_x);
 			break;
 		case COL_LOCATION_Y:
-			result = wxString::Format("%f", m_fid_mark_data->pnp_location_y);
+			result = wxString::Format("%f", data_comp->pnp_location_y);
 			break;
 		case COL_LOCAL_FOR:
-			for(size_t local_for_count = m_fid_mark_data->local_for_comps.GetCount(), size_t index = 0; index < local_for_count; index++)
+			local_for_count = data_fidmark->local_for_comps.GetCount();
+			for(size_t index = 0; index < local_for_count; index++)
 			{
-				result += m_fid_mark_data->local_for_comps[index] + ";";
+				result += data_fidmark->local_for_comps[index] + ";";
 			}
-			result = result.BeforeLast(";");//FIXME Ð½Ðµ ÑÐ°Ð¼Ñ‹Ð¹ ÐºÑ€Ð°ÑÐ¸Ð²Ñ‹Ð¹ Ð¼ÐµÑ‚Ð¾Ð´ ÑƒÐ±Ñ€Ð°Ñ‚ÑŒ Ð¿Ð¾ÑÐ»ÐµÐ´Ð½Ð¸Ð¹ ÑÐ¸Ð¼Ð²Ð¾Ð»
+			result = result.BeforeLast(';');//FIXME íå ñàìûé êðàñèâûé ìåòîä óáðàòü ïîñëåäíèé ñèìâîë
 			break;
 	}
 	return result;
@@ -161,7 +171,7 @@ void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 
 	wxString component;
 	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
-	t_component_descr *data_comp = m_component_data->Item(data_fidmark->component_index);
+	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
 //	wxConfigPathChanger cfg_cd_to(m_config, "/"+data->name+"/");
 	switch(a_col)
 	{

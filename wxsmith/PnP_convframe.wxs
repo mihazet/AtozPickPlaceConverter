@@ -46,8 +46,8 @@
 				<object class="wxAuiNotebook" name="ID_AUINOTEBOOK1" variable="auiMainNotebook" member="yes">
 					<style>wxAUI_NB_TAB_SPLIT|wxAUI_NB_TAB_MOVE|wxAUI_NB_WINDOWLIST_BUTTON</style>
 					<object class="AuiNotebookPage">
-						<object class="wxPanel" name="ID_PANEL4" variable="Panel4" member="yes">
-							<object class="wxBoxSizer" variable="BoxSizer3" member="no">
+						<object class="wxPanel" name="ID_PANEL_COMP" variable="PanelComp" member="no">
+							<object class="wxBoxSizer" variable="BoxSizerComp" member="no">
 								<object class="sizeritem">
 									<object class="Custom" name="ID_COMP_TABLE" subclass="cCompTable" variable="m_comp_table" member="yes">
 										<creating_code>$(THIS) = new $(CLASS)(&amp;m__components__list, $(PARENT),$(ID),$(POS),$(SIZE));</creating_code>
@@ -64,8 +64,8 @@
 						<label>Componenets</label>
 					</object>
 					<object class="AuiNotebookPage">
-						<object class="wxPanel" name="ID_PANEL1" variable="Panel1" member="yes">
-							<object class="wxBoxSizer" variable="BoxSizer1" member="no">
+						<object class="wxPanel" name="ID_PANEL_COMP_TYPE" variable="PanelCompType" member="no">
+							<object class="wxBoxSizer" variable="BoxSizerCompType" member="no">
 								<object class="sizeritem">
 									<object class="wxGrid" name="ID_GRID_COMP_TYPE" variable="m_grd_comp_type" member="yes" />
 									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
@@ -77,8 +77,8 @@
 						<label>Component Types</label>
 					</object>
 					<object class="AuiNotebookPage">
-						<object class="wxPanel" name="ID_PANEL2" variable="Panel2" member="yes">
-							<object class="wxBoxSizer" variable="BoxSizer2" member="no">
+						<object class="wxPanel" name="ID_PANEL_PAT" variable="PanelPat" member="no">
+							<object class="wxBoxSizer" variable="BoxSizerPat" member="no">
 								<object class="sizeritem">
 									<object class="wxGrid" name="ID_GRID_PATTERN" variable="m_grd_pattern" member="yes" />
 									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
@@ -88,6 +88,19 @@
 							</object>
 						</object>
 						<label>Patterns</label>
+					</object>
+					<object class="AuiNotebookPage">
+						<object class="wxPanel" name="ID_PANEL_FID" variable="PanelFid" member="no">
+							<object class="wxBoxSizer" variable="BoxSizerFid" member="no">
+								<object class="sizeritem">
+									<object class="wxGrid" name="ID_GRID_FID_MARKS" variable="m_grd_fid_marks" member="yes" />
+									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<option>1</option>
+								</object>
+							</object>
+						</object>
+						<label>Fiducials</label>
 					</object>
 				</object>
 				<name>auiPaneGraphs</name>

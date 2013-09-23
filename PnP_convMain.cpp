@@ -10,6 +10,7 @@
 #include "PnP_convMain.h"
 #include "comp_type_table.h"
 #include "pattern_table.h"
+#include "fid_mark_table.h"
 
 #include <wx/msgdlg.h>
 #include <wx/fileconf.h>
@@ -32,11 +33,19 @@ WX_DEFINE_OBJARRAY(tSubPcbs);
 
 int CmpCompTypeFunc(t_component_type_descr *a_arg1, t_component_type_descr *a_arg2)
 {
-   return (a_arg1->name).CmpNoCase(a_arg2->name);
+	return (a_arg1->name).CmpNoCase(a_arg2->name);
 }
 int CmpPatternFunc(t_pattern_descr *a_arg1, t_pattern_descr *a_arg2)
 {
-   return (a_arg1->pattern).CmpNoCase(a_arg2->pattern);
+	return (a_arg1->pattern).CmpNoCase(a_arg2->pattern);
+}
+int CmpFidMarkFunc(t_fid_mark_descr *a_arg1, t_fid_mark_descr *a_arg2)
+{
+	if(a_arg1->component_index == a_arg2->component_index)
+		return 0;
+	if(a_arg1->component_index < a_arg2->component_index)
+		return -1;
+	return 1;
 }
 
 //helper functions
@@ -69,11 +78,13 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 const long PnP_convFrame::ID_TEXTCTRL1 = wxNewId();
 const long PnP_convFrame::ID_PROP = wxNewId();
 const long PnP_convFrame::ID_COMP_TABLE = wxNewId();
-const long PnP_convFrame::ID_PANEL4 = wxNewId();
+const long PnP_convFrame::ID_PANEL_COMP = wxNewId();
 const long PnP_convFrame::ID_GRID_COMP_TYPE = wxNewId();
-const long PnP_convFrame::ID_PANEL1 = wxNewId();
+const long PnP_convFrame::ID_PANEL_COMP_TYPE = wxNewId();
 const long PnP_convFrame::ID_GRID_PATTERN = wxNewId();
-const long PnP_convFrame::ID_PANEL2 = wxNewId();
+const long PnP_convFrame::ID_PANEL_PAT = wxNewId();
+const long PnP_convFrame::ID_GRID_FID_MARKS = wxNewId();
+const long PnP_convFrame::ID_PANEL_FID = wxNewId();
 const long PnP_convFrame::ID_AUINOTEBOOK1 = wxNewId();
 const long PnP_convFrame::ID_OPEN = wxNewId();
 const long PnP_convFrame::ID_SAVE_PROD = wxNewId();
@@ -89,19 +100,24 @@ BEGIN_EVENT_TABLE(PnP_convFrame,wxFrame)
 END_EVENT_TABLE()
 
 PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
-	m_component_types_list(CmpCompTypeFunc), m_patterns_list(CmpPatternFunc)
+	m_component_types_list(CmpCompTypeFunc), m_patterns_list(CmpPatternFunc), m_fid_marks_list(CmpFidMarkFunc)
 {
     //(*Initialize(PnP_convFrame)
     wxMenuItem* mnuAbout;
-    wxBoxSizer* BoxSizer3;
+    wxBoxSizer* BoxSizerFid;
+    wxPanel* PanelPat;
+    wxPanel* PanelFid;
     wxMenu* Menu1;
+    wxBoxSizer* BoxSizerCompType;
+    wxPanel* PanelComp;
     wxMenuItem* mnuQuit;
-    wxBoxSizer* BoxSizer2;
     wxMenuItem* mnuOpen;
-    wxBoxSizer* BoxSizer1;
+    wxPanel* PanelCompType;
     wxMenuBar* MenuBar1;
     wxMenuItem* mnuSaveProd;
     wxMenu* Menu2;
+    wxBoxSizer* BoxSizerPat;
+    wxBoxSizer* BoxSizerComp;
 
     Create(parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE, _T("wxID_ANY"));
     SetClientSize(wxSize(1000,800));
@@ -111,30 +127,38 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
     m_pgProps = new wxPropertyGrid(this,ID_PROP);
     auiManager->AddPane(m_pgProps, wxAuiPaneInfo().Name(_T("auiProperties")).DefaultPane().Caption(_("Pane caption")).CaptionVisible(false).Row(1).Right().BestSize(wxSize(200,-1)));
     auiMainNotebook = new wxAuiNotebook(this, ID_AUINOTEBOOK1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TAB_SPLIT|wxAUI_NB_TAB_MOVE|wxAUI_NB_WINDOWLIST_BUTTON);
-    Panel4 = new wxPanel(auiMainNotebook, ID_PANEL4, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL4"));
-    BoxSizer3 = new wxBoxSizer(wxHORIZONTAL);
-    m_comp_table = new cCompTable(&m_components_list, Panel4,ID_COMP_TABLE,wxDefaultPosition,wxDefaultSize);
-    BoxSizer3->Add(m_comp_table, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    Panel4->SetSizer(BoxSizer3);
-    BoxSizer3->Fit(Panel4);
-    BoxSizer3->SetSizeHints(Panel4);
-    Panel1 = new wxPanel(auiMainNotebook, ID_PANEL1, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL1"));
-    BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
-    m_grd_comp_type = new wxGrid(Panel1, ID_GRID_COMP_TYPE, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID_COMP_TYPE"));
-    BoxSizer1->Add(m_grd_comp_type, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    Panel1->SetSizer(BoxSizer1);
-    BoxSizer1->Fit(Panel1);
-    BoxSizer1->SetSizeHints(Panel1);
-    Panel2 = new wxPanel(auiMainNotebook, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL2"));
-    BoxSizer2 = new wxBoxSizer(wxHORIZONTAL);
-    m_grd_pattern = new wxGrid(Panel2, ID_GRID_PATTERN, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID_PATTERN"));
-    BoxSizer2->Add(m_grd_pattern, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    Panel2->SetSizer(BoxSizer2);
-    BoxSizer2->Fit(Panel2);
-    BoxSizer2->SetSizeHints(Panel2);
-    auiMainNotebook->AddPage(Panel4, _("Componenets"));
-    auiMainNotebook->AddPage(Panel1, _("Component Types"));
-    auiMainNotebook->AddPage(Panel2, _("Patterns"));
+    PanelComp = new wxPanel(auiMainNotebook, ID_PANEL_COMP, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL_COMP"));
+    BoxSizerComp = new wxBoxSizer(wxHORIZONTAL);
+    m_comp_table = new cCompTable(&m_components_list, PanelComp,ID_COMP_TABLE,wxDefaultPosition,wxDefaultSize);
+    BoxSizerComp->Add(m_comp_table, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    PanelComp->SetSizer(BoxSizerComp);
+    BoxSizerComp->Fit(PanelComp);
+    BoxSizerComp->SetSizeHints(PanelComp);
+    PanelCompType = new wxPanel(auiMainNotebook, ID_PANEL_COMP_TYPE, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL_COMP_TYPE"));
+    BoxSizerCompType = new wxBoxSizer(wxHORIZONTAL);
+    m_grd_comp_type = new wxGrid(PanelCompType, ID_GRID_COMP_TYPE, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID_COMP_TYPE"));
+    BoxSizerCompType->Add(m_grd_comp_type, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    PanelCompType->SetSizer(BoxSizerCompType);
+    BoxSizerCompType->Fit(PanelCompType);
+    BoxSizerCompType->SetSizeHints(PanelCompType);
+    PanelPat = new wxPanel(auiMainNotebook, ID_PANEL_PAT, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL_PAT"));
+    BoxSizerPat = new wxBoxSizer(wxHORIZONTAL);
+    m_grd_pattern = new wxGrid(PanelPat, ID_GRID_PATTERN, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID_PATTERN"));
+    BoxSizerPat->Add(m_grd_pattern, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    PanelPat->SetSizer(BoxSizerPat);
+    BoxSizerPat->Fit(PanelPat);
+    BoxSizerPat->SetSizeHints(PanelPat);
+    PanelFid = new wxPanel(auiMainNotebook, ID_PANEL_FID, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL_FID"));
+    BoxSizerFid = new wxBoxSizer(wxHORIZONTAL);
+    m_grd_fid_mark = new wxGrid(PanelFid, ID_GRID_FID_MARKS, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID_FID_MARKS"));
+    BoxSizerFid->Add(m_grd_fid_mark, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    PanelFid->SetSizer(BoxSizerFid);
+    BoxSizerFid->Fit(PanelFid);
+    BoxSizerFid->SetSizeHints(PanelFid);
+    auiMainNotebook->AddPage(PanelComp, _("Componenets"));
+    auiMainNotebook->AddPage(PanelCompType, _("Component Types"));
+    auiMainNotebook->AddPage(PanelPat, _("Patterns"));
+    auiMainNotebook->AddPage(PanelFid, _("Fiducials"));
     auiManager->AddPane(auiMainNotebook, wxAuiPaneInfo().Name(_T("auiPaneGraphs")).CenterPane().Caption(_("Graphs view")).Floatable().Movable(false));
     auiManager->Update();
     MenuBar1 = new wxMenuBar();
@@ -179,6 +203,9 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	m_grd_comp_type->SetTable(m_component_types_table, false);
 	m_pattern_table = new cPatternTable(&m_patterns_list);
 	m_grd_pattern->SetTable(m_pattern_table, false);
+	m_fid_marks_table = new cFidMarkTable(&m_components_list, &m_fid_marks_list);
+	m_grd_fid_mark->SetTable(m_fid_marks_table, false);
+	ReInitLists();
 }
 
 PnP_convFrame::~PnP_convFrame()
@@ -252,6 +279,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	m_components_list.Clear();
 	WX_CLEAR_ARRAY(m_component_types_list);	m_component_types_list.Clear();
 	WX_CLEAR_ARRAY(m_patterns_list);	m_patterns_list.Clear();
+	WX_CLEAR_ARRAY(m_fid_marks_list);	m_fid_marks_list.Clear();
 
 	m_project.apply_offset = true; //for PCAD
 	m_project.fullfilename = dlg_open.GetPath();
@@ -557,18 +585,20 @@ bool PnP_convFrame::NormalizeNominal(t_component_type_descr *a_component_type)
 
 void PnP_convFrame::UpdateComponents()
 {
-	size_t comp_count = m_components_list.Count();
+	WX_CLEAR_ARRAY(m_fid_marks_list);	m_fid_marks_list.Clear();
+	size_t comp_count = m_components_list.GetCount();
 	for(size_t index = 0; index < comp_count; index++)
 	{
-		UpdateComponent(&m_components_list[index]);
+		UpdateComponent(&m_components_list[index], index);
 	}
 	ReInitLists();
 }
 
-void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
+void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_comp_index)
 {
-	t_component_type_descr *component_type;
-	t_pattern_descr *comp_pattern;
+	t_component_type_descr	*component_type;
+	t_pattern_descr		*comp_pattern;
+	t_fid_mark_descr	*fid_mark;
 	int index;
 //надо заполнить следующие поля:
 //pnp_name
@@ -632,72 +662,45 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component)
 	a_component->pnp_location_x -= m_project.pcbs[index].offset_x;
 	a_component->pnp_location_y -= m_project.pcbs[index].offset_y;
 	a_component->pnp_enabled = a_component->enabled && component_type->enabled && comp_pattern->enabled && m_project.pcbs[index].enabled;
-}
 
-void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
-{
-	wxString str;
-	wxXmlNode *node;
-	if(NULL == a_node)
-		return;
+//Реперный знак?
+	if(a_component->designator.StartsWith("FM"))
+	{
+		int index_local  = 0;
+		int index_global = 0;
+		fid_mark = new t_fid_mark_descr;
+		fid_mark->component_index = a_comp_index;
+		for(int fm_index = m_fid_marks_list.GetCount()-1; fm_index >= 0; fm_index--)
+		{
+			t_component_descr *tmp_fm_comp = &m_components_list[m_fid_marks_list[fm_index]->component_index];
+			index_global |= 1<<(m_fid_marks_list[fm_index]->usage_as_global);
+			if((tmp_fm_comp->pnp_subpcb_index != a_component->pnp_subpcb_index) || (tmp_fm_comp->layer != a_component->layer))
+				continue;
+			index_local |= 1<<(m_fid_marks_list[fm_index]->usage_type);
+		}
+		if(!(index_local & (1<<FID_MARK_USE_FM1)))
+		{
+			fid_mark->usage_type = FID_MARK_USE_FM1;
+		} else if(!(index_local & (1<<FID_MARK_USE_FM2))) {
+			fid_mark->usage_type = FID_MARK_USE_FM2;
+		} else if(!(index_local & (1<<FID_MARK_USE_FM3))) {
+			fid_mark->usage_type = FID_MARK_USE_FM3;
+		} else {
+			fid_mark->usage_type = FID_MARK_USE_IGNORE;
+		}
+		if(!(index_global & (1<<FID_MARK_USE_FM1)))
+		{
+			fid_mark->usage_as_global = FID_MARK_USE_FM1;
+		} else if(!(index_global & (1<<FID_MARK_USE_FM2))) {
+			fid_mark->usage_as_global = FID_MARK_USE_FM2;
+		} else if(!(index_global & (1<<FID_MARK_USE_FM3))) {
+			fid_mark->usage_as_global = FID_MARK_USE_FM3;
+		} else {
+			fid_mark->usage_as_global = FID_MARK_USE_IGNORE;
+		}
+		m_fid_marks_list.Add(fid_mark);
+	}
 
-	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Component");
-	node->AddAttribute("Ref", a_comp.designator);
-	node->AddAttribute("Name", a_comp.pnp_name);
-	str = wxString::Format("%ld,%ld", (long)(a_comp.pnp_location_x*1000), (long)(a_comp.pnp_location_y*1000));
-	node->AddAttribute("Position", str);
-	str = wxString::Format("%d", (int)(a_comp.pnp_angle*100));
-	node->AddAttribute("Angle", str);
-
-	a_node->parent->InsertChildAfter(node, a_node->last_child);
-	a_node->last_child = node;
-	a_node->elemets_count ++;
-}
-
-void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp)
-{
-	wxString str;
-	wxXmlNode *node;
-	if(NULL == a_node)
-		return;
-
-	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducial");
-	str = wxString::Format("%d", a_node->elemets_count + 1);
-	node->AddAttribute("Ref", str);
-	node->AddAttribute("CadRef", a_comp.designator);
-	str = wxString::Format("%ld,%ld", (long)(a_comp.pnp_location_x*1000), (long)(a_comp.pnp_location_y*1000));
-	node->AddAttribute("Position", str);
-	node->AddAttribute("Name", a_comp.pnp_name);
-
-	a_node->parent->InsertChildAfter(node, a_node->last_child);
-	a_node->last_child = node;
-	a_node->elemets_count ++;
-}
-
-wxXmlNode *PnP_convFrame::CreateProductSideDescr(wxString a_side)
-{
-	wxString str;
-	wxXmlNode *side_node, *tmp_node;
-
-	side_node = new wxXmlNode(wxXML_ELEMENT_NODE, (a_side.Upper() == "BOT")?"BottomSide":"TopSide");
-	side_node->AddAttribute("Barcode", "");
-
-	wxXmlNode *prod_orientation_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Orientations");
-	side_node->AddChild(prod_orientation_node);
-	tmp_node = new wxXmlNode(prod_orientation_node, wxXML_ELEMENT_NODE, "PP050");
-	tmp_node->AddAttribute("ProductOrientation", wxString::Format("%d", m_project.angle));
-
-	wxXmlNode *prod_fiducials_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
-	side_node->AddChild(prod_fiducials_node);
-	prod_fiducials_node->AddAttribute("BadmarkSupport", "no");
-	tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "PP050");
-	tmp_node->AddAttribute("UseGlobalRefs", "yes");
-	tmp_node->AddAttribute("CheckPanelRefs", (m_project.pcbs.GetCount() > 1)?"yes":"no");
-	tmp_node->AddAttribute("CheckLocalRefs", "yes");
-	tmp_node->AddAttribute("HighAccuracy", "yes");
-
-// TODO (alatar#1#): Добавление глобальных реперов
-	return side_node;
 }
 
 #define FID_ARRAY_OFFSET	1
@@ -747,8 +750,8 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 //Список компонентов
 	wxXmlNode *templates_node = new wxXmlNode(root_node, wxXML_ELEMENT_NODE, "Templates");
 
-	size_t comp_count = m_components_list.Count();
-	for (size_t subpcb_index = 0; subpcb_index < subpcbs; subpcb_index++)
+	size_t comp_count = m_components_list.GetCount();
+	for (size_t subpcb_index = 0; (long)subpcb_index < subpcbs; subpcb_index++)
 	{
 		wxXmlNode *panel_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Panel");
 		panels_node->AddChild(panel_node);
@@ -789,11 +792,11 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 			}
 			if(m_components_list[index].designator.StartsWith("FM"))
 			{
-				PrintFiducial(&nodes[tmp_ind + FID_ARRAY_OFFSET], m_components_list[index]);
+				PrintFiducial(&nodes[tmp_ind + FID_ARRAY_OFFSET], m_components_list[index], index);
 			} else {
 				PrintComponent(&nodes[tmp_ind], m_components_list[index]);
 			}
-wxLogVerbose(_T("Inserted %s to board %s"), m_components_list[index].designator, m_project.pcbs[subpcb_index].subpcb_name);
+//wxLogVerbose(_T("Inserted %s to board %s"), m_components_list[index].designator, m_project.pcbs[subpcb_index].subpcb_name);
 		}
 
 		tmp_node = new wxXmlNode(template_node, wxXML_ELEMENT_NODE, "Variants");
@@ -814,6 +817,111 @@ wxLogVerbose(_T("Inserted %s to board %s"), m_components_list[index].designator,
 wxLogMessage(_T("Saved to %s"), dlg_save.GetPath());
 }
 
+void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
+{
+	wxString str;
+	wxXmlNode *node;
+	if(NULL == a_node)
+		return;
+
+	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Component");
+	node->AddAttribute("Ref", a_comp.designator);
+	node->AddAttribute("Name", a_comp.pnp_name);
+	str = wxString::Format("%ld,%ld", (long)(a_comp.pnp_location_x*1000), (long)(a_comp.pnp_location_y*1000));
+	node->AddAttribute("Position", str);
+	str = wxString::Format("%d", (int)(a_comp.pnp_angle*100));
+	node->AddAttribute("Angle", str);
+
+	a_node->parent->InsertChildAfter(node, a_node->last_child);
+	a_node->last_child = node;
+}
+
+void PnP_convFrame::PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp, size_t a_comp_index)
+{
+	wxString ref_str;
+	wxXmlNode *node;
+	t_fid_mark_descr *fm_descr;
+	if(NULL == a_node)
+		return;
+	fm_descr = new t_fid_mark_descr;
+	fm_descr->component_index = a_comp_index;
+	long fm_descr_index = m_fid_marks_list.Index(fm_descr);
+	delete fm_descr;
+	if(wxNOT_FOUND == fm_descr_index)
+		return;
+	fm_descr = m_fid_marks_list[fm_descr_index];
+
+	if(FID_MARK_USE_FM1 == fm_descr->usage_type)
+	{
+		ref_str = "1";
+	} else if(FID_MARK_USE_FM2 == fm_descr->usage_type) {
+		ref_str = "2";
+	} else if(FID_MARK_USE_FM3 == fm_descr->usage_type) {
+		ref_str = "3";
+	} else {
+		return;
+	}
+	node = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducial");
+	node->AddAttribute("Ref", ref_str);
+	node->AddAttribute("CadRef", a_comp.designator);
+	node->AddAttribute("Position", wxString::Format("%ld,%ld", (long)(a_comp.pnp_location_x*1000), (long)(a_comp.pnp_location_y*1000)));
+	node->AddAttribute("Name", a_comp.pnp_name);
+
+	a_node->parent->InsertChildAfter(node, a_node->last_child);
+	a_node->last_child = node;
+}
+
+wxXmlNode *PnP_convFrame::CreateProductSideDescr(wxString a_side)
+{
+	wxString ref_str;
+	wxXmlNode *side_node, *tmp_node;
+	t_component_descr *fm_comp;
+	t_fid_mark_descr *fm_descr;
+
+	side_node = new wxXmlNode(wxXML_ELEMENT_NODE, (a_side.Upper() == "BOT")?"BottomSide":"TopSide");
+	side_node->AddAttribute("Barcode", "");
+
+	wxXmlNode *prod_orientation_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Orientations");
+	side_node->AddChild(prod_orientation_node);
+	tmp_node = new wxXmlNode(prod_orientation_node, wxXML_ELEMENT_NODE, "PP050");
+	tmp_node->AddAttribute("ProductOrientation", wxString::Format("%d", m_project.angle));
+
+	wxXmlNode *prod_fiducials_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Fiducials");
+	side_node->AddChild(prod_fiducials_node);
+	prod_fiducials_node->AddAttribute("BadmarkSupport", "no");
+
+	for(int index = m_fid_marks_list.GetCount()-1; index >= 0; index--)
+	{
+		fm_descr = m_fid_marks_list[index];
+		fm_comp = &m_components_list[fm_descr->component_index];
+		if(fm_comp->layer.Upper() != a_side.Upper())
+			continue;
+		if(FID_MARK_USE_FM1 == fm_descr->usage_as_global)
+		{
+			ref_str = "1";
+		} else if(FID_MARK_USE_FM2 == fm_descr->usage_as_global) {
+			ref_str = "2";
+		} else if(FID_MARK_USE_FM3 == fm_descr->usage_as_global) {
+			ref_str = "3";
+		} else {
+			continue;
+		}
+		tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "Fiducial");
+		tmp_node->AddAttribute("Ref", ref_str);
+		tmp_node->AddAttribute("CadRef", fm_comp->designator);
+		tmp_node->AddAttribute("Position", wxString::Format("%ld,%ld", (long)(fm_comp->pnp_location_x*1000), (long)(fm_comp->pnp_location_y*1000)));
+		tmp_node->AddAttribute("Name", fm_comp->pnp_name);
+
+	}
+
+	tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "PP050");
+	tmp_node->AddAttribute("UseGlobalRefs", "yes");
+	tmp_node->AddAttribute("CheckPanelRefs", (m_project.pcbs.GetCount() > 1)?"yes":"no");
+	tmp_node->AddAttribute("CheckLocalRefs", "yes");
+	tmp_node->AddAttribute("HighAccuracy", "yes");
+	return side_node;
+}
+
 void PnP_convFrame::ReInitLists()
 {
 	m_comp_table->ReInit();
@@ -829,6 +937,12 @@ void PnP_convFrame::ReInitLists()
 	wxGridTableMessage add2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_patterns_list.GetCount());
 	m_grd_pattern->ProcessTableMessage(add2);
 	m_grd_pattern->AutoSize();
+
+	wxGridTableMessage clr3(m_grd_fid_mark->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_fid_mark->GetNumberRows());
+	m_grd_fid_mark->ProcessTableMessage(clr3);
+	wxGridTableMessage add3(m_grd_fid_mark->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_fid_marks_list.GetCount());
+	m_grd_fid_mark->ProcessTableMessage(add3);
+	m_grd_fid_mark->AutoSize();
 }
 
 void PnP_convFrame::SaveProjectInfo()
