@@ -146,12 +146,6 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 		case COL_OFFSET_Y:
 			result = wxString::Format("%f", data->offset_y);
 			break;
-		case COL_OFFSET_X:
-			result = wxString::Format("%f", data->offset_x);
-			break;
-		case COL_OFFSET_Y:
-			result = wxString::Format("%f", data->offset_y);
-			break;
 		case COL_ANGLE:
 			result = wxString::Format("%f", data->angle);
 			break;
