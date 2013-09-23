@@ -630,7 +630,7 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 	a_component->pnp_package = comp_pattern->pnp_package;
 	a_component->pnp_footprint = comp_pattern->pnp_footprint;
 
-//Перенсчёт location и angle
+//Пересчёт location и angle
 	double sin_alpha = sin(a_component->cad_angle*(M_PI/180));
 	double cos_alpha = cos(a_component->cad_angle*(M_PI/180));
 	a_component->pnp_location_x = a_component->cad_location_x + ( comp_pattern->offset_x * cos_alpha + comp_pattern->offset_y * sin_alpha);
@@ -890,30 +890,32 @@ wxXmlNode *PnP_convFrame::CreateProductSideDescr(wxString a_side)
 	side_node->AddChild(prod_fiducials_node);
 	prod_fiducials_node->AddAttribute("BadmarkSupport", "no");
 
-	for(int index = m_fid_marks_list.GetCount()-1; index >= 0; index--)
+	if(m_project.pcbs.GetCount() > 1)
 	{
-		fm_descr = m_fid_marks_list[index];
-		fm_comp = &m_components_list[fm_descr->component_index];
-		if(fm_comp->layer.Upper() != a_side.Upper())
-			continue;
-		if(FID_MARK_USE_FM1 == fm_descr->usage_as_global)
+		for(int index = m_fid_marks_list.GetCount()-1; index >= 0; index--)
 		{
-			ref_str = "1";
-		} else if(FID_MARK_USE_FM2 == fm_descr->usage_as_global) {
-			ref_str = "2";
-		} else if(FID_MARK_USE_FM3 == fm_descr->usage_as_global) {
-			ref_str = "3";
-		} else {
-			continue;
+			fm_descr = m_fid_marks_list[index];
+			fm_comp = &m_components_list[fm_descr->component_index];
+			if(fm_comp->layer.Upper() != a_side.Upper())
+				continue;
+			if(FID_MARK_USE_FM1 == fm_descr->usage_as_global)
+			{
+				ref_str = "1";
+			} else if(FID_MARK_USE_FM2 == fm_descr->usage_as_global) {
+				ref_str = "2";
+			} else if(FID_MARK_USE_FM3 == fm_descr->usage_as_global) {
+				ref_str = "3";
+			} else {
+				continue;
+			}
+			tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "Fiducial");
+			tmp_node->AddAttribute("Ref", ref_str);
+			tmp_node->AddAttribute("CadRef", fm_comp->designator);
+			tmp_node->AddAttribute("Position", wxString::Format("%ld,%ld", (long)(fm_comp->pnp_location_x*1000), (long)(fm_comp->pnp_location_y*1000)));
+			tmp_node->AddAttribute("Name", fm_comp->pnp_name);
+
 		}
-		tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "Fiducial");
-		tmp_node->AddAttribute("Ref", ref_str);
-		tmp_node->AddAttribute("CadRef", fm_comp->designator);
-		tmp_node->AddAttribute("Position", wxString::Format("%ld,%ld", (long)(fm_comp->pnp_location_x*1000), (long)(fm_comp->pnp_location_y*1000)));
-		tmp_node->AddAttribute("Name", fm_comp->pnp_name);
-
 	}
-
 	tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "PP050");
 	tmp_node->AddAttribute("UseGlobalRefs", "yes");
 	tmp_node->AddAttribute("CheckPanelRefs", (m_project.pcbs.GetCount() > 1)?"yes":"no");
