@@ -94,8 +94,6 @@ private:
 	tComponentDescr		*m_component_data;
 	tFidMarkDescr		*m_fid_mark_data;
 	wxFileConfig		*m_config;
-	wxArrayString		m_array_on_subpcb;
-	wxArrayString		m_array_global;
 };
 
 #endif // EVENTS_TABLE_H

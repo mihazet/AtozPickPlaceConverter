@@ -25,6 +25,9 @@
 #include <wx/intl.h>
 //*)
 
+wxArrayString G_array_on_subpcb;
+wxArrayString G_array_global;
+
 #include <wx/arrimpl.cpp> // This is a magic incantation which must be done!
 WX_DEFINE_OBJARRAY(tComponentDescr);
 WX_DEFINE_OBJARRAY(tSubPcbs);
@@ -186,6 +189,19 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	wxLog::SetActiveTarget(new wxLogTextCtrl(m_txtLog));
 	wxLog::SetVerbose(true);
 //	wxLog::SetVerbose(false);
+
+	G_array_on_subpcb.Add("Unknown");
+	G_array_on_subpcb.Add("Not use");
+	G_array_on_subpcb.Add("Mark 1");
+	G_array_on_subpcb.Add("Mark 2");
+	G_array_on_subpcb.Add("Mark 3");
+	G_array_on_subpcb.Add("Local");
+
+	G_array_global.Add("Unknown");
+	G_array_global.Add("Not use");
+	G_array_global.Add("Mark 1");
+	G_array_global.Add("Mark 2");
+	G_array_global.Add("Mark 3");
 
 	wxFileConfig::GetLocalFile("test",wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR).Mkdir();
 	m_cfg_settings =		new wxFileConfig("PnP_conv", "Antrax", "settings",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
@@ -992,8 +1008,8 @@ wxLogVerbose("Found %ld FMs", fidmarks);
 	for (long index = 0; index < fidmarks; index++)
 	{
 wxLogVerbose("Save FM %s", m_fid_marks_list[index]->designator);
-		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_type", m_fid_marks_list[index]->usage_type);
-		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_as_global", m_fid_marks_list[index]->usage_as_global);
+		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_type", G_array_on_subpcb[m_fid_marks_list[index]->usage_type]);
+		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_as_global", G_array_global[m_fid_marks_list[index]->usage_as_global]);
 	}
 	m_cfg_projects->Flush();
 }
@@ -1073,7 +1089,6 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 //Load fidmark info
 	if(m_cfg_projects->HasGroup("fid_mark"))
 	{
-wxLogVerbose("Loading FMs");
 		wxString fid_mark_des;
 		long dummy;
 		wxConfigPathChanger cfg_cd_to_sub_pcb(m_cfg_projects, "fid_mark/");
@@ -1082,11 +1097,17 @@ wxLogVerbose("Loading FMs");
 			have_group = m_cfg_projects->GetNextGroup(fid_mark_des, dummy)
 		)
 		{
-wxLogVerbose("Found %s", fid_mark_des);
+			wxString tmp_str;
+			int str_index;
 			t_fid_mark_descr *fid_mark = new t_fid_mark_descr;
 			fid_mark->designator      = fid_mark_des;
-			fid_mark->usage_type      = m_cfg_projects->ReadLong(fid_mark_des+"/usage_type", FID_MARK_USE_UNKNOWN);
-			fid_mark->usage_as_global = m_cfg_projects->ReadLong(fid_mark_des+"/usage_as_global", FID_MARK_USE_UNKNOWN);
+
+			tmp_str = m_cfg_projects->Read(fid_mark_des+"/usage_type", G_array_on_subpcb[FID_MARK_USE_UNKNOWN]);
+			str_index = G_array_on_subpcb.Index(tmp_str, false);
+			fid_mark->usage_type = (wxNOT_FOUND == str_index)?FID_MARK_USE_UNKNOWN:str_index;
+			tmp_str = m_cfg_projects->Read(fid_mark_des+"/usage_as_global", G_array_global[FID_MARK_USE_UNKNOWN]);
+			str_index = G_array_global.Index(tmp_str, false);
+			fid_mark->usage_as_global = (wxNOT_FOUND == str_index)?FID_MARK_USE_UNKNOWN:str_index;
 			m_fid_marks_list.Add(fid_mark);
 		}
 	}

@@ -130,4 +130,8 @@ int CmpCompTypeFunc(t_component_type_descr *a_arg1, t_component_type_descr *a_ar
 int CmpPatternFunc(t_pattern_descr *a_arg1, t_pattern_descr *a_arg2);
 int CmpFidMarkFunc(t_fid_mark_descr *a_arg1, t_fid_mark_descr *a_arg2);
 
+extern wxArrayString G_array_on_subpcb;
+extern wxArrayString G_array_global;
+
+
 #endif // COMMON_H

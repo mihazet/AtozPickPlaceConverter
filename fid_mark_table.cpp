@@ -38,24 +38,13 @@ cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks
 	SetColAttr (ro_float_attr, COL_LOCATION_X);
 	SetColAttr (ro_float_attr, COL_LOCATION_Y);
 
-	m_array_on_subpcb.Add("Unknown");
-	m_array_on_subpcb.Add("Not use");
-	m_array_on_subpcb.Add("Mark 1");
-	m_array_on_subpcb.Add("Mark 2");
-	m_array_on_subpcb.Add("Mark 3");
-	m_array_on_subpcb.Add("Local");
 	wxGridCellAttr *choise_on_subpcb_attr = new wxGridCellAttr();
-	wxGridCellChoiceEditor *choise_on_subpcb_edit = new wxGridCellChoiceEditor(m_array_on_subpcb);
+	wxGridCellChoiceEditor *choise_on_subpcb_edit = new wxGridCellChoiceEditor(G_array_on_subpcb);
 	choise_on_subpcb_attr->SetEditor(choise_on_subpcb_edit);
 	SetColAttr (choise_on_subpcb_attr, COL_USE_ON_SUBPCB);
 
-	m_array_global.Add("Unknown");
-	m_array_global.Add("Not use");
-	m_array_global.Add("Mark 1");
-	m_array_global.Add("Mark 2");
-	m_array_global.Add("Mark 3");
 	wxGridCellAttr *choise_global_attr = new wxGridCellAttr();
-	wxGridCellChoiceEditor *choise_global_edit = new wxGridCellChoiceEditor(m_array_global);
+	wxGridCellChoiceEditor *choise_global_edit = new wxGridCellChoiceEditor(G_array_global);
 	choise_global_attr->SetEditor(choise_global_edit);
 	SetColAttr (choise_global_attr, COL_USE_GLOBAL);
 }
@@ -139,10 +128,10 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 			result = wxString::Format("%zu", data_comp->pnp_subpcb_index);
 			break;
 		case COL_USE_ON_SUBPCB:
-			result = m_array_on_subpcb[data_fidmark->usage_type];
+			result = G_array_on_subpcb[data_fidmark->usage_type];
 			break;
 		case COL_USE_GLOBAL:
-			result = m_array_global[data_fidmark->usage_as_global];
+			result = G_array_global[data_fidmark->usage_as_global];
 			break;
 		case COL_LOCATION_X:
 			result = wxString::Format("%f", data_comp->pnp_location_x);
