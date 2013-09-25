@@ -851,6 +851,44 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 
 	doc.Save(dlg_save.GetPath());
 wxLogMessage(_T("Saved to %s"), dlg_save.GetPath());
+	SaveDD500File(&doc, dlg_save.GetPath().BeforeLast('.') + ".pcb");
+}
+
+#define DD500_SECTION(a_NAME)			(wxString::Format("[%s]", a_NAME))
+#define DD500_PARAM(a_NAME, a_VALUE)		(wxString::Format("%-28s: %s", a_NAME, a_VALUE))
+
+void PnP_convFrame::SaveDD500File(wxXmlDocument *a_doc, wxString a_file)
+{
+	if(NULL == a_doc)
+		return;
+	wxFileName filename(a_file);
+	wxTextFile doc(a_file);
+	if(doc.Exists())
+	{
+		doc.Open();
+		doc.Clear();
+	} else {
+		doc.Create();
+	}
+	doc.AddLine(DD500_SECTION(wxT("FileID 1.00")));
+	doc.AddLine(wxEmptyString);
+	doc.AddLine(DD500_SECTION("General"));
+	doc.AddLine(DD500_PARAM("Pcb name", (".\\" + filename.GetFullName())));
+	doc.AddLine(DD500_PARAM("Barcode",		""));
+	doc.AddLine(DD500_PARAM("Pcb units",		"mm"));
+	doc.AddLine(DD500_PARAM("Pcb length",		wxString::Format("%.3f", m_project.size_x)));
+	doc.AddLine(DD500_PARAM("Pcb width",		wxString::Format("%.3f", m_project.size_y)));
+	doc.AddLine(DD500_PARAM("Pcb thickness",	wxString::Format("%.3f", m_project.height)));
+	doc.AddLine(DD500_PARAM("Active side",		"Top"));
+	doc.AddLine(DD500_PARAM("Pcb type",		"Single"));
+	doc.AddLine(DD500_PARAM("Pcb orientation",	wxString::Format("%d", 0)));
+	doc.AddLine(DD500_PARAM("Badmark support",	"Yes"));
+	doc.AddLine(DD500_PARAM("Component library",	".\\Complib.clb"));
+	doc.AddLine(DD500_PARAM("Fiducial library",	".\\Fidlib.flb"));
+	doc.AddLine(DD500_PARAM("Pcb comment",		""));
+
+	doc.Write();
+	doc.Close();
 }
 
 void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
