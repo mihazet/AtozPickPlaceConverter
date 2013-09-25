@@ -6,13 +6,13 @@
 #include <wx/grid.h>
 
 class wxFileConfig;
+class PnP_convFrame;
 
 class cFidMarkTable : public wxGridTableBase
 {
 public:
-	cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks);
+	cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks, PnP_convFrame *a_data_ctrl);
 	virtual ~cFidMarkTable();
-	void SetProjectsConfig(wxFileConfig *a_config) {m_config = a_config;};
 
 	// You must override these functions in a derived table class
 	//
@@ -93,7 +93,7 @@ protected:
 private:
 	tComponentDescr		*m_component_data;
 	tFidMarkDescr		*m_fid_mark_data;
-	wxFileConfig		*m_config;
+	PnP_convFrame		*m_main_data_controller; // TODO (alatar#1#): Перевести на события
 };
 
 #endif // EVENTS_TABLE_H

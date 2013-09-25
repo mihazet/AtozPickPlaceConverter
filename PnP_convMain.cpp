@@ -215,7 +215,7 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	m_grd_comp_type->SetTable(m_component_types_table, false);
 	m_pattern_table = new cPatternTable(&m_patterns_list);
 	m_grd_pattern->SetTable(m_pattern_table, false);
-	m_fid_marks_table = new cFidMarkTable(&m_components_list, &m_fid_marks_list);
+	m_fid_marks_table = new cFidMarkTable(&m_components_list, &m_fid_marks_list, this);
 	m_grd_fid_mark->SetTable(m_fid_marks_table, false);
 	ReInitLists();
 }
@@ -1004,10 +1004,8 @@ void PnP_convFrame::SaveProjectInfo()
 	}
 //Save fidmark info
 	m_cfg_projects->DeleteGroup("fid_mark");
-wxLogVerbose("Found %ld FMs", fidmarks);
 	for (long index = 0; index < fidmarks; index++)
 	{
-wxLogVerbose("Save FM %s", m_fid_marks_list[index]->designator);
 		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_type", G_array_on_subpcb[m_fid_marks_list[index]->usage_type]);
 		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_as_global", G_array_global[m_fid_marks_list[index]->usage_as_global]);
 	}
@@ -1100,8 +1098,7 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 			wxString tmp_str;
 			int str_index;
 			t_fid_mark_descr *fid_mark = new t_fid_mark_descr;
-			fid_mark->designator      = fid_mark_des;
-
+			fid_mark->designator = fid_mark_des;
 			tmp_str = m_cfg_projects->Read(fid_mark_des+"/usage_type", G_array_on_subpcb[FID_MARK_USE_UNKNOWN]);
 			str_index = G_array_on_subpcb.Index(tmp_str, false);
 			fid_mark->usage_type = (wxNOT_FOUND == str_index)?FID_MARK_USE_UNKNOWN:str_index;

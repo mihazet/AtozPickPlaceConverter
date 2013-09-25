@@ -35,6 +35,7 @@ class PnP_convFrame: public wxFrame
     public:
 	PnP_convFrame(wxWindow* parent,wxWindowID id = -1);
 	virtual ~PnP_convFrame();
+	void SaveProjectInfo();
 
     private:
 	wxFileConfig		*m_cfg_settings;
@@ -64,7 +65,6 @@ class PnP_convFrame: public wxFrame
 	void ReInitLists();
 	void RedrawProjectInfo();
 	void LoadProjectInfo(wxString a_filename);
-	void SaveProjectInfo();
 	void UpdatePCBFullSize();
 	bool IsInRoom(double a_ref1_x, double a_ref1_y, double a_ref2_x, double a_ref2_y, double a_ptr_x, double a_ptr_y);
 

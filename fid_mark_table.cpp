@@ -1,4 +1,5 @@
 #include "fid_mark_table.h"
+#include "PnP_convMain.h"
 #include <wx/fileconf.h>
 
 enum eFidMarkTable {
@@ -14,12 +15,12 @@ enum eFidMarkTable {
 	COL_COUNT
 };
 
-cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks)
+cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks, PnP_convFrame *a_data_ctrl)
 	: wxGridTableBase()
 {
 	m_component_data = a_comps;
 	m_fid_mark_data = a_fidmarks;
-	m_config = NULL;
+	m_main_data_controller = a_data_ctrl;
 
 	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
 	SetAttrProvider (attrProvider);
@@ -154,23 +155,24 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 {
 	long tmp_long;
-	bool component_found = false;
-	if((NULL == m_config) || (NULL == m_component_data) || (NULL == m_fid_mark_data) || (a_row >= (int)m_fid_mark_data->GetCount()))
+//	bool component_found = false;
+	if((NULL == m_main_data_controller) || (NULL == m_component_data) || (NULL == m_fid_mark_data) || (a_row >= (int)m_fid_mark_data->GetCount()))
 		return;
 	if((COL_LOCAL_FOR != a_col) && a_value.IsEmpty())
 		return;
 
 	wxString component;
 	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
-	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
-//	wxConfigPathChanger cfg_cd_to(m_config, "/"+data->name+"/");
+//	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
 	switch(a_col)
 	{
 		case COL_USE_ON_SUBPCB:
-//			result = m_array_on_subpcb[m_fid_mark_data->usage_type];
+			tmp_long = G_array_on_subpcb.Index(a_value, false);
+			data_fidmark->usage_type = (wxNOT_FOUND == tmp_long)?FID_MARK_USE_UNKNOWN:tmp_long;
 			break;
 		case COL_USE_GLOBAL:
-//			result = m_array_on_subpcb[m_fid_mark_data->usage_as_global];
+			tmp_long = G_array_global.Index(a_value, false);
+			data_fidmark->usage_as_global = (wxNOT_FOUND == tmp_long)?FID_MARK_USE_UNKNOWN:tmp_long;
 			break;
 		case COL_LOCAL_FOR:
 //			if(a_value.IsEmpty())
@@ -187,4 +189,5 @@ void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 //			}
 			break;
 	}
+	m_main_data_controller->SaveProjectInfo();
 }
