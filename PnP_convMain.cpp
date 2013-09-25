@@ -581,16 +581,20 @@ bool PnP_convFrame::NormalizeNominal(t_component_type_descr *a_component_type)
 
 void PnP_convFrame::UpdateComponents()
 {
+	bool need_save_proj = false;
 	size_t comp_count = m_components_list.GetCount();
 	for(size_t index = 0; index < comp_count; index++)
 	{
-		UpdateComponent(&m_components_list[index], index);
+		need_save_proj = UpdateComponent(&m_components_list[index], index) || need_save_proj;
 	}
 	ReInitLists();
+	if(need_save_proj)
+		SaveProjectInfo();
 }
 
-void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_comp_index)
+bool PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_comp_index)
 {
+	bool need_save_proj = false;
 	t_component_type_descr	*component_type;
 	t_pattern_descr		*comp_pattern;
 	t_fid_mark_descr	*fid_mark;
@@ -603,14 +607,14 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 //pnp_location_y
 //pnp_angle
 	if(NULL == a_component)
-		return;
+		return false;
 
 	component_type = new t_component_type_descr;
 	component_type->name = a_component->full_name;
 	index = m_component_types_list.Index(component_type);
 	delete component_type;
 	if(wxNOT_FOUND == index)
-		return;
+		return false;
 	component_type = m_component_types_list[index];
 
 	comp_pattern = new t_pattern_descr;
@@ -618,7 +622,7 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 	index = m_patterns_list.Index(comp_pattern);
 	delete comp_pattern;
 	if(wxNOT_FOUND == index)
-		return;
+		return false;
 	comp_pattern = m_patterns_list[index];
 
 	a_component->pnp_name = component_type->pnp_name;
@@ -699,6 +703,7 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 			} else {
 				fid_mark->usage_type = FID_MARK_USE_IGNORE;
 			}
+			need_save_proj = true;
 		}
 		if(FID_MARK_USE_UNKNOWN == fid_mark->usage_as_global)
 		{
@@ -712,9 +717,10 @@ void PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 			} else {
 				fid_mark->usage_as_global = FID_MARK_USE_IGNORE;
 			}
+			need_save_proj = true;
 		}
 	}
-
+	return need_save_proj;
 }
 
 #define FID_ARRAY_OFFSET	1
@@ -964,12 +970,13 @@ void PnP_convFrame::ReInitLists()
 void PnP_convFrame::SaveProjectInfo()
 {
 	long subpcbs = m_project.pcbs.GetCount();
+	long fidmarks = m_fid_marks_list.GetCount();
 	wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
 	m_cfg_projects->Write("project_name", m_project.project_name);
 	m_cfg_projects->Write("pcb_height", m_project.height);
 	m_cfg_projects->Write("pnp_angle", m_project.angle);
 	m_cfg_projects->Write("apply_offset", m_project.apply_offset);
-	m_cfg_projects->Write("subpcb_count", subpcbs);
+//	m_cfg_projects->Write("subpcb_count", subpcbs);
 	m_cfg_projects->DeleteGroup("subpcb");
 	for (long index = 0; index < subpcbs; index++)
 	{
@@ -979,6 +986,16 @@ void PnP_convFrame::SaveProjectInfo()
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/offset_y", m_project.pcbs[index].offset_y);
 		m_cfg_projects->Write("subpcb/"+m_project.pcbs[index].subpcb_name+"/enabled", m_project.pcbs[index].enabled);
 	}
+//Save fidmark info
+	m_cfg_projects->DeleteGroup("fid_mark");
+wxLogVerbose("Found %ld FMs", fidmarks);
+	for (long index = 0; index < fidmarks; index++)
+	{
+wxLogVerbose("Save FM %s", m_fid_marks_list[index]->designator);
+		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_type", m_fid_marks_list[index]->usage_type);
+		m_cfg_projects->Write("fid_mark/"+m_fid_marks_list[index]->designator+"/usage_as_global", m_fid_marks_list[index]->usage_as_global);
+	}
+	m_cfg_projects->Flush();
 }
 
 void PnP_convFrame::LoadProjectInfo(wxString a_filename)
@@ -1013,8 +1030,9 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 		m_project.angle = 0;
 		break;
 	}
-	long subpcbs = m_cfg_projects->ReadLong("subpcb_count", -1);
-	if(subpcbs > 0)
+//	long subpcbs = m_cfg_projects->ReadLong("subpcb_count", -1);
+//	if(subpcbs > 0)
+	if(m_cfg_projects->HasGroup("subpcb"))
 	{
 		wxString subpcb_name;
 		long dummy;
@@ -1050,12 +1068,34 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 		new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
 		new_subpcb.enabled = 1;
 		m_project.pcbs.Add(new_subpcb);
-		SaveProjectInfo();
+	}
+
+//Load fidmark info
+	if(m_cfg_projects->HasGroup("fid_mark"))
+	{
+wxLogVerbose("Loading FMs");
+		wxString fid_mark_des;
+		long dummy;
+		wxConfigPathChanger cfg_cd_to_sub_pcb(m_cfg_projects, "fid_mark/");
+		for (bool have_group = m_cfg_projects->GetFirstGroup(fid_mark_des, dummy);
+			have_group;
+			have_group = m_cfg_projects->GetNextGroup(fid_mark_des, dummy)
+		)
+		{
+wxLogVerbose("Found %s", fid_mark_des);
+			t_fid_mark_descr *fid_mark = new t_fid_mark_descr;
+			fid_mark->designator      = fid_mark_des;
+			fid_mark->usage_type      = m_cfg_projects->ReadLong(fid_mark_des+"/usage_type", FID_MARK_USE_UNKNOWN);
+			fid_mark->usage_as_global = m_cfg_projects->ReadLong(fid_mark_des+"/usage_as_global", FID_MARK_USE_UNKNOWN);
+			m_fid_marks_list.Add(fid_mark);
+		}
 	}
 //load to GUI
 	UpdatePCBFullSize();
 	RedrawProjectInfo();
 	m_pgProps->SetSplitterLeft();
+//	if(need_resave_project)
+//		SaveProjectInfo();
 }
 
 void PnP_convFrame::RedrawProjectInfo()

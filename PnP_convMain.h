@@ -60,7 +60,7 @@ class PnP_convFrame: public wxFrame
 	bool ParseNominals(t_component_type_descr *a_component_type, wxString a_designator, wxString a_value);
 	bool NormalizeNominal(t_component_type_descr *a_component_type);
 	void UpdateComponents();
-	void UpdateComponent(t_component_descr *a_component, size_t a_comp_index);
+	bool UpdateComponent(t_component_descr *a_component, size_t a_comp_index);
 	void ReInitLists();
 	void RedrawProjectInfo();
 	void LoadProjectInfo(wxString a_filename);
