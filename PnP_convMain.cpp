@@ -858,6 +858,7 @@ wxLogMessage(_T("Saved to %s"), dlg_save.GetPath());
 #define DD500_PARAM(a_NAME, a_VALUE)			(wxString::Format("%-28s: %s", a_NAME, a_VALUE))
 #define DD500_FIDMARK(a_NAME, a_X, a_Y)			(wxString::Format("%-32s|%8.3f|%8.3f| ", a_NAME, a_X, a_Y))
 #define DD500_COMP(a_DES, a_NAME, a_X, a_Y, a_ANG)	(wxString::Format("%-8s|%-32s|%8.3f|%8.3f|%7.2f|", a_DES, a_NAME, a_X, a_Y, a_ANG))
+#define DD500_CALC_COORD(a_COMP, a_COORD)		(a_COMP->pnp_location_##a_COORD + (m_project.pcbs[a_COMP->pnp_subpcb_index].offset_##a_COORD - m_project.offset_##a_COORD))
 
 void PnP_convFrame::SaveDD500File(wxXmlDocument *a_doc, wxString a_file)
 {
@@ -883,7 +884,7 @@ void PnP_convFrame::SaveDD500File(wxXmlDocument *a_doc, wxString a_file)
 	doc.AddLine(DD500_PARAM("Pcb thickness",	wxString::Format("%.3f", m_project.height)));
 	doc.AddLine(DD500_PARAM("Active side",		"Top"));
 	doc.AddLine(DD500_PARAM("Pcb type",		"Single"));
-	doc.AddLine(DD500_PARAM("Pcb orientation",	wxString::Format("%d", 0)));
+	doc.AddLine(DD500_PARAM("Pcb orientation",	wxString::Format("%d", m_project.angle)));
 	doc.AddLine(DD500_PARAM("Badmark support",	"Yes"));
 	doc.AddLine(DD500_PARAM("Component library",	".\\Complib.clb"));
 	doc.AddLine(DD500_PARAM("Fiducial library",	".\\Fidlib.flb"));
@@ -938,17 +939,17 @@ void PnP_convFrame::PrintDD500SideDescr(wxTextFile &a_doc, wxString a_side)
 	if(index_fm1 >= 0)
 	{
 		comp = &m_components_list[index_fm1];
-		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, comp->pnp_location_x, comp->pnp_location_y));
+		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, DD500_CALC_COORD(comp, x), DD500_CALC_COORD(comp, y)));
 	}
 	if(index_fm2 >= 0)
 	{
 		comp = &m_components_list[index_fm2];
-		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, comp->pnp_location_x, comp->pnp_location_y));
+		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, DD500_CALC_COORD(comp, x), DD500_CALC_COORD(comp, y)));
 	}
 	if(index_fm3 >= 0)
 	{
 		comp = &m_components_list[index_fm3];
-		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, comp->pnp_location_x, comp->pnp_location_y));
+		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, DD500_CALC_COORD(comp, x), DD500_CALC_COORD(comp, y)));
 	}
 	a_doc.AddLine(wxEmptyString);
 	a_doc.AddLine(DD500_SECTION("Panel Reference Points"));
@@ -963,7 +964,7 @@ void PnP_convFrame::PrintDD500SideDescr(wxTextFile &a_doc, wxString a_side)
 		comp = &m_components_list[index];
 		if(comp->layer.Upper() != a_side.Upper())
 			continue;
-		a_doc.AddLine(DD500_COMP(comp->designator, comp->pnp_footprint, comp->pnp_location_x, comp->pnp_location_y, comp->pnp_angle));
+		a_doc.AddLine(DD500_COMP(comp->designator, comp->pnp_footprint, DD500_CALC_COORD(comp, x), DD500_CALC_COORD(comp, y), comp->pnp_angle));
 	}
 	a_doc.AddLine(wxEmptyString);
 }
