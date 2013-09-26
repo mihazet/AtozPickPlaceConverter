@@ -154,24 +154,58 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 
 void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 {
-	long tmp_long;
-//	bool component_found = false;
 	if((NULL == m_main_data_controller) || (NULL == m_component_data) || (NULL == m_fid_mark_data) || (a_row >= (int)m_fid_mark_data->GetCount()))
 		return;
 	if((COL_LOCAL_FOR != a_col) && a_value.IsEmpty())
 		return;
 
-	wxString component;
 	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
-//	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
+	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
+	long tmp_long;
+//	wxString component;
+//	bool component_found = false;
 	switch(a_col)
 	{
 		case COL_USE_ON_SUBPCB:
 			tmp_long = G_array_on_subpcb.Index(a_value, false);
-			data_fidmark->usage_type = (wxNOT_FOUND == tmp_long)?FID_MARK_USE_UNKNOWN:tmp_long;
+			if(wxNOT_FOUND == tmp_long)
+				tmp_long = FID_MARK_USE_UNKNOWN;
+			if((FID_MARK_USE_FM1 == tmp_long)||(FID_MARK_USE_FM2 == tmp_long)||(FID_MARK_USE_FM3 == tmp_long))
+			{
+				for(int index = m_fid_mark_data->GetCount()-1; index >= 0; index--) //проверка, есть ли уже репер с таким номером
+				{
+					t_fid_mark_descr *fm_descr = m_fid_mark_data->Item(index);
+					t_component_descr *fm_comp = &m_component_data->Item(fm_descr->component_index);
+					if((fm_comp->layer != data_comp->layer) || (fm_comp->pnp_subpcb_index != data_comp->pnp_subpcb_index))
+						continue;
+					if(tmp_long == fm_descr->usage_type) //если есть, то меняем местами
+					{
+						fm_descr->usage_type = data_fidmark->usage_type;
+						break;
+					}
+				}
+			}
+			data_fidmark->usage_type = tmp_long;
 			break;
 		case COL_USE_GLOBAL:
 			tmp_long = G_array_global.Index(a_value, false);
+			if(wxNOT_FOUND == tmp_long)
+				tmp_long = FID_MARK_USE_UNKNOWN;
+			if((FID_MARK_USE_FM1 == tmp_long)||(FID_MARK_USE_FM2 == tmp_long)||(FID_MARK_USE_FM3 == tmp_long))
+			{
+				for(int index = m_fid_mark_data->GetCount()-1; index >= 0; index--) //проверка, есть ли уже репер с таким номером
+				{
+					t_fid_mark_descr *fm_descr = m_fid_mark_data->Item(index);
+					t_component_descr *fm_comp = &m_component_data->Item(fm_descr->component_index);
+					if(fm_comp->layer != data_comp->layer)
+						continue;
+					if(tmp_long == fm_descr->usage_as_global) //если есть, то меняем местами
+					{
+						fm_descr->usage_as_global = data_fidmark->usage_as_global;
+						break;
+					}
+				}
+			}
 			data_fidmark->usage_as_global = (wxNOT_FOUND == tmp_long)?FID_MARK_USE_UNKNOWN:tmp_long;
 			break;
 		case COL_LOCAL_FOR:
@@ -190,4 +224,5 @@ void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 			break;
 	}
 	m_main_data_controller->SaveProjectInfo();
+	m_main_data_controller->Refresh();
 }
