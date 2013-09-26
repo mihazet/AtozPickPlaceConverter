@@ -854,8 +854,10 @@ wxLogMessage(_T("Saved to %s"), dlg_save.GetPath());
 	SaveDD500File(&doc, dlg_save.GetPath().BeforeLast('.') + ".pcb");
 }
 
-#define DD500_SECTION(a_NAME)			(wxString::Format("[%s]", a_NAME))
-#define DD500_PARAM(a_NAME, a_VALUE)		(wxString::Format("%-28s: %s", a_NAME, a_VALUE))
+#define DD500_SECTION(a_NAME)				(wxString::Format("[%s]", a_NAME))
+#define DD500_PARAM(a_NAME, a_VALUE)			(wxString::Format("%-28s: %s", a_NAME, a_VALUE))
+#define DD500_FIDMARK(a_NAME, a_X, a_Y)			(wxString::Format("%-32s|%8.3f|%8.3f| ", a_NAME, a_X, a_Y))
+#define DD500_COMP(a_DES, a_NAME, a_X, a_Y, a_ANG)	(wxString::Format("%-8s|%-32s|%8.3f|%8.3f|%7.2f|", a_DES, a_NAME, a_X, a_Y, a_ANG))
 
 void PnP_convFrame::SaveDD500File(wxXmlDocument *a_doc, wxString a_file)
 {
@@ -886,9 +888,84 @@ void PnP_convFrame::SaveDD500File(wxXmlDocument *a_doc, wxString a_file)
 	doc.AddLine(DD500_PARAM("Component library",	".\\Complib.clb"));
 	doc.AddLine(DD500_PARAM("Fiducial library",	".\\Fidlib.flb"));
 	doc.AddLine(DD500_PARAM("Pcb comment",		""));
+	doc.AddLine(wxEmptyString);
+
+	PrintDD500SideDescr(doc, "TOP");
+	PrintDD500SideDescr(doc, "BOT");
 
 	doc.Write();
 	doc.Close();
+}
+void PnP_convFrame::PrintDD500SideDescr(wxTextFile &a_doc, wxString a_side)
+{
+	int index_fm1 = -1,
+	    index_fm2 = -1,
+	    index_fm3 = -1;
+	t_component_descr *comp;
+	int comps_count = m_components_list.GetCount();
+	a_doc.AddLine(DD500_SECTION(wxString::Format("%s side", (a_side.Upper() == "BOT")?"Bottom":"Top")));
+	a_doc.AddLine(DD500_PARAM("Use variants only",		"No"));
+	a_doc.AddLine(wxEmptyString);
+	a_doc.AddLine(DD500_SECTION("Fiducials"));
+	a_doc.AddLine(DD500_PARAM("Use reference points",	"Yes"));
+	a_doc.AddLine(DD500_PARAM("Check all panel refs",	"No"));
+	a_doc.AddLine(DD500_PARAM("Check refs with both heads",	"No"));
+	a_doc.AddLine(DD500_PARAM("Double-check refs",		"Yes"));
+	a_doc.AddLine(DD500_PARAM("Check local refs",		"Yes"));
+	a_doc.AddLine(DD500_PARAM("Use badmark fiducial",	"Yes"));
+	a_doc.AddLine(wxEmptyString);
+	a_doc.AddLine(DD500_SECTION("Global Reference Points"));
+	a_doc.AddLine(";Fiducial name------------------|----X---|----Y---|-Comment------------");
+	a_doc.AddLine(wxEmptyString);
+	a_doc.AddLine(DD500_SECTION("Reference Panel Reference Points"));
+	a_doc.AddLine(";Fiducial name------------------|----X---|----Y---|-Comment------------");
+//USE GLOBAL FMs
+	for(int index = m_fid_marks_list.GetCount()-1; index >= 0; index--)
+	{
+		int comp_index = m_fid_marks_list[index]->component_index;
+		comp = &m_components_list[comp_index];
+		if(comp->layer.Upper() != a_side.Upper())
+			continue;
+		if(FID_MARK_USE_FM1 == m_fid_marks_list[index]->usage_as_global)
+		{
+			index_fm1 = comp_index;
+		} else if(FID_MARK_USE_FM2 == m_fid_marks_list[index]->usage_as_global) {
+			index_fm2 = comp_index;
+		} else if(FID_MARK_USE_FM3 == m_fid_marks_list[index]->usage_as_global) {
+			index_fm3 = comp_index;
+		}
+	}
+	if(index_fm1 >= 0)
+	{
+		comp = &m_components_list[index_fm1];
+		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, comp->pnp_location_x, comp->pnp_location_y));
+	}
+	if(index_fm2 >= 0)
+	{
+		comp = &m_components_list[index_fm2];
+		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, comp->pnp_location_x, comp->pnp_location_y));
+	}
+	if(index_fm3 >= 0)
+	{
+		comp = &m_components_list[index_fm3];
+		a_doc.AddLine(DD500_FIDMARK(comp->pnp_name, comp->pnp_location_x, comp->pnp_location_y));
+	}
+	a_doc.AddLine(wxEmptyString);
+	a_doc.AddLine(DD500_SECTION("Panel Reference Points"));
+	a_doc.AddLine(wxEmptyString);
+	a_doc.AddLine(DD500_SECTION("Dispense"));
+	a_doc.AddLine(DD500_PARAM("Move height",	"1.500"));
+	a_doc.AddLine(wxEmptyString);
+	a_doc.AddLine(DD500_SECTION("Components"));
+	a_doc.AddLine(";Ref----|-Component name-----------------|----X---|----Y---|-Angle-|Prio|-ID-");
+	for(int index = 0; index < comps_count; index++)
+	{
+		comp = &m_components_list[index];
+		if(comp->layer.Upper() != a_side.Upper())
+			continue;
+		a_doc.AddLine(DD500_COMP(comp->designator, comp->pnp_footprint, comp->pnp_location_x, comp->pnp_location_y, comp->pnp_angle));
+	}
+	a_doc.AddLine(wxEmptyString);
 }
 
 void PnP_convFrame::PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp)
@@ -987,7 +1064,6 @@ wxXmlNode *PnP_convFrame::CreateProductSideDescr(wxString a_side)
 			tmp_node->AddAttribute("CadRef", fm_comp->designator);
 			tmp_node->AddAttribute("Position", wxString::Format("%ld,%ld", (long)(fm_comp->pnp_location_x*1000), (long)(fm_comp->pnp_location_y*1000)));
 			tmp_node->AddAttribute("Name", fm_comp->pnp_name);
-
 		}
 	}
 	tmp_node = new wxXmlNode(prod_fiducials_node, wxXML_ELEMENT_NODE, "PP050");

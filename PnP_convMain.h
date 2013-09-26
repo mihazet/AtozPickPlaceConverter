@@ -27,6 +27,7 @@
 class wxXmlNode;
 class wxXmlDocument;
 class wxFileConfig;
+class wxTextFile;
 class cCompTypeTable;
 class cPatternTable;
 class cFidMarkTable;
@@ -69,6 +70,7 @@ class PnP_convFrame: public wxFrame
 	void UpdatePCBFullSize();
 	bool IsInRoom(double a_ref1_x, double a_ref1_y, double a_ref2_x, double a_ref2_y, double a_ptr_x, double a_ptr_y);
 	void SaveDD500File(wxXmlDocument *a_doc, wxString a_file);
+	void PrintDD500SideDescr(wxTextFile &a_doc, wxString a_side);
 
 
         //(*Handlers(PnP_convFrame)
