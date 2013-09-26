@@ -162,6 +162,7 @@ void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
 	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
 	long tmp_long;
+	bool single_board = m_main_data_controller->IsSingleBoard();
 //	wxString component;
 //	bool component_found = false;
 	switch(a_col)
@@ -181,11 +182,15 @@ void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 					if(tmp_long == fm_descr->usage_type) //если есть, то меняем местами
 					{
 						fm_descr->usage_type = data_fidmark->usage_type;
+						if(single_board)
+							fm_descr->usage_as_global = data_fidmark->usage_as_global;
 						break;
 					}
 				}
 			}
 			data_fidmark->usage_type = tmp_long;
+			if(single_board)
+				data_fidmark->usage_as_global = tmp_long;
 			break;
 		case COL_USE_GLOBAL:
 			tmp_long = G_array_global.Index(a_value, false);
@@ -202,11 +207,15 @@ void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
 					if(tmp_long == fm_descr->usage_as_global) //если есть, то меняем местами
 					{
 						fm_descr->usage_as_global = data_fidmark->usage_as_global;
+						if(single_board)
+							fm_descr->usage_type = data_fidmark->usage_type;
 						break;
 					}
 				}
 			}
 			data_fidmark->usage_as_global = (wxNOT_FOUND == tmp_long)?FID_MARK_USE_UNKNOWN:tmp_long;
+			if(single_board)
+				data_fidmark->usage_type = tmp_long;
 			break;
 		case COL_LOCAL_FOR:
 //			if(a_value.IsEmpty())

@@ -38,6 +38,7 @@ class PnP_convFrame: public wxFrame
 	PnP_convFrame(wxWindow* parent,wxWindowID id = -1);
 	virtual ~PnP_convFrame();
 	void SaveProjectInfo();
+	bool IsSingleBoard() {return (m_project.pcbs.GetCount() <= 1);};
 
     private:
 	wxFileConfig		*m_cfg_settings;
