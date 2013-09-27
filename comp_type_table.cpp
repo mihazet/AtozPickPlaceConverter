@@ -121,7 +121,7 @@ wxString cCompTypeTable::GetValue(int a_row, int a_col)
 			result = wxString::Format("%d", data->override_name);
 			break;
 		case COL_COMP_COUNT:
-			result = wxString::Format("%zu", data->comp_count);
+			result = wxString::Format("%d", data->comp_count);
 			break;
 		case COL_ENABLED:
 			result = wxString::Format("%d", data->enabled);

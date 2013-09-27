@@ -126,7 +126,7 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 			result = data_comp->layer;
 			break;
 		case COL_SUBPCB_INDEX:
-			result = wxString::Format("%zu", data_comp->pnp_subpcb_index);
+			result = wxString::Format("%d", data_comp->pnp_subpcb_index);
 			break;
 		case COL_USE_ON_SUBPCB:
 			result = G_array_on_subpcb[data_fidmark->usage_type];

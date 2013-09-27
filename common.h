@@ -33,7 +33,7 @@ struct t_component_descr {
 	double		pnp_location_y;/**< координата центра компонента в PP-050/DD-500 */
 	double		pnp_angle;/**< угол поворота компонента в PP-050/DD-500 */
 	bool		pnp_enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
-	size_t		pnp_subpcb_index;/**< К какому куску платы относится */
+	int		pnp_subpcb_index;/**< К какому куску платы относится */
 	t_component_descr() :
 		cad_location_x(0), cad_location_y(0), cad_angle(0), enabled(true),
 		pnp_location_x(0), pnp_location_y(0), pnp_angle(0), pnp_enabled(true),
@@ -46,7 +46,7 @@ struct t_component_type_descr {
 	wxString	pnp_name;/**< Имя компонента в PP-050/DD-500 */
 	bool		override_name;/**< Не генерить имя из шаблона и названия */
 	wxString	value;/**< Номинальное значение для резисторов/еондёров/etc. или просто название компонента*/
-	size_t		comp_count;/**< Количество компонентов этого типа на плате */
+	int		comp_count;/**< Количество компонентов этого типа на плате */
 	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
 	bool		is_new;/**< Был ли этот компонент в базе конвертора */
 	t_component_type_descr() : override_name(false), comp_count(1), enabled(true), is_new(true) {}
@@ -60,7 +60,7 @@ struct t_pattern_descr {
 	double		offset_x;/**< смещение центра компонента от реферной точки */
 	double		offset_y;/**< смещение центра компонента от реферной точки */
 	double		angle;/**< угол поворота компонента в базе PCAD/Altium относительно PP-050/DD-500 */
-	size_t		comp_count;/**< Количество компонентов с таким корпусом на плате */
+	int		comp_count;/**< Количество компонентов с таким корпусом на плате */
 	bool		enabled;/**< Устанавливается ли компонент с таким корпусом в PP-050/DD-500 */
 	bool		is_new;/**< Был ли этот корпус в базе конвертора */
 	t_pattern_descr() : add_pack_to_name(true),

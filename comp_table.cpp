@@ -120,7 +120,7 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 			case COL_PNP_ANGLE:
 				return wxString::Format("%.1f", data->pnp_angle);
 			case COL_PNP_SUBPCB:
-				return wxString::Format("%zu", data->pnp_subpcb_index);
+				return wxString::Format("%d", data->pnp_subpcb_index);
 			case COL_PNP_ENABLED:
 				return wxString::Format("%d", data->pnp_enabled);
 			default:
