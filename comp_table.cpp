@@ -34,8 +34,11 @@ cCompTable::cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID win
 	: wxListCtrl(parent, winid, pos, size, style | wxLC_VIRTUAL, validator, name)
 {
 	m_comp_data = a_data;
-//	m_Timer = new wxTimer(this, ID_TIMER);
-//	m_Timer->Start(AUTOUPDATE_INTERVAL);
+
+	m_attr_disabled_comp = new wxListItemAttr;
+	m_attr_disabled_comp->SetTextColour(*wxLIGHT_GREY);
+	m_attr_data_to_out = new wxListItemAttr;
+	m_attr_data_to_out->SetBackgroundColour(*wxGREEN);
 
 	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
 	InsertColumn(COL_DESIGNATOR,	_T("Des"),	wxLIST_FORMAT_LEFT, 60);
@@ -101,7 +104,7 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 			case COL_CAD_ANGLE:
 				return wxString::Format("%.1f", data->cad_angle);
 			case COL_ENABLED:
-				return wxString::Format("%d", data->enabled);;
+				return wxString::Format("%d", data->enabled);
 			case COL_PATTERN:
 				return data->pattern;
 			case COL_PNP_NAME:
@@ -119,7 +122,7 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 			case COL_PNP_SUBPCB:
 				return wxString::Format("%zu", data->pnp_subpcb_index);
 			case COL_PNP_ENABLED:
-				return wxString::Format("%d", data->pnp_enabled);;
+				return wxString::Format("%d", data->pnp_enabled);
 			default:
 				return wxEmptyString;
 		}
@@ -133,50 +136,51 @@ wxString cCompTable::OnGetItemText(long item, long column) const
 // ----------------------------------------------------------------------------
 wxListItemAttr *cCompTable::OnGetItemAttr(long item) const
 {
-	return NULL;
-}
+	if(NULL == m_comp_data)
+		return NULL;
 
-// ----------------------------------------------------------------------------
-// Картинки в строках
-// ----------------------------------------------------------------------------
-int cCompTable::OnGetItemImage(long item) const
-{
-	return -1;
-}
-// ----------------------------------------------------------------------------
+	t_component_descr *data = &(m_comp_data->Item(item));
+	wxListItemAttr *result = NULL;
 
-int cCompTable::OnGetItemColumnImage(long item, long column) const
-{
-	return -1;
+	if(!(data->enabled && data->pnp_enabled))
+	{
+		result = m_attr_disabled_comp;
+	}
+	return result;
 }
-// ----------------------------------------------------------------------------
+wxListItemAttr *cCompTable::OnGetItemColumnAttr(long item, long column) const
+{
+	if(NULL == m_comp_data)
+		return NULL;
+
+	wxListItemAttr *result = OnGetItemAttr(item);
+
+	if(NULL == result)
+	{
+		switch (column)
+		{
+			case COL_DESIGNATOR:
+			case COL_LAYER:
+			case COL_PNP_NAME:
+			case COL_PNP_FOOTPRINT:
+			case COL_PNP_LOCATION_X:
+			case COL_PNP_LOCATION_Y:
+			case COL_PNP_ANGLE:
+				result = m_attr_data_to_out;
+			default:
+				result = NULL;
+		}
+	}
+	return result;
+}
 
 void cCompTable::ReInit()
 {
-	if (m_comp_data)
-	{
-		SetItemCount(m_comp_data->GetCount());
-		Refresh();
-//		if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
-//			EnsureVisible(GetItemCount() - 1);
-	}
+	if (NULL == m_comp_data)
+		return;
+
+	SetItemCount(m_comp_data->GetCount());
+	Refresh();
+//	if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
+//		EnsureVisible(GetItemCount() - 1);
 }
-// ----------------------------------------------------------------------------
-//void cCompTable::OnContextMenu(wxContextMenuEvent& event)
-//{
-//	PopupMenu(m_PopupMenu);
-//	return;
-//}
-//void cCompTable::OnAutoUpdate(wxCommandEvent& event)
-//{
-//	if(event.IsChecked())
-//		m_Timer->Start(AUTOUPDATE_INTERVAL);
-//	else
-//		m_Timer->Stop();
-//}
-//void cCompTable::OnTimer(wxTimerEvent& event)
-//{
-//	if((size_t)GetItemCount() != m_events_data->GetCount())
-//		ReInit();
-//}
-//

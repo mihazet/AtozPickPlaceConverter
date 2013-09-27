@@ -20,7 +20,9 @@ public:
 protected:
 private:
 	tComponentDescr		*m_comp_data;
-//	wxTimer			*m_Timer;
+	wxListItemAttr		*m_attr_disabled_comp;
+	wxListItemAttr		*m_attr_data_to_out;
+
 
 	// Переопределяем виртуальные функции
 
@@ -33,28 +35,7 @@ private:
 	// Атрибуты строки
 	// ----------------------------------------------------------------------------
 	virtual wxListItemAttr *OnGetItemAttr(long item) const;
-
-	// ----------------------------------------------------------------------------
-	// Картинки в строках
-	// ----------------------------------------------------------------------------
-	virtual int OnGetItemImage(long item) const;
-
-	// ----------------------------------------------------------------------------
-	// и ячейках
-	// ----------------------------------------------------------------------------
-	virtual int OnGetItemColumnImage(long item, long column) const;
-
-	// ----------------------------------------------------------------------------
-	// Конекстное меню
-	// ----------------------------------------------------------------------------
-//	void OnContextMenu(wxContextMenuEvent& event);
-//	void OnAutoUpdate(wxCommandEvent& event);
-
-	// ----------------------------------------------------------------------------
-	// Таймер
-	// ----------------------------------------------------------------------------
-//	void OnTimer(wxTimerEvent& event);
-
+	virtual wxListItemAttr *OnGetItemColumnAttr(long item, long column) const;
 	DECLARE_EVENT_TABLE()
 };
 
