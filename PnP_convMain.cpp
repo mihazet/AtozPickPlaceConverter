@@ -824,8 +824,11 @@ bool PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 
 void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 {
+	wxFileName filename = m_project.fullfilename;
+	filename.SetName(m_project.project_name);
+	filename.SetExt("prod");
 	wxFileDialog dlg_save(this, "Enter target filename",
-			wxEmptyString, m_project.fullfilename.BeforeLast('.') + ".prod",
+			wxEmptyString, filename.GetFullPath(),
 			"PP-050 files (*.prod)|*.prod|DD-500 files (*.pcb)|*.pcb", wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
 
 //	dlg_save.SetWindowStyleFlag(wxFD_SAVE);
@@ -1218,11 +1221,17 @@ void PnP_convFrame::LoadProjectInfo(wxString a_filename)
 {
 	if(a_filename.IsEmpty())
 		return;
+	wxString filename_pref = ("Pick Place for ");
+	wxString proj_name = a_filename.BeforeLast('.');
+	if(proj_name.StartsWith(filename_pref))
+	{
+		proj_name = proj_name.Mid(filename_pref.Len());
+	}
 	m_project.filename = a_filename;
 	m_project.pcbs.Clear();
 
 	wxConfigPathChanger cfg_cd_to(m_cfg_projects, "/"+m_project.filename+"/");
-	m_project.project_name = m_cfg_projects->Read("project_name", m_project.filename.BeforeLast('.'));
+	m_project.project_name = m_cfg_projects->Read("project_name", proj_name);
 	m_project.height = m_cfg_projects->ReadDouble("pcb_height", m_project.height);
 	m_project.angle = m_cfg_projects->ReadLong("pnp_angle", m_project.angle);
 	m_project.apply_offset = m_cfg_projects->ReadBool("apply_offset", m_project.apply_offset);
