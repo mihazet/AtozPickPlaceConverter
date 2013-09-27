@@ -7,6 +7,10 @@
 
 class wxXmlNode;
 
+#define LAYER_TOP_NAME		("T")
+#define LAYER_BOT_NAME		("B")
+#define FIDMARD_DES_PREF	("FM")
+
 struct t_component_descr {
 ///исходные данные
 	wxString	designator;/**< Обозначение компонента */

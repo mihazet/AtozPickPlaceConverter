@@ -250,13 +250,17 @@ void PnP_convFrame::OnAbout(wxCommandEvent& event)
 	wxMessageBox(msg, _("Welcome to..."));
 }
 
-#define CSV_DELIMITER				';'
 enum {
 	INDEX_TOP_COMP,
 	INDEX_TOP_FID,
 	INDEX_BOT_COMP,
 	INDEX_BOT_FID,
 	INDEX_COUNT
+};
+enum {
+	FILE_TYPE_PCAD,
+	FILE_TYPE_ALTIUM,
+	FILE_TYPES_COUNT
 };
 
 void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
@@ -270,20 +274,15 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 
 	int			tmp_index;
 	double			value;
+	int			input_file_type;
+	char			csv_delimiter = ';';
 
 	dlg_open.SetWindowStyleFlag(wxFD_OPEN|wxFD_FILE_MUST_EXIST|wxFD_CHANGE_DIR|wxFD_PREVIEW);
-	dlg_open.SetWildcard(_("PCAD PnP files (*.txt)|*.txt|All files (*)|*"));
+	dlg_open.SetWildcard(_("All supported files (*.txt;*.csv)|*.txt;*.csv|PCAD PnP files (*.txt)|*.txt|Altium Designer PnP files (*.csv)|*.txt|All files (*)|*"));
 	if(dlg_open.ShowModal() != wxID_OK)
 		return;
 
-#warning TODO (alatar#1#): Сделать диалог для выбора типа входного файла, пока только P-CAD
-	m_cfg_components_active = m_cfg_components_pcad;
-	m_cfg_patterns_active = m_cfg_patterns_pcad;
-	m_component_types_table->SetCompTypesConfig(m_cfg_components_active);
-	m_pattern_table->SetPatternsConfig(m_cfg_patterns_active);
-
 	wxTextFile file(dlg_open.GetPath());
-
 	if(!file.Open())
 	{
 		wxLogError(_T("File can`t be opened!"));
@@ -294,49 +293,109 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	WX_CLEAR_ARRAY(m_patterns_list);	m_patterns_list.Clear();
 	WX_CLEAR_ARRAY(m_fid_marks_list);	m_fid_marks_list.Clear();
 
-	m_project.apply_offset = true; //for PCAD
 	m_project.fullfilename = dlg_open.GetPath();
+// TODO (alatar#1#): Сделать диалог для выбора типа входного файла
+	wxString file_ext = m_project.fullfilename.AfterLast('.');
+	if(file_ext == "txt")
+	{
+		input_file_type = FILE_TYPE_PCAD;
+		m_project.apply_offset = true; //for PCAD
+		m_cfg_components_active = m_cfg_components_pcad;
+		m_cfg_patterns_active = m_cfg_patterns_pcad;
+		csv_delimiter = ';';
+	} else if (file_ext == "csv") {
+		input_file_type = FILE_TYPE_ALTIUM;
+		m_project.apply_offset = false;
+		m_cfg_components_active = m_cfg_components_altium;
+		m_cfg_patterns_active = m_cfg_patterns_altium;
+		csv_delimiter = ',';
+	} else {
+		wxLogError(_T("Don`t know how to open %s!"), file_ext);
+		return;
+	}
 	LoadProjectInfo(dlg_open.GetFilename());
+	m_component_types_table->SetCompTypesConfig(m_cfg_components_active);
+	m_pattern_table->SetPatternsConfig(m_cfg_patterns_active);
 
+	if(input_file_type == FILE_TYPE_ALTIUM)
+	{
+		file.RemoveLine(0);
+		file.RemoveLine(0);
+	}
 	for(str = file.GetFirstLine(); !file.Eof(); str = file.GetNextLine())
 	{
 		t_component_descr component;
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		if(str.IsEmpty())
+			continue;
+		tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
 		component.designator = RemoveQuotes(tmp_str);
+		if(component.designator.IsEmpty())
+			continue;
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
 		component.cad_pattern = RemoveQuotes(tmp_str);
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
-		component.cad_name = RemoveQuotes(tmp_str);
+		if(input_file_type == FILE_TYPE_PCAD)
+		{
+			tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
+			component.cad_name = RemoveQuotes(tmp_str);
+			tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
+			component.cad_value = RemoveQuotes(tmp_str);
+			tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
+			if("TOP" == RemoveQuotes(tmp_str).Upper())
+				component.layer = LAYER_TOP_NAME;
+			else
+				component.layer = LAYER_BOT_NAME;
+		}
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
-		component.cad_value = RemoveQuotes(tmp_str);
+		if(input_file_type == FILE_TYPE_ALTIUM)
+		{
+			str = str.AfterFirst(csv_delimiter);
+			str = str.AfterFirst(csv_delimiter);
+		}
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
-		component.layer = RemoveQuotes(tmp_str);
-
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
 		tmp_str = RemoveQuotes(tmp_str);
+		tmp_str = tmp_str.BeforeFirst('m');
 		if(tmp_str.ToDouble(&value))
 			component.cad_location_x = value;
 		else
 			component.cad_location_x = 0;
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
 		tmp_str = RemoveQuotes(tmp_str);
+		tmp_str = tmp_str.BeforeFirst('m');
 		if(tmp_str.ToDouble(&value))
 			component.cad_location_y = value;
 		else
 			component.cad_location_y = 0;
 
-		tmp_str = str.BeforeFirst(CSV_DELIMITER); str = str.AfterFirst(CSV_DELIMITER);
+		if(input_file_type == FILE_TYPE_ALTIUM)
+		{
+			str = str.AfterFirst(csv_delimiter);
+			str = str.AfterFirst(csv_delimiter);
+			tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
+			if("T" == RemoveQuotes(tmp_str).Upper())
+				component.layer = LAYER_TOP_NAME;
+			else
+				component.layer = LAYER_BOT_NAME;
+		}
+
+		tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
 		tmp_str = RemoveQuotes(tmp_str);
 		if(tmp_str.ToDouble(&value))
 			component.cad_angle = value;
 		else
 			component.cad_angle = 0;
+		if(component.cad_angle >= 360.0)
+			component.cad_angle -= 360.0;
+
+		if(input_file_type == FILE_TYPE_ALTIUM)
+		{
+			tmp_str = str.BeforeFirst(csv_delimiter); str = str.AfterFirst(csv_delimiter);
+			component.cad_value = RemoveQuotes(tmp_str);
+		}
 //wxLogMessage(_T("Found %s %s at %f %f %f"), component.designator, component.cad_name, component.cad_location_x, component.cad_location_y, component.cad_angle);
 
 ///Корректировка
@@ -399,12 +458,17 @@ void PnP_convFrame::LoadComponent(t_component_type_descr *a_comp_type, const t_c
 
 	a_comp_type->pattern = a_component.cad_pattern;
 	a_comp_type->pnp_name = a_component.full_name;
-	a_comp_type->value = ParseNominal(a_component.designator, a_component.strip_value);
-	if((a_comp_type->value).IsEmpty())
+	if(a_component.strip_value.IsEmpty())
 	{
-		wxString msg = wxString::Format("Can`t parse value for %s (%s). Value is %s.", a_comp_type->name, a_component.designator, a_component.strip_value);
-		wxLogWarning(msg);
-		a_comp_type->value = a_component.strip_value;
+		a_comp_type->value = a_component.cad_value;
+	} else {
+		a_comp_type->value = ParseNominal(a_component.designator, a_component.strip_value);
+		if((a_comp_type->value).IsEmpty())
+		{
+			wxString msg = wxString::Format("Can`t parse value for %s (%s). Value is %s.", a_comp_type->name, a_component.designator, a_component.strip_value);
+			wxLogWarning(msg);
+			a_comp_type->value = a_component.strip_value;
+		}
 	}
 	if(m_cfg_components_active->HasGroup(a_comp_type->name))
 	{
@@ -696,7 +760,7 @@ bool PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 	a_component->pnp_enabled = a_component->enabled && component_type->enabled && comp_pattern->enabled && m_project.pcbs[index].enabled;
 
 //Реперный знак?
-	if(a_component->designator.StartsWith("FM"))
+	if(a_component->designator.StartsWith(FIDMARD_DES_PREF))
 	{
 		int index_local  = 0;
 		int index_global = 0;
@@ -790,10 +854,10 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
 
-	tmp_node = CreateProductSideDescr("TOP");
+	tmp_node = CreateProductSideDescr(LAYER_TOP_NAME);
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
-	tmp_node = CreateProductSideDescr("BOT");
+	tmp_node = CreateProductSideDescr(LAYER_BOT_NAME);
 	node->InsertChildAfter(tmp_node, last_child_node);
 	last_child_node = tmp_node;
 
@@ -835,15 +899,15 @@ void PnP_convFrame::On_mnuSaveProdSelected(wxCommandEvent& event)
 			int tmp_ind;
 			if(!(m_components_list[index].pnp_enabled && (m_components_list[index].pnp_subpcb_index == subpcb_index)))
 				continue;
-			if(m_components_list[index].layer.Upper() == "TOP")
+			if(m_components_list[index].layer == LAYER_TOP_NAME)
 			{
 				tmp_ind = INDEX_TOP_COMP;
-			} else if(m_components_list[index].layer.Upper() == "BOTTOM") {
+			} else if(m_components_list[index].layer == LAYER_BOT_NAME) {
 				tmp_ind = INDEX_BOT_COMP;
 			} else {
 				continue;
 			}
-			if(m_components_list[index].designator.StartsWith("FM"))
+			if(m_components_list[index].designator.StartsWith(FIDMARD_DES_PREF))
 			{
 				PrintFiducial(&nodes[tmp_ind + FID_ARRAY_OFFSET], m_components_list[index]);
 			} else {
@@ -908,8 +972,8 @@ void PnP_convFrame::SaveDD500File(wxXmlDocument *a_doc, wxString a_file)
 	doc.AddLine(DD500_PARAM("Pcb comment",		""));
 	doc.AddLine(wxEmptyString);
 
-	PrintDD500SideDescr(doc, "TOP");
-	PrintDD500SideDescr(doc, "BOT");
+	PrintDD500SideDescr(doc, LAYER_TOP_NAME);
+	PrintDD500SideDescr(doc, LAYER_BOT_NAME);
 
 	doc.Write();
 	doc.Close();
@@ -921,7 +985,7 @@ void PnP_convFrame::PrintDD500SideDescr(wxTextFile &a_doc, wxString a_side)
 	    index_fm3 = -1;
 	t_component_descr *comp;
 	int comps_count = m_components_list.GetCount();
-	a_doc.AddLine(DD500_SECTION(wxString::Format("%s side", (a_side.Upper() == "BOT")?"Bottom":"Top")));
+	a_doc.AddLine(DD500_SECTION(wxString::Format("%s side", (a_side == LAYER_BOT_NAME)?"Bottom":"Top")));
 	a_doc.AddLine(DD500_PARAM("Use variants only",		"No"));
 	a_doc.AddLine(wxEmptyString);
 	a_doc.AddLine(DD500_SECTION("Fiducials"));
@@ -979,7 +1043,7 @@ void PnP_convFrame::PrintDD500SideDescr(wxTextFile &a_doc, wxString a_side)
 	for(int index = 0; index < comps_count; index++)
 	{
 		comp = &m_components_list[index];
-		if((comp->layer.Upper() != a_side.Upper()) || comp->designator.StartsWith("FM"))
+		if((comp->layer.Upper() != a_side.Upper()) || comp->designator.StartsWith(FIDMARD_DES_PREF))
 			continue;
 		a_doc.AddLine(DD500_COMP(comp->designator, comp->pnp_footprint, DD500_CALC_COORD(comp, x), DD500_CALC_COORD(comp, y), comp->pnp_angle));
 	}
@@ -1047,7 +1111,7 @@ wxXmlNode *PnP_convFrame::CreateProductSideDescr(wxString a_side)
 	t_component_descr *fm_comp;
 	t_fid_mark_descr *fm_descr;
 
-	side_node = new wxXmlNode(wxXML_ELEMENT_NODE, (a_side.Upper() == "BOT")?"BottomSide":"TopSide");
+	side_node = new wxXmlNode(wxXML_ELEMENT_NODE, (a_side == LAYER_BOT_NAME)?"BottomSide":"TopSide");
 	side_node->AddAttribute("Barcode", "");
 
 	wxXmlNode *prod_orientation_node = new wxXmlNode(wxXML_ELEMENT_NODE, "Orientations");
