@@ -40,18 +40,18 @@ struct t_component_type_descr {
 	wxString	name;/**< Идентификатор, расчитанный на базе имён и номинала в PCAD/Altium */
 	wxString	pattern;/**< Имя посадочного места в базе конвертора */
 	wxString	pnp_name;/**< Имя компонента в PP-050/DD-500 */
-	double		value;/**< Номинальное значение для резисторов/еондёров/etc. */
-	wxString	unit;/**< Размерность номинального значения */
-	wxString	value_postfix;/**< Утточнение номинала (например вольтаж кондёра) */
+	bool		override_name;/**< Не генерить имя из шаблона и названия */
+	wxString	value;/**< Номинальное значение для резисторов/еондёров/etc. или просто название компонента*/
 	size_t		comp_count;/**< Количество компонентов этого типа на плате */
 	bool		enabled;/**< Устанавливается ли компонент в PP-050/DD-500 */
 	bool		is_new;/**< Был ли этот компонент в базе конвертора */
-	t_component_type_descr() : value(0), comp_count(1), enabled(true), is_new(true) {}
+	t_component_type_descr() : override_name(false), comp_count(1), enabled(true), is_new(true) {}
 };
 
 struct t_pattern_descr {
 	wxString	pattern;/**< Имя посадочного места в базе конвертора */
 	wxString	pnp_package;/**< Имя корпуса в PP-050 */
+	bool		add_pack_to_name;/**< Добавлять имя корпуса к имени компонента */
 	wxString	pnp_footprint;/**< Имя футпринта в DD-500 */
 	double		offset_x;/**< смещение центра компонента от реферной точки */
 	double		offset_y;/**< смещение центра компонента от реферной точки */
@@ -59,7 +59,8 @@ struct t_pattern_descr {
 	size_t		comp_count;/**< Количество компонентов с таким корпусом на плате */
 	bool		enabled;/**< Устанавливается ли компонент с таким корпусом в PP-050/DD-500 */
 	bool		is_new;/**< Был ли этот корпус в базе конвертора */
-	t_pattern_descr() : offset_x(0), offset_y(0), angle(0),
+	t_pattern_descr() : add_pack_to_name(true),
+		offset_x(0), offset_y(0), angle(0),
 		comp_count(1), enabled(true), is_new(true) {}
 };
 

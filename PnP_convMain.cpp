@@ -365,16 +365,22 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 			m_component_types_list.Add(component_type);
 			component_type->pattern = component.cad_pattern;
 			component_type->pnp_name = component.full_name;
-			ParseNominals(component_type, component.designator, component.strip_value);
+			component_type->value = ParseNominal(component.designator, component.strip_value);
+			if((component_type->value).IsEmpty())
+			{
+				wxString msg = wxString::Format("Can`t parse value for %s (%s). Value is %s.", component_type->name, component.designator, component.strip_value);
+//				wxMessageBox(msg, "Warning");
+				wxLogWarning(msg);
+				component_type->value = component.strip_value;
+			}
 			if(cfg_components->HasGroup(component_type->name))
 			{
 				component_type->is_new = 0;
 				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
 				component_type->pattern = cfg_components->Read("pattern", component_type->pattern);
 				component_type->pnp_name = cfg_components->Read("pnp_name", component_type->pnp_name);
+				component_type->override_name = cfg_components->ReadBool("override_name", component.enabled);
 				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
-				component_type->value = cfg_components->ReadDouble("value", component_type->value);
-				component_type->unit = cfg_components->Read("unit", component_type->unit);
 			} else {
 				component_type->is_new = 1;
 //				component_type->enabled = component.enabled;
@@ -406,6 +412,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 				comp_pattern->offset_x = cfg_patterns->ReadDouble("offset_x", 0.0);
 				comp_pattern->offset_y = cfg_patterns->ReadDouble("offset_y", 0.0);
 				comp_pattern->angle = cfg_patterns->ReadDouble("angle", 0.0);
+				comp_pattern->add_pack_to_name = cfg_patterns->ReadBool("add_pack_to_name", true);
 				comp_pattern->enabled = cfg_patterns->ReadBool("enabled", true);
 			} else {
 				comp_pattern->is_new = 1;
@@ -442,36 +449,35 @@ wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
 	return str;
 }
 
-bool PnP_convFrame::ParseNominals(t_component_type_descr *a_component_type, wxString a_designator, wxString a_value)
+wxString PnP_convFrame::ParseNominal(wxString a_designator, wxString a_value)
 {
 	char ch;
-	double val_part;
+	double tmp_val;
 	double factor = 1;
-	wxString val, unit;
+	wxString val, tmp_unit;
 
-	if(NULL == a_component_type)
-		return false;
+	double		value = -1;/**< Номинальное значение для резисторов/еондёров/etc. */
+	wxString	unit;/**< Размерность номинального значения */
+	wxString	value_postfix;/**< Утточнение номинала (например вольтаж кондёра) */
+	wxString	result;/**< Утточнение номинала (например вольтаж кондёра) */
 
-	a_component_type->value_postfix = wxEmptyString;
 	ch = a_designator.Upper()[0];
 	switch(ch)
 	{
 	case 'R':
-		a_component_type->unit = "";
+		unit = "";
 		break;
 	case 'C':
-		a_component_type->unit = "F";
+		unit = "F";
 		factor = 1e-6;
 		break;
 	case 'L':
-		a_component_type->unit = "H";
+		unit = "H";
 		break;
 	default:
-		a_component_type->value = -1;
-		a_component_type->unit = wxEmptyString;
-		return true;
+		return a_value;
 	}
-wxLogMessage(_T(">> Input is %s for %s, initial PnP name %s, pattern %s"), a_value, a_designator, a_component_type->pnp_name, a_component_type->pattern);
+//wxLogVerbose(_T(">> Input is %s for %s"), a_value, a_designator);
 
 	wxRegEx re_format1("^([[:digit:]]+)([pnumkKMrRfFhH]{1,2})([[:digit:]]+)(.*)$"); //1p1F bla-bla-bla
 	wxRegEx re_format2("^([[:digit:]]+[.,]?[[:digit:]]*)([pnumkKM]?)[fFhH]?(.*)$"); //1.1pF bla-bla-bla
@@ -482,24 +488,24 @@ wxLogMessage(_T(">> Input is %s for %s, initial PnP name %s, pattern %s"), a_val
 	}
 	if(!re_format2.Matches(a_value))
 	{
-		a_component_type->value = -1;
-	return false;
+		value = -1;
+		return wxEmptyString;
 	}
 	val = re_format2.GetMatch(a_value, 1); val.Replace(",", ".");
-	unit = re_format2.GetMatch(a_value, 2);
-	a_component_type->value_postfix = re_format2.GetMatch(a_value, 3);
+	tmp_unit = re_format2.GetMatch(a_value, 2);
+	value_postfix = re_format2.GetMatch(a_value, 3);
 
-//wxLogMessage(_T(">> Input is %s, Val is %s, Unit is %s, Postfix is %s"), a_value, val, unit, a_component_type->value_postfix);
+//wxLogVerbose(_T(">> Input is %s, Val is %s, Unit is %s, Postfix is %s"), a_value, val, tmp_unit, value_postfix);
 
-	if(!val.ToCDouble(&val_part))
+	if((!val.ToCDouble(&tmp_val)) || (tmp_val < 0))
 	{
-		a_component_type->value = -1;
-//wxLogMessage(_T("Convert fail! Val is %s, converted val is %f"), val, val_part);
-		return false;
+		value = -1;
+//wxLogVerbose(_T("Convert fail! Val is %s, converted val is %f"), val, tmp_val);
+		return wxEmptyString;
 	}
-	a_component_type->value = val_part;
+	value = tmp_val;
 
-	ch = unit[0];
+	ch = tmp_unit[0];
 	switch(ch)
 	{
 	case 'p':
@@ -522,77 +528,64 @@ wxLogMessage(_T(">> Input is %s for %s, initial PnP name %s, pattern %s"), a_val
 		factor = 1e6;
 		break;
 	}
-//wxLogMessage(_T("Scale: Val is %f, factor is %f"), a_component_type->value, factor);
-	a_component_type->value *= factor;
-	NormalizeNominal(a_component_type);
-	a_component_type->pnp_name = a_component_type->pattern + " " + wxNumberFormatter::ToString(a_component_type->value, 8, wxNumberFormatter::Style::Style_NoTrailingZeroes)/*.Replace(",", ".")*/ + a_component_type->unit + a_component_type->value_postfix;
-wxLogMessage(_T("<< Result is %s"), a_component_type->pnp_name);
-	return true;
-}
+//wxLogVerbose(_T("Scale: Val is %f, factor is %f"), value, factor);
+	value *= factor;
 
-bool PnP_convFrame::NormalizeNominal(t_component_type_descr *a_component_type)
-{
-	if((NULL == a_component_type) || (a_component_type->value < 0))
+//wxLogVerbose(_T("PnP_convFrame::NormalizeNominal %f - %s"), value, unit);
+	if(value == 0)
 	{
-//wxLogMessage(_T("PnP_convFrame::NormalizeNominal fail on input check (%p, %d)"), a_component_type, (a_component_type==NULL)?0:a_component_type->value);
-		return false;
-	}
-	if(a_component_type->value == 0)
-	{
-//wxLogMessage(_T("PnP_convFrame::NormalizeNominal Zero on input: %f - %s"), a_component_type->value, a_component_type->unit);
-		return true;
-	}
-//wxLogMessage(_T("PnP_convFrame::NormalizeNominal %f - %s"), a_component_type->value, a_component_type->unit);
-
-	if(a_component_type->value < 1e-9)
-	{
-		a_component_type->value /= 1e-12;
-		a_component_type->unit.Prepend("p");
-//wxLogMessage(_T("Step 1e-9 -> %f - %s"), a_component_type->value, a_component_type->unit);
-	} else if (a_component_type->value < 1e-6) {
-		if("F" == a_component_type->unit)
+//wxLogVerbose(_T("PnP_convFrame::NormalizeNominal Zero on input: %f - %s"), value, unit);
+	} else if(value < 1e-9) {
+		value /= 1e-12;
+		unit.Prepend("p");
+//wxLogVerbose(_T("Step 1e-9 -> %f - %s"), value, unit);
+	} else if (value < 1e-6) {
+		if("F" == unit)
 		{
-			if (a_component_type->value < 1e-8)
+			if (value < 1e-8)
 			{
-				a_component_type->value /= 1e-12;
-				a_component_type->unit.Prepend("p");
+				value /= 1e-12;
+				unit.Prepend("p");
 			} else {
-				a_component_type->value /= 1e-6;
-				a_component_type->unit.Prepend("u");
+				value /= 1e-6;
+				unit.Prepend("u");
 			}
 		} else {
-			a_component_type->value /= 1e-9;
-			a_component_type->unit.Prepend("n");
+			value /= 1e-9;
+			unit.Prepend("n");
 		}
-//wxLogMessage(_T("Step 1e-6 -> %f - %s"), a_component_type->value, a_component_type->unit);
-	} else if (a_component_type->value < 1e-3) {
-		a_component_type->value /= 1e-6;
-		a_component_type->unit.Prepend("u");
-//wxLogMessage(_T("Step 1e-3 -> %f - %s"), a_component_type->value, a_component_type->unit);
-	} else if (a_component_type->value < 1) {
-		if(("F" == a_component_type->unit) && (a_component_type->value < 1e-1))
+//wxLogVerbose(_T("Step 1e-6 -> %f - %s"), value, unit);
+	} else if (value < 1e-3) {
+		value /= 1e-6;
+		unit.Prepend("u");
+//wxLogVerbose(_T("Step 1e-3 -> %f - %s"), value, unit);
+	} else if (value < 1) {
+		if(("F" == unit) && (value < 1e-1))
 		{
-			a_component_type->value /= 1e-6;
-			a_component_type->unit.Prepend("u");
+			value /= 1e-6;
+			unit.Prepend("u");
 		} else {
-			a_component_type->value /= 1e-3;
-			a_component_type->unit.Prepend("m");
+			value /= 1e-3;
+			unit.Prepend("m");
 		}
-//wxLogMessage(_T("Step 1e-0 -> %f - %s"), a_component_type->value, a_component_type->unit);
-	} else if (a_component_type->value < 1e3) {
-//		a_component_type->value /= 1e0;
-//		a_component_type->unit.Prepend("");
-//wxLogMessage(_T("Step 1e3 -> %f - %s"), a_component_type->value, a_component_type->unit);
-	} else if (a_component_type->value < 1e6) {
-		a_component_type->value /= 1e3;
-		a_component_type->unit.Prepend("k");
-//wxLogMessage(_T("Step 1e6 -> %f - %s"), a_component_type->value, a_component_type->unit);
+//wxLogVerbose(_T("Step 1e-0 -> %f - %s"), value, unit);
+	} else if (value < 1e3) {
+//		value /= 1e0;
+//		unit.Prepend("");
+//wxLogVerbose(_T("Step 1e3 -> %f - %s"), value, unit);
+	} else if (value < 1e6) {
+		value /= 1e3;
+		unit.Prepend("k");
+//wxLogVerbose(_T("Step 1e6 -> %f - %s"), value, unit);
 	} else {
-		a_component_type->value /= 1e6;
-		a_component_type->unit.Prepend("M");
-//wxLogMessage(_T("Step 1e9 -> %f - %s"), a_component_type->value, a_component_type->unit);
+		value /= 1e6;
+		unit.Prepend("M");
+//wxLogVerbose(_T("Step 1e9 -> %f - %s"), value, unit);
 	}
-	return true;
+
+	result = wxNumberFormatter::ToString(value, 8, wxNumberFormatter::Style::Style_NoTrailingZeroes)/*.Replace(",", ".")*/ + unit + value_postfix;
+//wxLogVerbose(_T("<< Result is %s"), result);
+	return result;
 }
 
 void PnP_convFrame::UpdateComponents()
@@ -641,7 +634,14 @@ bool PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 		return false;
 	comp_pattern = m_patterns_list[index];
 
-	a_component->pnp_name = component_type->pnp_name;
+	if(component_type->override_name)
+	{
+		a_component->pnp_name = component_type->pnp_name;
+	} else {
+		a_component->pnp_name = component_type->value;
+		if(comp_pattern->add_pack_to_name)
+			a_component->pnp_name = a_component->pnp_name.Prepend(comp_pattern->pnp_package + " ");
+	}
 	a_component->pnp_package = comp_pattern->pnp_package;
 	a_component->pnp_footprint = comp_pattern->pnp_footprint;
 

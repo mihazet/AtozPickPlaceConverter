@@ -4,6 +4,7 @@
 enum ePatternTable {
 	COL_PATTERN = 0,
 	COL_PNP_PACKAGE,
+	COL_ADD_TO_NAME,
 	COL_PNP_FOOTPRINT,
 	COL_OFFSET_X,
 	COL_OFFSET_Y,
@@ -56,6 +57,7 @@ cPatternTable::cPatternTable(tPatternDescr *a_data)
 	bool_edit->UseStringValues("1", "0");
 	bool_attr->SetEditor(bool_edit);
 	SetColAttr (bool_attr, COL_ENABLED);
+	SetColAttr (bool_attr, COL_ADD_TO_NAME);
 
 //	InsertColumn(COL_PATTERN,	_T("Patt Name"),wxLIST_FORMAT_LEFT, 120);
 //	InsertColumn(COL_PNP_PACKAGE,	_T("Package"),	wxLIST_FORMAT_LEFT, 120);
@@ -93,6 +95,9 @@ wxString cPatternTable::GetColLabelValue( int a_col )
 			break;
 		case COL_PNP_PACKAGE:
 			result = _T("Package");
+			break;
+		case COL_ADD_TO_NAME:
+			result = _T("Include to name");
 			break;
 		case COL_PNP_FOOTPRINT:
 			result = _T("Footprint");
@@ -137,6 +142,9 @@ wxString cPatternTable::GetValue(int a_row, int a_col)
 		case COL_PNP_PACKAGE:
 			result = data->pnp_package;
 			break;
+		case COL_ADD_TO_NAME:
+			result = wxString::Format("%d", data->add_pack_to_name);
+			break;
 		case COL_PNP_FOOTPRINT:
 			result = data->pnp_footprint;
 			break;
@@ -178,6 +186,11 @@ void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
 		case COL_PNP_PACKAGE:
 			data->pnp_package = a_value;
 			m_config->Write("pnp_package", a_value);
+			break;
+		case COL_ADD_TO_NAME:
+			a_value.ToLong(&tmp_long);
+			data->add_pack_to_name = tmp_long;
+			m_config->Write("add_pack_to_name", a_value);
 			break;
 		case COL_PNP_FOOTPRINT:
 			data->pnp_footprint = a_value;

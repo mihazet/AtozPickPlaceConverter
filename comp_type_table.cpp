@@ -5,6 +5,7 @@ enum eCompTypeTable {
 	COL_NAME = 0,
 	COL_PATTERN,
 	COL_PNP_NAME,
+	COL_OVR_NAME,
 	COL_COMP_COUNT,
 	COL_ENABLED,
 	COL_IS_NEW,
@@ -38,6 +39,7 @@ cCompTypeTable::cCompTypeTable(tComponentTypeDescr *a_data)
 	bool_edit->UseStringValues("1", "0");
 	bool_attr->SetEditor(bool_edit);
 	SetColAttr (bool_attr, COL_ENABLED);
+	SetColAttr (bool_attr, COL_OVR_NAME);
 
 //	InsertColumn(COL_NAME,		_T("Name"),	wxLIST_FORMAT_LEFT, 120);
 //	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
@@ -76,6 +78,9 @@ wxString cCompTypeTable::GetColLabelValue( int a_col )
 		case COL_PNP_NAME:
 			result = _T("Name in PnP");
 			break;
+		case COL_OVR_NAME:
+			result = _T("Override Name");
+			break;
 		case COL_COMP_COUNT:
 			result = _T("Count");
 			break;
@@ -110,6 +115,9 @@ wxString cCompTypeTable::GetValue(int a_row, int a_col)
 		case COL_PNP_NAME:
 			result = data->pnp_name;
 			break;
+		case COL_OVR_NAME:
+			result = wxString::Format("%d", data->override_name);
+			break;
 		case COL_COMP_COUNT:
 			result = wxString::Format("%zu", data->comp_count);
 			break;
@@ -142,6 +150,11 @@ void cCompTypeTable::SetValue(int a_row, int a_col, const wxString& a_value)
 		case COL_PNP_NAME:
 			data->pnp_name = a_value;
 			m_config->Write("pnp_name", a_value);
+			break;
+		case COL_OVR_NAME:
+			a_value.ToLong(&tmp_long);
+			data->override_name = tmp_long;
+			m_config->Write("override_name", a_value);
 			break;
 		case COL_ENABLED:
 			a_value.ToLong(&tmp_long);
