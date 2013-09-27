@@ -211,9 +211,9 @@ PnP_convFrame::PnP_convFrame(wxWindow* parent,wxWindowID id) :
 	m_cfg_patterns_altium =		new wxFileConfig("PnP_conv", "Antrax", "patterns_altium",	wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 	m_cfg_projects =		new wxFileConfig("PnP_conv", "Antrax", "projects",		wxEmptyString,wxCONFIG_USE_LOCAL_FILE| wxCONFIG_USE_SUBDIR);
 
-	m_component_types_table = new cCompTypeTable(&m_component_types_list);
+	m_component_types_table = new cCompTypeTable(&m_component_types_list, this);
 	m_grd_comp_type->SetTable(m_component_types_table, false);
-	m_pattern_table = new cPatternTable(&m_patterns_list);
+	m_pattern_table = new cPatternTable(&m_patterns_list, this);
 	m_grd_pattern->SetTable(m_pattern_table, false);
 	m_fid_marks_table = new cFidMarkTable(&m_components_list, &m_fid_marks_list, this);
 	m_grd_fid_mark->SetTable(m_fid_marks_table, false);

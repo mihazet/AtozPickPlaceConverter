@@ -1,4 +1,5 @@
 #include "comp_type_table.h"
+#include "PnP_convMain.h"
 #include <wx/fileconf.h>
 
 enum eCompTypeTable {
@@ -12,10 +13,11 @@ enum eCompTypeTable {
 	COL_COUNT
 };
 
-cCompTypeTable::cCompTypeTable(tComponentTypeDescr *a_data)
+cCompTypeTable::cCompTypeTable(tComponentTypeDescr *a_data, PnP_convFrame *a_data_ctrl)
 	: wxGridTableBase()
 {
 	m_comp_type_data = a_data;
+	m_main_data_controller = a_data_ctrl;
 	m_config = NULL;
 
 	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
@@ -162,4 +164,5 @@ void cCompTypeTable::SetValue(int a_row, int a_col, const wxString& a_value)
 			m_config->Write("enabled", a_value);
 			break;
 	}
+	m_main_data_controller->UpdateComponents();
 }

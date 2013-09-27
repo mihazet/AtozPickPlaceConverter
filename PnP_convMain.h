@@ -39,6 +39,7 @@ class PnP_convFrame: public wxFrame
 	virtual ~PnP_convFrame();
 	void SaveProjectInfo();
 	bool IsSingleBoard() {return (m_project.pcbs.GetCount() <= 1);};
+	void UpdateComponents();
 
     private:
 	wxFileConfig		*m_cfg_settings;
@@ -62,7 +63,6 @@ class PnP_convFrame: public wxFrame
 	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp);
 	wxXmlNode *CreateProductSideDescr(wxString a_side);
 	static wxString ParseNominal(wxString a_designator, wxString a_value);
-	void UpdateComponents();
 	bool UpdateComponent(t_component_descr *a_component, size_t a_comp_index);
 	void ReInitLists();
 	void RedrawProjectInfo();

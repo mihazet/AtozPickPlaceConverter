@@ -6,11 +6,12 @@
 #include <wx/grid.h>
 
 class wxFileConfig;
+class PnP_convFrame;
 
 class cPatternTable : public wxGridTableBase
 {
 public:
-	cPatternTable(tPatternDescr *a_data);
+	cPatternTable(tPatternDescr *a_data, PnP_convFrame *a_data_ctrl);
 	virtual ~cPatternTable();
 	void SetPatternsConfig(wxFileConfig *a_config) {m_config = a_config;};
 
@@ -93,6 +94,7 @@ protected:
 private:
 	tPatternDescr		*m_pattern_data;
 	wxFileConfig		*m_config;
+	PnP_convFrame		*m_main_data_controller; // TODO (alatar#1#): Перевести на события
 };
 
 #endif // EVENTS_TABLE_H
