@@ -238,6 +238,9 @@ PnP_convFrame::~PnP_convFrame()
 
 void PnP_convFrame::OnQuit(wxCommandEvent& event)
 {
+	m_grd_comp_type->ClearGrid();
+	m_grd_pattern->ClearGrid();
+	m_grd_fid_mark->ClearGrid();
 	Close();
 }
 
@@ -1075,27 +1078,33 @@ wxXmlNode *PnP_convFrame::CreateProductSideDescr(wxString a_side)
 	return side_node;
 }
 
+void update_table(wxGrid *a_grid, wxBaseArrayPtrVoid *a_data)
+{
+	long cur_rows, act_rows;
+	cur_rows = a_grid->GetNumberRows();
+	act_rows = a_data->GetCount();
+	if(cur_rows == act_rows)
+		return;
+	a_grid->ClearGrid();
+	if(cur_rows < act_rows)
+	{
+		wxGridTableMessage add(a_grid->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, act_rows - cur_rows);
+		a_grid->ProcessTableMessage(add);
+
+	} else {
+		wxGridTableMessage del(a_grid->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, cur_rows - act_rows);
+		a_grid->ProcessTableMessage(del);
+	}
+	a_grid->AutoSize();
+	a_grid->GetParent()->Layout();
+}
+
 void PnP_convFrame::ReInitLists()
 {
 	m_comp_table->ReInit();
-
-	wxGridTableMessage clr1(m_grd_comp_type->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_comp_type->GetNumberRows());
-	m_grd_comp_type->ProcessTableMessage(clr1);
-	wxGridTableMessage add1(m_grd_comp_type->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_component_types_list.GetCount());
-	m_grd_comp_type->ProcessTableMessage(add1);
-	m_grd_comp_type->AutoSize();
-
-	wxGridTableMessage clr2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_pattern->GetNumberRows());
-	m_grd_pattern->ProcessTableMessage(clr2);
-	wxGridTableMessage add2(m_grd_pattern->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_patterns_list.GetCount());
-	m_grd_pattern->ProcessTableMessage(add2);
-	m_grd_pattern->AutoSize();
-
-	wxGridTableMessage clr3(m_grd_fid_mark->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, m_grd_fid_mark->GetNumberRows());
-	m_grd_fid_mark->ProcessTableMessage(clr3);
-	wxGridTableMessage add3(m_grd_fid_mark->GetTable(), wxGRIDTABLE_NOTIFY_ROWS_APPENDED, m_fid_marks_list.GetCount());
-	m_grd_fid_mark->ProcessTableMessage(add3);
-	m_grd_fid_mark->AutoSize();
+	update_table(m_grd_comp_type, &m_component_types_list);
+	update_table(m_grd_pattern, &m_patterns_list);
+	update_table(m_grd_fid_mark, &m_fid_marks_list);
 }
 
 void PnP_convFrame::SaveProjectInfo()
