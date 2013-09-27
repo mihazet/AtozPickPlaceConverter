@@ -251,8 +251,6 @@ void PnP_convFrame::OnAbout(wxCommandEvent& event)
 }
 
 #define CSV_DELIMITER				';'
-#define CFG_COMPONENT_SECTION			"component/"
-#define CFG_PATTERN_SECTION			"package/"
 enum {
 	INDEX_TOP_COMP,
 	INDEX_TOP_FID,
