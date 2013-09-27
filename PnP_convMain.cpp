@@ -265,8 +265,8 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 {
 	wxString		str, tmp_str;
 	wxFileDialog		dlg_open(this);
-	wxFileConfig		*cfg_components = NULL;
-	wxFileConfig		*cfg_patterns = NULL;
+//	wxFileConfig		*cfg_components = NULL;
+//	wxFileConfig		*cfg_patterns = NULL;
 	t_component_type_descr	*component_type;
 	t_pattern_descr		*comp_pattern;
 
@@ -279,10 +279,10 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 		return;
 
 #warning TODO (alatar#1#): Сделать диалог для выбора типа входного файла, пока только P-CAD
-	cfg_components = m_cfg_components_pcad;
-	cfg_patterns = m_cfg_patterns_pcad;
-	m_component_types_table->SetCompTypesConfig(m_cfg_components_pcad);
-	m_pattern_table->SetPatternsConfig(m_cfg_patterns_pcad);
+	m_cfg_components_active = m_cfg_components_pcad;
+	m_cfg_patterns_active = m_cfg_patterns_pcad;
+	m_component_types_table->SetCompTypesConfig(m_cfg_components_active);
+	m_pattern_table->SetPatternsConfig(m_cfg_patterns_active);
 
 	wxTextFile file(dlg_open.GetPath());
 
@@ -366,32 +366,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_component_types_list.Add(component_type);
-			component_type->pattern = component.cad_pattern;
-			component_type->pnp_name = component.full_name;
-			component_type->value = ParseNominal(component.designator, component.strip_value);
-			if((component_type->value).IsEmpty())
-			{
-				wxString msg = wxString::Format("Can`t parse value for %s (%s). Value is %s.", component_type->name, component.designator, component.strip_value);
-//				wxMessageBox(msg, "Warning");
-				wxLogWarning(msg);
-				component_type->value = component.strip_value;
-			}
-			if(cfg_components->HasGroup(component_type->name))
-			{
-				component_type->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
-				component_type->pattern = cfg_components->Read("pattern", component_type->pattern);
-				component_type->pnp_name = cfg_components->Read("pnp_name", component_type->pnp_name);
-				component_type->override_name = cfg_components->ReadBool("override_name", component.enabled);
-				component_type->enabled = cfg_components->ReadBool("enabled", component.enabled);
-			} else {
-				component_type->is_new = 1;
-//				component_type->enabled = component.enabled;
-				wxConfigPathChanger cfg_cd_to(cfg_components, "/"+component_type->name+"/");
-				cfg_components->Write("enabled", component_type->enabled);
-//				cfg_components->Write("pattern", component_type->pattern);
-//				cfg_components->Write("pnp_name", component_type->pnp_name);
-			}
+			LoadComponent(component_type, component);
 		} else {
 			delete component_type;
 			component_type = m_component_types_list[tmp_index];
@@ -406,26 +381,7 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 		if(wxNOT_FOUND == tmp_index)
 		{
 			m_patterns_list.Add(comp_pattern);
-			if(cfg_patterns->HasGroup(comp_pattern->pattern))
-			{
-				comp_pattern->is_new = 0;
-				wxConfigPathChanger cfg_cd_to(cfg_patterns, "/"+comp_pattern->pattern+"/");
-				comp_pattern->pnp_package = cfg_patterns->Read("pnp_package", component.pattern);
-				comp_pattern->pnp_footprint = cfg_patterns->Read("pnp_footprint", component.pattern);
-				comp_pattern->offset_x = cfg_patterns->ReadDouble("offset_x", 0.0);
-				comp_pattern->offset_y = cfg_patterns->ReadDouble("offset_y", 0.0);
-				comp_pattern->angle = cfg_patterns->ReadDouble("angle", 0.0);
-				comp_pattern->add_pack_to_name = cfg_patterns->ReadBool("add_pack_to_name", true);
-				comp_pattern->enabled = cfg_patterns->ReadBool("enabled", true);
-			} else {
-				comp_pattern->is_new = 1;
-				comp_pattern->pnp_package = component.pattern;
-				comp_pattern->pnp_footprint = component.pattern;
-				wxConfigPathChanger cfg_cd_to(cfg_patterns, "/"+comp_pattern->pattern+"/");
-				cfg_patterns->Write("enabled", comp_pattern->enabled);
-//				cfg_patterns->Write("pnp_package", comp_pattern->pnp_package);
-//				cfg_patterns->Write("pnp_footprint", comp_pattern->pnp_footprint);
-			}
+			LoadPattern(comp_pattern);
 		} else {
 			delete comp_pattern;
 			comp_pattern = m_patterns_list[tmp_index];
@@ -436,6 +392,61 @@ void PnP_convFrame::On_mnuOpenSelected(wxCommandEvent& event)
 	}
 //	m_component_types_list.Sort(CmpCompTypeFunc);
 	UpdateComponents();
+}
+
+void PnP_convFrame::LoadComponent(t_component_type_descr *a_comp_type, const t_component_descr &a_component)
+{
+	if((NULL == m_cfg_components_active)||(NULL == a_comp_type))
+		return;
+
+	a_comp_type->pattern = a_component.cad_pattern;
+	a_comp_type->pnp_name = a_component.full_name;
+	a_comp_type->value = ParseNominal(a_component.designator, a_component.strip_value);
+	if((a_comp_type->value).IsEmpty())
+	{
+		wxString msg = wxString::Format("Can`t parse value for %s (%s). Value is %s.", a_comp_type->name, a_component.designator, a_component.strip_value);
+		wxLogWarning(msg);
+		a_comp_type->value = a_component.strip_value;
+	}
+	if(m_cfg_components_active->HasGroup(a_comp_type->name))
+	{
+		a_comp_type->is_new = 0;
+		wxConfigPathChanger cfg_cd_to(m_cfg_components_active, "/"+a_comp_type->name+"/");
+		a_comp_type->pattern = m_cfg_components_active->Read("pattern", a_comp_type->pattern);
+		a_comp_type->pnp_name = m_cfg_components_active->Read("pnp_name", a_comp_type->pnp_name);
+		a_comp_type->override_name = m_cfg_components_active->ReadBool("override_name", a_comp_type->override_name);
+		a_comp_type->enabled = m_cfg_components_active->ReadBool("enabled", a_comp_type->enabled);
+	} else {
+		a_comp_type->is_new = 1;
+//		a_comp_type->enabled = a_component.enabled;
+		wxConfigPathChanger cfg_cd_to(m_cfg_components_active, "/"+a_comp_type->name+"/");
+		m_cfg_components_active->Write("enabled", a_comp_type->enabled);
+	}
+}
+
+void PnP_convFrame::LoadPattern(t_pattern_descr *a_pattern)
+{
+	if((NULL == m_cfg_patterns_active)||(NULL == a_pattern))
+		return;
+	wxString pattern_name = a_pattern->pattern;
+	if(m_cfg_patterns_active->HasGroup(pattern_name))
+	{
+		a_pattern->is_new = 0;
+		wxConfigPathChanger cfg_cd_to(m_cfg_patterns_active, "/"+pattern_name+"/");
+		a_pattern->pnp_package = m_cfg_patterns_active->Read("pnp_package", pattern_name);
+		a_pattern->pnp_footprint = m_cfg_patterns_active->Read("pnp_footprint", pattern_name);
+		a_pattern->offset_x = m_cfg_patterns_active->ReadDouble("offset_x", a_pattern->offset_x);
+		a_pattern->offset_y = m_cfg_patterns_active->ReadDouble("offset_y", a_pattern->offset_y);
+		a_pattern->angle = m_cfg_patterns_active->ReadDouble("angle", a_pattern->angle);
+		a_pattern->add_pack_to_name = m_cfg_patterns_active->ReadBool("add_pack_to_name", a_pattern->add_pack_to_name);
+		a_pattern->enabled = m_cfg_patterns_active->ReadBool("enabled", a_pattern->enabled);
+	} else {
+		a_pattern->is_new = 1;
+		a_pattern->pnp_package = pattern_name;
+		a_pattern->pnp_footprint = pattern_name;
+		wxConfigPathChanger cfg_cd_to(m_cfg_patterns_active, "/"+a_pattern->pattern+"/");
+		m_cfg_patterns_active->Write("enabled", a_pattern->enabled);
+	}
 }
 
 wxString PnP_convFrame::RemoveQuotes(const wxString a_str)
@@ -630,11 +641,16 @@ bool PnP_convFrame::UpdateComponent(t_component_descr *a_component, size_t a_com
 	component_type = m_component_types_list[index];
 
 	comp_pattern = new t_pattern_descr;
-	comp_pattern->pattern = a_component->pattern;
+	comp_pattern->pattern = component_type->pattern;
 	index = m_patterns_list.Index(comp_pattern);
-	delete comp_pattern;
 	if(wxNOT_FOUND == index)
-		return false;
+	{
+		m_patterns_list.Add(comp_pattern);
+		LoadPattern(comp_pattern);
+		index = m_patterns_list.Index(comp_pattern);
+	} else {
+		delete comp_pattern;
+	}
 	comp_pattern = m_patterns_list[index];
 
 	if(component_type->override_name)

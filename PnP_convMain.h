@@ -49,6 +49,9 @@ class PnP_convFrame: public wxFrame
 	wxFileConfig		*m_cfg_patterns_altium;
 	wxFileConfig		*m_cfg_projects;
 
+	wxFileConfig		*m_cfg_components_active;
+	wxFileConfig		*m_cfg_patterns_active;
+
 	t_board_descr		m_project;
 	tComponentDescr		m_components_list;
 	tComponentTypeDescr	m_component_types_list;
@@ -58,6 +61,8 @@ class PnP_convFrame: public wxFrame
 	cPatternTable		*m_pattern_table;
 	cFidMarkTable		*m_fid_marks_table;
 
+	void LoadComponent(t_component_type_descr *a_comp_type, const t_component_descr &a_component);
+	void LoadPattern(t_pattern_descr *a_pattern);
 	wxString RemoveQuotes(const wxString a_str);
 	void PrintComponent(t_xml_node_ptrs *a_node, t_component_descr a_comp);
 	void PrintFiducial(t_xml_node_ptrs *a_node, t_component_descr a_comp);
