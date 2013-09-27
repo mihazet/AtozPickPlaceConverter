@@ -2,83 +2,79 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="IKZ_log_viewer" />
+		<Option title="PnP_conv" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Release">
-				<Option output="bin/Release/IKZ_log_viewer" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/PnP_conv" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add directory="$(#wx29)/lib/gcc_lib/mswu" />
+					<Add directory="$(#wx30)/lib/gcc_lib/mswu" />
 				</Compiler>
 				<ResourceCompiler>
-					<Add directory="$(#wx29)/lib/gcc_lib/mswu" />
+					<Add directory="$(#wx30)/lib/gcc_lib/mswu" />
 				</ResourceCompiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="libwxmsw29u_propgrid.a" />
-					<Add library="libwxmsw29u_richtext.a" />
-					<Add library="libwxmsw29u_xrc.a" />
-					<Add library="libwxmsw29u_aui.a" />
-					<Add library="libwxmsw29u_media.a" />
-					<Add library="libwxbase29u_net.a" />
-					<Add library="libwxmsw29u_gl.a" />
-					<Add library="libwxbase29u_xml.a" />
-					<Add library="libwxmsw29u_adv.a" />
-					<Add library="libwxmsw29u_html.a" />
-					<Add library="libwxmsw29u_core.a" />
-					<Add library="libwxbase29u.a" />
+					<Add library="libwxmsw30u_propgrid.a" />
+					<Add library="libwxmsw30u_richtext.a" />
+					<Add library="libwxmsw30u_xrc.a" />
+					<Add library="libwxmsw30u_aui.a" />
+					<Add library="libwxmsw30u_media.a" />
+					<Add library="libwxbase30u_net.a" />
+					<Add library="libwxmsw30u_gl.a" />
+					<Add library="libwxbase30u_xml.a" />
+					<Add library="libwxmsw30u_adv.a" />
+					<Add library="libwxmsw30u_html.a" />
+					<Add library="libwxmsw30u_core.a" />
+					<Add library="libwxbase30u.a" />
 					<Add library="libwxpng.a" />
 					<Add library="libwxjpeg.a" />
 					<Add library="libwxtiff.a" />
 					<Add library="libwxzlib.a" />
 					<Add library="libwxregexu.a" />
 					<Add library="libwxexpat.a" />
-					<Add library="libwxcode_msw29u_freechart.a" />
-					<Add directory="$(#wx29)/lib/gcc_lib" />
+					<Add directory="$(#wx30)/lib/gcc_lib" />
 				</Linker>
 			</Target>
 			<Target title="Debug">
-				<Option output="bin/Debug/IKZ_log_viewer" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/PnP_conv" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-g" />
-					<Add directory="$(#wx29)/lib/gcc_lib/mswu" />
-					<Add directory="$(#wxcode)/components/wxthings/include" />
-					<Add directory="$(#wxcode)/components/plotctrl/include" />
+					<Add directory="$(#wx30)/lib/gcc_lib/mswu" />
 				</Compiler>
 				<ResourceCompiler>
-					<Add directory="$(#wx29)/lib/gcc_lib/mswu" />
+					<Add directory="$(#wx30)/lib/gcc_lib/mswu" />
 				</ResourceCompiler>
 				<Linker>
-					<Add library="libwxmsw29ud_propgrid.a" />
-					<Add library="libwxmsw29ud_richtext.a" />
-					<Add library="libwxmsw29ud_xrc.a" />
-					<Add library="libwxmsw29ud_aui.a" />
-					<Add library="libwxmsw29ud_media.a" />
-					<Add library="libwxbase29ud_net.a" />
-					<Add library="libwxmsw29ud_gl.a" />
-					<Add library="libwxbase29ud_xml.a" />
-					<Add library="libwxmsw29ud_adv.a" />
-					<Add library="libwxmsw29ud_html.a" />
-					<Add library="libwxmsw29ud_core.a" />
-					<Add library="libwxbase29ud.a" />
+					<Add library="libwxmsw30ud_propgrid.a" />
+					<Add library="libwxmsw30ud_richtext.a" />
+					<Add library="libwxmsw30ud_xrc.a" />
+					<Add library="libwxmsw30ud_aui.a" />
+					<Add library="libwxmsw30ud_media.a" />
+					<Add library="libwxbase30ud_net.a" />
+					<Add library="libwxmsw30ud_gl.a" />
+					<Add library="libwxbase30ud_xml.a" />
+					<Add library="libwxmsw30ud_adv.a" />
+					<Add library="libwxmsw30ud_html.a" />
+					<Add library="libwxmsw30ud_core.a" />
+					<Add library="libwxbase30ud.a" />
 					<Add library="libwxpngd.a" />
 					<Add library="libwxjpegd.a" />
 					<Add library="libwxtiffd.a" />
 					<Add library="libwxzlibd.a" />
 					<Add library="libwxregexud.a" />
 					<Add library="libwxexpatd.a" />
-					<Add library="libwxcode_msw29ud_freechart.a" />
-					<Add directory="$(#wx29)/lib/gcc_lib" />
+					<Add directory="$(#wx30)/lib/gcc_lib" />
 				</Linker>
 			</Target>
 		</Build>
@@ -90,16 +86,15 @@
 			<Add option="-D__GNUWIN32__" />
 			<Add option="-D__WXMSW__" />
 			<Add option="-DwxUSE_UNICODE" />
-			<Add directory="$(#wx29)/include" />
-			<Add directory="$(#wx29)/contrib/include" />
-			<Add directory="$(#libmysql.include)" />
-			<Add directory="$(#wxcode)/components/freechart/include" />
+			<Add directory="$(#wx30)/include" />
+			<Add directory="$(#wx30)/contrib/include" />
+			<Add option="-std=gnu++0x" />
 			<Add directory="." />
 			<Add directory="../../include" />
-			<Add directory="$(#wx29)/src/common" />
+			<Add directory="$(#wx30)/src/common" />
 		</Compiler>
 		<ResourceCompiler>
-			<Add directory="$(#wx29)/include" />
+			<Add directory="$(#wx30)/include" />
 		</ResourceCompiler>
 		<Linker>
 			<Add option="-mthreads" />
@@ -116,43 +111,34 @@
 			<Add library="libcomctl32.a" />
 			<Add library="libwsock32.a" />
 			<Add library="libodbc32.a" />
-			<Add library="mysql" />
-			<Add directory="$(#libmysql.lib)" />
-			<Add directory="$(#wxcode)/components/freechart/lib/gcc_lib" />
 		</Linker>
-		<Unit filename="C:/Users/alatar/AppData/Roaming/IKZ_Log_viewer.ini" />
-		<Unit filename="IKZ_log_viewerApp.cpp" />
-		<Unit filename="IKZ_log_viewerApp.h" />
-		<Unit filename="IKZ_log_viewerMain.cpp" />
-		<Unit filename="IKZ_log_viewerMain.h" />
-		<Unit filename="chart_panel.cpp" />
-		<Unit filename="chart_panel.h" />
+		<Unit filename="PnP_convApp.cpp" />
+		<Unit filename="PnP_convApp.h" />
+		<Unit filename="PnP_convMain.cpp" />
+		<Unit filename="PnP_convMain.h" />
 		<Unit filename="common.h" />
-		<Unit filename="events_table.cpp" />
-		<Unit filename="events_table.h" />
+		<Unit filename="comp_table.cpp" />
+		<Unit filename="comp_table.h" />
+		<Unit filename="comp_type_table.cpp" />
+		<Unit filename="comp_type_table.h" />
+		<Unit filename="fid_mark_table.cpp" />
+		<Unit filename="fid_mark_table.h" />
+		<Unit filename="pattern_table.cpp" />
+		<Unit filename="pattern_table.h" />
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
-		<Unit filename="wxsmith/IKZ_log_viewerframe.wxs" />
+		<Unit filename="wxsmith/PnP_convframe.wxs" />
 		<Extensions>
 			<code_completion />
 			<envvars />
 			<debugger />
 			<wxsmith version="1">
-				<gui name="wxWidgets" src="IKZ_log_viewerApp.cpp" main="IKZ_log_viewerFrame" init_handlers="necessary" language="CPP" />
+				<gui name="wxWidgets" src="PnP_convApp.cpp" main="PnP_convFrame" init_handlers="necessary" language="CPP" />
 				<resources>
-					<wxFrame wxs="wxsmith/IKZ_log_viewerframe.wxs" src="IKZ_log_viewerMain.cpp" hdr="IKZ_log_viewerMain.h" fwddecl="0" i18n="1" name="IKZ_log_viewerFrame" language="CPP" />
+					<wxFrame wxs="wxsmith/PnP_convframe.wxs" src="PnP_convMain.cpp" hdr="PnP_convMain.h" fwddecl="0" i18n="1" name="PnP_convFrame" language="CPP" />
 				</resources>
 			</wxsmith>
-			<DoxyBlocks>
-				<comment_style block="0" line="0" />
-				<doxyfile_project />
-				<doxyfile_build />
-				<doxyfile_warnings />
-				<doxyfile_output />
-				<doxyfile_dot />
-				<general />
-			</DoxyBlocks>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
