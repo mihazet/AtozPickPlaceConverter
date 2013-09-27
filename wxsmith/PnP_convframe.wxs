@@ -93,7 +93,7 @@
 						<object class="wxPanel" name="ID_PANEL_FID" variable="PanelFid" member="no">
 							<object class="wxBoxSizer" variable="BoxSizerFid" member="no">
 								<object class="sizeritem">
-									<object class="wxGrid" name="ID_GRID_FID_MARKS" variable="m_grd_fid_marks" member="yes" />
+									<object class="wxGrid" name="ID_GRID_FID_MARKS" variable="m_grd_fid_mark" member="yes" />
 									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
 									<border>5</border>
 									<option>1</option>
