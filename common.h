@@ -63,7 +63,7 @@ struct t_pattern_descr {
 	int		comp_count;/**< Количество компонентов с таким корпусом на плате */
 	bool		enabled;/**< Устанавливается ли компонент с таким корпусом в PP-050/DD-500 */
 	bool		is_new;/**< Был ли этот корпус в базе конвертора */
-	t_pattern_descr() : add_pack_to_name(true),
+	t_pattern_descr() : add_pack_to_name(false),
 		offset_x(0), offset_y(0), angle(0),
 		comp_count(1), enabled(true), is_new(true) {}
 };
