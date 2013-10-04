@@ -1046,7 +1046,7 @@ void PnP_convFrame::PrintDD500SideDescr(wxTextFile &a_doc, wxString a_side)
 	for(int index = 0; index < comps_count; index++)
 	{
 		comp = &m_components_list[index];
-		if((comp->layer.Upper() != a_side.Upper()) || comp->designator.StartsWith(FIDMARD_DES_PREF))
+		if((!comp->pnp_enabled) || (comp->layer.Upper() != a_side.Upper()) || comp->designator.StartsWith(FIDMARD_DES_PREF))
 			continue;
 		a_doc.AddLine(DD500_COMP(comp->designator, comp->pnp_footprint, DD500_CALC_COORD(comp, x), DD500_CALC_COORD(comp, y), comp->pnp_angle));
 	}
