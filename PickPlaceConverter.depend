@@ -4193,26 +4193,66 @@
 
 1402775758 d:\wx\wxmsw-3.0.1\include\wx\msw\rcdefs.h
 
-1412788202 source:d:\projects\pickplaceconverter\v1.1\comptable.cpp
+1412788202 source:d:\projects\pickplaceconverter\v2.0\comptable.cpp
 	"comptable.h"
 	"project.h"
 	<algorithm>
 
-1412785812 d:\projects\pickplaceconverter\v1.1\comptable.h
+1412785812 d:\projects\pickplaceconverter\v2.0\comptable.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413136545 d:\projects\pickplaceconverter\v1.1\common.h
+1412881064 d:\projects\pickplaceconverter\v2.0\common.h
 	<wx/wx.h>
 	<vector>
 
-1413136935 d:\projects\pickplaceconverter\v1.1\project.h
+1412877260 d:\projects\pickplaceconverter\v2.0\project.h
 	<wx/wx.h>
 	<vector>
 	"common.h"
 
-1413135086 source:d:\projects\pickplaceconverter\v1.1\project.cpp
+1413219612 source:d:\projects\pickplaceconverter\v2.0\main.cpp
+	<wx/wx.h>
+	"main_frame.h"
+
+1412877952 d:\projects\pickplaceconverter\v2.0\mainframe.h
+	<wx/wx.h>
+	<wx/grid.h>
+	<wx/propgrid/propgrid.h>
+	<wx/notebook.h>
+	<wx/treectrl.h>
+	<wx/laywin.h>
+
+1412880969 source:d:\projects\pickplaceconverter\v2.0\mainframe.cpp
+	"mainframe.h"
+	"project.h"
+	"comptable.h"
+	"typetable.h"
+	"patterntable.h"
+	"fidmarktable.h"
+
+1412788704 d:\projects\pickplaceconverter\v2.0\typetable.h
+	<wx/wx.h>
+	<wx/grid.h>
+	"common.h"
+
+1412788872 d:\projects\pickplaceconverter\v2.0\patterntable.h
+	<wx/wx.h>
+	<wx/grid.h>
+	"common.h"
+
+1412788872 d:\projects\pickplaceconverter\v2.0\fidmarktable.h
+	<wx/wx.h>
+	<wx/grid.h>
+	"common.h"
+
+1412790370 source:d:\projects\pickplaceconverter\v2.0\patterntable.cpp
+	"patterntable.h"
+	"project.h"
+	<algorithm>
+
+1412880953 source:d:\projects\pickplaceconverter\v2.0\project.cpp
 	"project.h"
 	"utils.h"
 	<wx/filename.h>
@@ -4220,73 +4260,78 @@
 	<wx/tokenzr.h>
 	<wx/xml/xml.h>
 	<wx/textfile.h>
+	<wx/wfstream.h>
 	<algorithm>
 
-1413134298 d:\projects\pickplaceconverter\v1.1\utils.h
+1412880271 d:\projects\pickplaceconverter\v2.0\utils.h
 
-1412273244 source:d:\projects\pickplaceconverter\v1.1\resource.rc
+1412273244 source:d:\projects\pickplaceconverter\v2.0\resource.rc
 	"wx/msw/wx.rc"
 
-1413135117 source:d:\projects\pickplaceconverter\v1.1\utils.cpp
+1412789930 source:d:\projects\pickplaceconverter\v2.0\typetable.cpp
+	"typetable.h"
+	"project.h"
+	<algorithm>
+
+1412880271 source:d:\projects\pickplaceconverter\v2.0\utils.cpp
 	<wx/regex.h>
 	<wx/numformatter.h>
 
-1413135853 source:d:\projects\pickplaceconverter\v1.1\comp_table.cpp
+1412855956 source:d:\projects\pickplaceconverter\v2.0\fidmarktable.cpp
+	"fidmarktable.h"
+	"project.h"
+	<algorithm>
+
+1402775758 d:\wx\wxmsw-3.0.1\include\wx\wfstream.h
+	"wx/defs.h"
+	"wx/object.h"
+	"wx/string.h"
+	"wx/stream.h"
+	"wx/file.h"
+	"wx/ffile.h"
+
+1402775758 d:\wx\wxmsw-3.0.1\include\wx\ffile.h
+	"wx/defs.h"
+	"wx/string.h"
+	"wx/filefn.h"
+	"wx/convauto.h"
+	<stdio.h>
+
+1413219575 source:d:\projects\pickplaceconverter\v2.0\comp_table.cpp
 	"comp_table.h"
 	"project.h"
 	<algorithm>
 
-1413135160 d:\projects\pickplaceconverter\v1.1\comp_table.h
+1412785812 d:\projects\pickplaceconverter\v2.0\comp_table.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413135864 source:d:\projects\pickplaceconverter\v1.1\comp_type_table.cpp
+1413219588 source:d:\projects\pickplaceconverter\v2.0\comp_type_table.cpp
 	"comp_type_table.h"
 	"project.h"
 	<algorithm>
 
-1413135171 d:\projects\pickplaceconverter\v1.1\comp_type_table.h
+1412788704 d:\projects\pickplaceconverter\v2.0\comp_type_table.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413135877 source:d:\projects\pickplaceconverter\v1.1\fid_mark_table.cpp
+1413219600 source:d:\projects\pickplaceconverter\v2.0\fid_mark_table.cpp
 	"fid_mark_table.h"
 	"project.h"
 	<algorithm>
 
-1413135186 d:\projects\pickplaceconverter\v1.1\fid_mark_table.h
+1412788872 d:\projects\pickplaceconverter\v2.0\fid_mark_table.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413134430 source:d:\projects\pickplaceconverter\v1.1\main.cpp
-	<wx/wx.h>
-	"main_frame.h"
-
-1413134430 d:\projects\pickplaceconverter\v1.1\main_frame.h
+1412877952 d:\projects\pickplaceconverter\v2.0\main_frame.h
 	<wx/wx.h>
 	<wx/grid.h>
 	<wx/propgrid/propgrid.h>
 	<wx/notebook.h>
+	<wx/treectrl.h>
 	<wx/laywin.h>
-
-1413135774 source:d:\projects\pickplaceconverter\v1.1\main_frame.cpp
-	"main_frame.h"
-	"project.h"
-	"comp_table.h"
-	"comp_type_table.h"
-	"pattern_table.h"
-	"fid_mark_table.h"
-
-1413135206 d:\projects\pickplaceconverter\v1.1\pattern_table.h
-	<wx/wx.h>
-	<wx/grid.h>
-	"common.h"
-
-1413135888 source:d:\projects\pickplaceconverter\v1.1\pattern_table.cpp
-	"pattern_table.h"
-	"project.h"
-	<algorithm>
 

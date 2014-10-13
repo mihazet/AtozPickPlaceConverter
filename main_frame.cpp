@@ -1,12 +1,3 @@
-/***************************************************************
- * Name:      main_frame.cpp
- * Purpose:   Code for Application Frame
- * Author:    Alatar ()
- * Created:   2012-12-16
- * Copyright: Alatar ()
- * License:
- **************************************************************/
-
 #include "main_frame.h"
 #include "project.h"
 
@@ -16,14 +7,17 @@
 #include "fid_mark_table.h"
 
 
-#define APP_TITLE	("Pick & Place Converter")
+#define APP_TITLE	("Pick & Place Converter 2.0")
 
 enum
 {
 	ID_FILE_OPEN = wxID_HIGHEST,
 	ID_FILE_SAVE,
+	ID_FILE_PROJECT_OPEN,
+	ID_FILE_PROJECT_SAVE,
 	ID_FILE_QUIT,
 	ID_HELP_ABOUT,
+	ID_TREE,
 	ID_PROP,
 	ID_COMP_GRID,
 	ID_TYPE_GRID,
@@ -31,6 +25,7 @@ enum
 	ID_FIDMARK_GRID,
 
 
+	ID_WINDOW_LEFT,
 	ID_WINDOW_RIGHT,
 	ID_WINDOW_BOTTOM,
 };
@@ -38,18 +33,24 @@ enum
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(ID_FILE_OPEN, MainFrame::OnFileOpen)
 	EVT_MENU(ID_FILE_SAVE, MainFrame::OnFileSave)
+	EVT_MENU(ID_FILE_PROJECT_OPEN, MainFrame::OnFileProjectOpen)
+	EVT_MENU(ID_FILE_PROJECT_SAVE, MainFrame::OnFileProjectSave)
 	EVT_MENU(ID_FILE_QUIT, MainFrame::OnFileQuit)
 	EVT_MENU(ID_HELP_ABOUT, MainFrame::OnHelpAbout)
-	EVT_SASH_DRAGGED_RANGE(ID_WINDOW_RIGHT, ID_WINDOW_BOTTOM, MainFrame::OnSashDrag)
+	EVT_SASH_DRAGGED_RANGE(ID_WINDOW_LEFT, ID_WINDOW_BOTTOM, MainFrame::OnSashDrag)
 	EVT_SIZE(MainFrame::OnSize)
 	EVT_PG_CHANGED(ID_PROP, MainFrame::OnPropertyGridChanged)
+	EVT_TREE_ITEM_ACTIVATED(ID_TREE, MainFrame::OnTreeActivated)
 	EVT_GRID_CMD_COL_SORT(ID_COMP_GRID, MainFrame::OnCompGridColSort)
 	EVT_GRID_CMD_COL_SORT(ID_TYPE_GRID, MainFrame::OnTypeGridColSort)
 	EVT_GRID_CMD_COL_SORT(ID_PATTERN_GRID, MainFrame::OnPatternGridColSort)
 	EVT_GRID_CMD_COL_SORT(ID_FIDMARK_GRID, MainFrame::OnFidmarkGridColSort)
 
+	// from Project
 	EVT_PROJECT_LOADED(MainFrame::OnProjectLoaded)
+	EVT_PROJECT_CADFILE_LOADED(MainFrame::OnProjectCadFileLoaded)
 	EVT_PROJECT_UPDATED(MainFrame::OnProjectUpdated)
+	EVT_PROJECT_UPDATE_TITLE(MainFrame::OnProjectUpdateTitle)
 
 END_EVENT_TABLE()
 
@@ -58,20 +59,28 @@ MainFrame::MainFrame()
 {
 	CreateMenu();
 
-	// window right
+	// окно слева
+	m_leftLayoutWin = new wxSashLayoutWindow(this, ID_WINDOW_LEFT);
+	m_leftLayoutWin->SetDefaultSize(wxSize(200, 1000));
+	m_leftLayoutWin->SetOrientation(wxLAYOUT_VERTICAL);
+	m_leftLayoutWin->SetAlignment(wxLAYOUT_LEFT);
+	m_leftLayoutWin->SetSashVisible(wxSASH_RIGHT, true);
+
+	// окно справа
 	m_rightLayoutWin = new wxSashLayoutWindow(this, ID_WINDOW_RIGHT);
 	m_rightLayoutWin->SetDefaultSize(wxSize(200, 1000));
 	m_rightLayoutWin->SetOrientation(wxLAYOUT_VERTICAL);
 	m_rightLayoutWin->SetAlignment(wxLAYOUT_RIGHT);
 	m_rightLayoutWin->SetSashVisible(wxSASH_LEFT, true);
 
-	// window bottom
+	// окно снизу
 	m_bottomLayoutWin = new wxSashLayoutWindow(this, ID_WINDOW_BOTTOM);
 	m_bottomLayoutWin->SetDefaultSize(wxSize(1000, 100));
 	m_bottomLayoutWin->SetOrientation(wxLAYOUT_HORIZONTAL);
 	m_bottomLayoutWin->SetAlignment(wxLAYOUT_BOTTOM);
 	m_bottomLayoutWin->SetSashVisible(wxSASH_TOP, true);
 
+	m_filesTree = new wxTreeCtrl(m_leftLayoutWin, ID_TREE);
 	m_projectPG = new wxPropertyGrid(m_rightLayoutWin, ID_PROP);
 	m_book = new wxNotebook(this, wxID_ANY);
 	m_compGrid = new wxGrid(m_book, ID_COMP_GRID);
@@ -110,6 +119,9 @@ void MainFrame::CreateMenu()
 	fileMenu->Append(ID_FILE_OPEN, "&Open PnP file...\tCtrl+O");
 	fileMenu->Append(ID_FILE_SAVE, "&Save prod file...\tCtrl+S");
 	fileMenu->AppendSeparator();
+	fileMenu->Append(ID_FILE_PROJECT_OPEN, "Open or create project...");
+	fileMenu->Append(ID_FILE_PROJECT_SAVE, "Save project");
+	fileMenu->AppendSeparator();
 	fileMenu->Append(ID_FILE_QUIT, "&Quit\tCtrl+Q");
 
 	wxMenu *helpMenu = new wxMenu();
@@ -124,6 +136,13 @@ void MainFrame::CreateMenu()
 
 void MainFrame::OnFileOpen(wxCommandEvent &event)
 {
+	if (m_project->Filename().IsEmpty())
+	{
+		wxMessageBox("First you must create project!", "File open");
+		return;
+	}
+
+
 	wxFileDialog openDialog(this, "Select a file", "", "",
 							"All supported files (*.txt;*.csv)|*.txt;*.csv"
 							"|PCAD PnP files (*.txt)|*.txt"
@@ -133,6 +152,13 @@ void MainFrame::OnFileOpen(wxCommandEvent &event)
 
 	if (openDialog.ShowModal() == wxID_OK)
 	{
+		wxString file = openDialog.GetPath();
+		if (wxYES == wxMessageBox("Do you want to add this file to project?",
+								  "Add file to project",
+								  wxYES_NO | wxICON_INFORMATION, this))
+		{
+			m_project->AddCadFile(file);
+		}
 		m_project->Load(openDialog.GetPath());
 	}
 }
@@ -153,6 +179,25 @@ void MainFrame::OnFileSave(wxCommandEvent &event)
 	}
 }
 
+void MainFrame::OnFileProjectOpen(wxCommandEvent &event)
+{
+	wxFileDialog openDialog(this, "Select a file or enter name for create new project", "", "",
+							"Pick Place Converter project (*.prj)|*.prj",
+							wxFD_OPEN);
+
+	if (openDialog.ShowModal() == wxID_OK)
+	{
+		m_project->OpenProject(openDialog.GetPath());
+	}
+
+}
+
+void MainFrame::OnFileProjectSave(wxCommandEvent &event)
+{
+	if (!m_project->Filename().IsEmpty())
+		m_project->SaveProject();
+}
+
 void MainFrame::OnFileQuit(wxCommandEvent &event)
 {
 	Close();
@@ -160,9 +205,10 @@ void MainFrame::OnFileQuit(wxCommandEvent &event)
 
 void MainFrame::OnHelpAbout(wxCommandEvent& event)
 {
-	wxMessageBox("PickPlaceConverter Version 1.2", "About");
+	wxMessageBox("PickPlaceConverter Version 2.0", "About");
 }
 
+// Sash layout
 void MainFrame::OnSashDrag(wxSashEvent& event)
 {
 	if (event.GetDragStatus() == wxSASH_STATUS_OUT_OF_RANGE)
@@ -170,6 +216,10 @@ void MainFrame::OnSashDrag(wxSashEvent& event)
 
 	switch (event.GetId())
 	{
+		case ID_WINDOW_LEFT:
+			m_leftLayoutWin->SetDefaultSize(wxSize(event.GetDragRect().width, 1000));
+			break;
+
 		case ID_WINDOW_RIGHT:
 			m_rightLayoutWin->SetDefaultSize(wxSize(event.GetDragRect().width, 1000));
 			break;
@@ -309,6 +359,7 @@ void MainFrame::OnPropertyGridChanged(wxPropertyGridEvent& event)
 				subpcb.ref_point2_x = subpcb.offset_x + subpcb.size_x;
 				subpcb.ref_point2_y = subpcb.offset_y + subpcb.size_y;
 				m_project->Notify(wxEVT_PROJECT_UPDATED);
+				m_project->Notify(wxEVT_PROJECT_UPDATE_TITLE);
 				return;
 			}
 			subpcb.size_x = subpcb.ref_point2_x - subpcb.ref_point1_x;
@@ -320,6 +371,15 @@ void MainFrame::OnPropertyGridChanged(wxPropertyGridEvent& event)
 	}
 	m_project->UpdateComponents();
 	m_project->Notify(wxEVT_PROJECT_UPDATED);
+	m_project->Notify(wxEVT_PROJECT_UPDATE_TITLE);
+}
+
+void MainFrame::OnTreeActivated(wxTreeEvent& event)
+{
+	wxTreeItemId selId = event.GetItem();
+	wxString filename = m_filesTree->GetItemText(selId);
+
+	m_project->Load( m_project->FindCadFileByName(filename) );
 }
 
 void MainFrame::OnCompGridColSort(wxGridEvent& event)
@@ -327,7 +387,7 @@ void MainFrame::OnCompGridColSort(wxGridEvent& event)
 	int col = event.GetCol();
 
 	ComponentTable *table = wxDynamicCast(m_compGrid->GetTable(), ComponentTable);
-	if (table && !m_compGrid->IsSortingBy(col))
+	if (table)
 	{
 		table->Sort(col);
 	}
@@ -338,7 +398,7 @@ void MainFrame::OnTypeGridColSort(wxGridEvent& event)
 	int col = event.GetCol();
 
 	ComponentTypeTable *table = wxDynamicCast(m_typeGrid->GetTable(), ComponentTypeTable);
-	if (table && !m_typeGrid->IsSortingBy(col))
+	if (table)
 	{
 		table->Sort(col);
 	}
@@ -349,7 +409,7 @@ void MainFrame::OnPatternGridColSort(wxGridEvent& event)
 	int col = event.GetCol();
 
 	PatternTable *table = wxDynamicCast(m_patternGrid->GetTable(), PatternTable);
-	if (table && !m_patternGrid->IsSortingBy(col))
+	if (table)
 	{
 		table->Sort(col);
 	}
@@ -360,7 +420,7 @@ void MainFrame::OnFidmarkGridColSort(wxGridEvent& event)
 	int col = event.GetCol();
 
 	FidMarkTable *table = wxDynamicCast(m_fidMarkGrid->GetTable(), FidMarkTable);
-	if (table && !m_fidMarkGrid->IsSortingBy(col))
+	if (table)
 	{
 		table->Sort(col);
 	}
@@ -370,15 +430,17 @@ void MainFrame::OnFidmarkGridColSort(wxGridEvent& event)
 
 void MainFrame::OnProjectLoaded(wxCommandEvent& event)
 {
+	BuildFilesTree();
+	BuildProjectPG();
+	wxLogMessage("Done.");
+}
+
+void MainFrame::OnProjectCadFileLoaded(wxCommandEvent& event)
+{
 	BuildCompGrid();
 	BuildTypeGrid();
 	BuildPatternGrid();
 	BuildFidMarkGrid();
-
-	BuildProjectPG();
-
-	// Update frame title
-	SetTitle(wxFileNameFromPath(m_project->Filename()) + " - " + APP_TITLE);
 	wxLogMessage("Done.");
 }
 
@@ -390,6 +452,35 @@ void MainFrame::OnProjectUpdated(wxCommandEvent& event)
 	UpdatePatternGrid();
 	UpdateFidMarkGrid();
 	wxLogMessage("Done.");
+}
+
+void MainFrame::OnProjectUpdateTitle(wxCommandEvent& event)
+{
+	// Update frame title
+	wxString filename = wxEmptyString;
+	if (GetTitle().Find("[") != wxNOT_FOUND)
+		filename = GetTitle().BeforeFirst('[').Trim();
+
+	SetTitle( wxString::Format("%s [%s] - %s",
+							   event.GetString().IsEmpty() ? filename : event.GetString(),
+							   m_project->Name(),
+							   APP_TITLE) );
+}
+
+void MainFrame::BuildFilesTree()
+{
+	wxLogMessage("Build files tree.");
+	m_filesTree->Freeze();
+	m_filesTree->DeleteAllItems();
+
+	wxTreeItemId rootId = m_filesTree->AddRoot(m_project->Name()/*wxFileNameFromPath(m_project->Filename())*/);
+	wxArrayString files = m_project->CadFiles();
+	for (size_t i = 0; i < files.size(); i++)
+	{
+		m_filesTree->AppendItem(rootId, wxFileNameFromPath(files[i]));
+	}
+	m_filesTree->Expand(rootId);
+	m_filesTree->Thaw();
 }
 
 void MainFrame::BuildCompGrid()
@@ -438,7 +529,8 @@ void MainFrame::BuildProjectPG()
 	arr_orientation.Add("270", 3);
 	m_projectPG->Clear();
 	m_projectPG->Append( new wxStringProperty("Project", wxPG_LABEL, m_project->Name()) );
-	m_projectPG->Append( new wxStringProperty("Filename", wxPG_LABEL, wxFileNameFromPath(m_project->Filename())) );
+	wxString file = m_project->Filename().IsEmpty() ? "Default" : wxFileNameFromPath(m_project->Filename());
+	m_projectPG->Append( new wxStringProperty("Filename", wxPG_LABEL, file) );
 	m_projectPG->SetPropertyReadOnly("Filename");
 	m_projectPG->Append( new wxFloatProperty("Height", wxPG_LABEL, m_project->Height()) );
 	m_projectPG->Append( new wxEnumProperty("Angle", wxPG_LABEL, arr_orientation, m_project->Angle()) );

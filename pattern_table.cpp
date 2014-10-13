@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-enum PatternColumns
+enum
 {
 	COL_PATTERN = 0,
 	COL_PNP_PACKAGE,
@@ -15,7 +15,7 @@ enum PatternColumns
 	COL_COMP_COUNT,
 	COL_ENABLED,
 	COL_IS_NEW,
-	COUNT,
+	COUNT_COLS,
 };
 
 PatternTable::PatternTable(Project *project)
@@ -74,7 +74,7 @@ int PatternTable::GetNumberRows()
 
 int PatternTable::GetNumberCols()
 {
-	return COUNT;
+	return COUNT_COLS;
 }
 
 wxString PatternTable::GetColLabelValue( int col )

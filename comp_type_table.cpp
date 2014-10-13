@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-enum ComponentTypeColumns
+enum
 {
 	COL_NAME = 0,
 	COL_PATTERN,
@@ -12,7 +12,7 @@ enum ComponentTypeColumns
 	COL_COMP_COUNT,
 	COL_ENABLED,
 	COL_IS_NEW,
-	COUNT,
+	COUNT_COLS,
 };
 
 
@@ -63,7 +63,7 @@ int ComponentTypeTable::GetNumberRows()
 }
 int ComponentTypeTable::GetNumberCols()
 {
-	return COUNT;
+	return COUNT_COLS;
 }
 
 wxString ComponentTypeTable::GetColLabelValue( int col )
@@ -164,6 +164,7 @@ void ComponentTypeTable::Sort(int col)
 	switch (col)
 	{
 		case COL_NAME:
+			// по умолчанию - оператор '<'
 			std::sort(m_type.begin(), m_type.end());
 			break;
 		case COL_PATTERN:

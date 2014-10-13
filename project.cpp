@@ -6,11 +6,14 @@
 #include <wx/tokenzr.h>
 #include <wx/xml/xml.h>
 #include <wx/textfile.h>
+#include <wx/wfstream.h>
 
 #include <algorithm>
 
 wxDEFINE_EVENT(wxEVT_PROJECT_LOADED, wxCommandEvent);
+wxDEFINE_EVENT(wxEVT_PROJECT_CADFILE_LOADED, wxCommandEvent);
 wxDEFINE_EVENT(wxEVT_PROJECT_UPDATED, wxCommandEvent);
+wxDEFINE_EVENT(wxEVT_PROJECT_UPDATE_TITLE, wxCommandEvent);
 
 wxArrayString G_array_on_subpcb;
 wxArrayString G_array_global;
@@ -23,6 +26,11 @@ FileTemplate::FileTemplate()
 {
 	m_template.push_back( ItemTemplate("pcad", ";", "refdes:pattern:name:value:layer:location_x:location_y:angle", false) );
 	m_template.push_back( ItemTemplate("altum", ",", "refdes:pattern:::location_x:location_y:::layer:angle:value", true) );
+
+	//for (size_t i = 0; i < m_template.size(); i++)
+	//{
+	//	wxLogMessage("template: %s %s %s", m_template[i].type, m_template[i].delimiter, m_template[i].format);
+	//}
 }
 
 ItemTemplate *FileTemplate::FindByType(wxString type)
@@ -39,7 +47,7 @@ ItemTemplate *FileTemplate::FindByType(wxString type)
 
 Project::Project()
 	: m_height(1.6), m_angle(0), m_size_x(0), m_size_y(0), m_offset_x(0), m_offset_y(0)
-	, m_apply_offset(false), m_filename("")
+	, m_apply_offset(false), m_filename(""), m_newProject(true)
 {
 	G_array_on_subpcb.Add("Unknown");
 	G_array_on_subpcb.Add("Not use");
@@ -64,38 +72,79 @@ Project::Project()
 	m_compAltumCfg = new wxFileConfig("PickPlaceConverter", "Antrax", "components_altium", wxEmptyString, wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_SUBDIR);
 	m_patternsPcadCfg = new wxFileConfig("PickPlaceConverter", "Antrax", "patterns_pcad", wxEmptyString, wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_SUBDIR);
 	m_patternsAltumCfg = new wxFileConfig("PickPlaceConverter", "Antrax", "patterns_altium", wxEmptyString, wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_SUBDIR);
-	m_projectsCfg = new wxFileConfig("PickPlaceConverter", "Antrax", "projects", wxEmptyString, wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_SUBDIR);
 }
 
 Project::~Project()
 {
 	if (!m_filename.IsEmpty())
 	{
-		SaveProjectInfo();
-		SaveTypes();
-		SavePatterns();
+		SaveProject();
 	}
 
+	SaveTypes();
+	SavePatterns();
 
 	delete m_settingsCfg;
 	delete m_compPcadCfg;
 	delete m_compAltumCfg;
 	delete m_patternsPcadCfg;
 	delete m_patternsAltumCfg;
-	delete m_projectsCfg;
 }
+
+void Project::OpenProject(const wxString& filename)
+{
+	if (!m_filename.IsEmpty())
+	{
+		SaveProject();
+	}
+
+	LoadProjectInfo(filename);
+	m_filename = filename;
+
+	Notify(wxEVT_PROJECT_LOADED);
+	Notify(wxEVT_PROJECT_UPDATE_TITLE);
+}
+
+void Project::SaveProject(const wxString& filename)
+{
+	if (!filename.IsEmpty())
+		m_filename = filename;
+
+	SaveProjectInfo();
+	SaveTypes();
+	SavePatterns();
+}
+
+void Project::AddCadFile(const wxString& filename)
+{
+	if (m_cadfiles.Index(filename) == wxNOT_FOUND)
+	{
+		m_cadfiles.Add(filename);
+		Notify(wxEVT_PROJECT_LOADED);
+	}
+}
+
+wxString Project::FindCadFileByName(const wxString& name)
+{
+	for (size_t i = 0; i < m_cadfiles.size(); i++)
+	{
+		if (wxFileNameFromPath(m_cadfiles[i]) == name)
+			return m_cadfiles[i];
+	}
+	return wxEmptyString;
+}
+
+
+//
+// Работа с файлом данных (cad file)
+//
 
 void Project::Load(const wxString& filename)
 {
 	ItemTemplate *templ = NULL;
 
-	// save previous project
-	if (!m_filename.IsEmpty())
-	{
-		SaveProjectInfo();
-		SaveTypes();
-		SavePatterns();
-	}
+	if (filename.IsEmpty())
+		return;
 
 	wxString ext = wxFileName(filename).GetExt();
 
@@ -121,17 +170,20 @@ void Project::Load(const wxString& filename)
 
 	if (templ && Parse(filename, templ))
 	{
-		// init
-		m_filename = filename;
-		LoadProjectInfo(filename);
+		// инициализация
 		UpdatePCBFullSize();
 		UpdateComponentFullName();
+		//LoadTypes();
+		//LoadPatterns();
 		LoadTypes();
 		LoadPatterns();
 		UpdateComponents();
 
+		// Сортируем по умолчанию - по имени
+		//std::sort(m_comps.begin(), m_comps.end());
 
-		Notify(wxEVT_PROJECT_LOADED);
+		Notify(wxEVT_PROJECT_CADFILE_LOADED);
+		Notify(wxEVT_PROJECT_UPDATE_TITLE, wxFileNameFromPath(filename));
 
 		wxLogMessage("Done.");
 	}
@@ -142,16 +194,6 @@ void Project::Load(const wxString& filename)
 // Saved
 //
 #define FID_ARRAY_OFFSET	1
-
-enum
-{
-	INDEX_TOP_COMP = 0,
-	INDEX_TOP_FID,
-	INDEX_BOT_COMP,
-	INDEX_BOT_FID,
-	COUNT_INDEX,
-};
-
 
 void Project::SaveProd(const wxString& filename)
 {
@@ -343,9 +385,10 @@ void Project::UpdatePCBFullSize()
 }
 
 
-void Project::Notify(wxEventType type)
+void Project::Notify(wxEventType type, const wxString& msg)
 {
 	wxCommandEvent event(type);
+	event.SetString(msg);
 	wxPostEvent(this, event);
 }
 
@@ -450,7 +493,7 @@ bool Project::Parse(const wxString& filename, ItemTemplate *templ)
 		if (add)
 		{
 			comp.index = index;
-		 	m_comps.push_back(comp);
+			m_comps.push_back(comp);
 			index++;
 		}
 	}
@@ -528,9 +571,9 @@ void Project::UpdateComponent(Component& comp, size_t compIndex)
 	comp.pnp_location_x -= m_pcbs[index].offset_x;
 	comp.pnp_location_y -= m_pcbs[index].offset_y;
 	comp.pnp_enabled = comp.enabled
-							&& type_it->enabled
-							&& pattern_it->enabled
-							&& m_pcbs[index].enabled;
+					   && type_it->enabled
+					   && pattern_it->enabled
+					   && m_pcbs[index].enabled;
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -911,136 +954,193 @@ void Project::LoadProjectInfo(wxString filename)
 {
 	if (filename.IsEmpty())
 		return;
-	wxString filename_pref = ("Pick Place for ");
-	wxString proj_name = wxFileName(filename).GetName();
-	if (proj_name.StartsWith(filename_pref))
+
+	wxFileConfig *projectConf;
+
+	if (wxFileExists(filename))
 	{
-		proj_name = proj_name.Mid(filename_pref.Len());
+		wxFileInputStream is(filename);
+		projectConf = new wxFileConfig(is);
+		m_newProject = false;
 	}
+	else
+	{
+		// default
+		filename = "default";
+		m_newProject = true;
+		projectConf = new wxFileConfig("PickPlaceConverter", "Antrax", "projects", wxEmptyString, wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_SUBDIR);
+	}
+
+	//wxString filename_pref = ("Pick Place for ");
+	//wxString proj_name = wxFileName(filename).GetName();
+	//if (proj_name.StartsWith(filename_pref))
+	//{
+	//	proj_name = proj_name.Mid(filename_pref.Len());
+	//}
 
 	m_pcbs.clear();
 
-	wxConfigPathChanger cfg_cd_to(m_projectsCfg, "/" + wxFileNameFromPath(filename) + "/");
-	m_project_name = m_projectsCfg->Read("project_name", proj_name);
-	m_height = m_projectsCfg->ReadDouble("pcb_height", m_height);
-	m_angle = m_projectsCfg->ReadLong("pnp_angle", m_angle);
-	m_apply_offset = m_projectsCfg->ReadBool("apply_offset", m_apply_offset);
-	switch (m_angle)
 	{
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-			break;
-		case 90:
-			m_angle = 1;
-			break;
-		case 180:
-			m_angle = 2;
-			break;
-		case 270:
-			m_angle = 3;
-			break;
-		default:
-			m_angle = 0;
-			break;
-	}
-	//	long subpcbs = m_projectsCfg->ReadLong("subpcb_count", -1);
-	//	if(subpcbs > 0)
-	if (m_projectsCfg->HasGroup("subpcb"))
-	{
-		wxString subpcb_name;
-		long dummy;
-		wxConfigPathChanger cfg_cd_to_sub_pcb(m_projectsCfg, "subpcb/");
-		for (bool have_group = m_projectsCfg->GetFirstGroup(subpcb_name, dummy);
-				have_group;
-				have_group = m_projectsCfg->GetNextGroup(subpcb_name, dummy)
-			)
+		wxConfigPathChanger cfg_cd_to(projectConf, "/project/");
+		m_project_name = projectConf->Read("project_name", wxFileNameFromPath(filename));
+		m_height = projectConf->ReadDouble("pcb_height", m_height);
+		m_angle = projectConf->ReadLong("pnp_angle", m_angle);
+		m_apply_offset = projectConf->ReadBool("apply_offset", m_apply_offset);
+		switch (m_angle)
+		{
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+				break;
+			case 90:
+				m_angle = 1;
+				break;
+			case 180:
+				m_angle = 2;
+				break;
+			case 270:
+				m_angle = 3;
+				break;
+			default:
+				m_angle = 0;
+				break;
+		}
+		//	long subpcbs = m_projectsCfg->ReadLong("subpcb_count", -1);
+		//	if(subpcbs > 0)
+		if (projectConf->HasGroup("subpcb"))
+		{
+			wxString subpcb_name;
+			long dummy;
+			wxConfigPathChanger cfg_cd_to_sub_pcb(projectConf, "subpcb/");
+			for (bool have_group = projectConf->GetFirstGroup(subpcb_name, dummy);
+					have_group;
+					have_group = projectConf->GetNextGroup(subpcb_name, dummy)
+				)
+			{
+				Subpcb new_subpcb;
+				new_subpcb.subpcb_name = subpcb_name;
+				new_subpcb.size_x   = projectConf->ReadDouble(subpcb_name + "/size_x", 100);
+				new_subpcb.size_y   = projectConf->ReadDouble(subpcb_name + "/size_y", 100);
+				new_subpcb.offset_x = projectConf->ReadDouble(subpcb_name + "/offset_x", 0);
+				new_subpcb.offset_y = projectConf->ReadDouble(subpcb_name + "/offset_y", 0);
+				new_subpcb.ref_point1_x = new_subpcb.offset_x;
+				new_subpcb.ref_point1_y = new_subpcb.offset_y;
+				new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
+				new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
+				new_subpcb.enabled = projectConf->ReadBool(subpcb_name + "enabled", 1);
+				m_pcbs.push_back(new_subpcb);
+			}
+		}
+		else
 		{
 			Subpcb new_subpcb;
-			new_subpcb.subpcb_name = subpcb_name;
-			new_subpcb.size_x   = m_projectsCfg->ReadDouble(subpcb_name + "/size_x", 100);
-			new_subpcb.size_y   = m_projectsCfg->ReadDouble(subpcb_name + "/size_y", 100);
-			new_subpcb.offset_x = m_projectsCfg->ReadDouble(subpcb_name + "/offset_x", 0);
-			new_subpcb.offset_y = m_projectsCfg->ReadDouble(subpcb_name + "/offset_y", 0);
+			new_subpcb.subpcb_name = "default";
+			new_subpcb.size_x = 100;
+			new_subpcb.size_y = 100;
+			new_subpcb.offset_x = 0;
+			new_subpcb.offset_y = 0;
 			new_subpcb.ref_point1_x = new_subpcb.offset_x;
 			new_subpcb.ref_point1_y = new_subpcb.offset_y;
 			new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
 			new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
-			new_subpcb.enabled = m_projectsCfg->ReadBool(subpcb_name + "enabled", 1);
+			new_subpcb.enabled = 1;
 			m_pcbs.push_back(new_subpcb);
 		}
-	}
-	else
-	{
-		Subpcb new_subpcb;
-		new_subpcb.subpcb_name = "default";
-		new_subpcb.size_x = 100;
-		new_subpcb.size_y = 100;
-		new_subpcb.offset_x = 0;
-		new_subpcb.offset_y = 0;
-		new_subpcb.ref_point1_x = new_subpcb.offset_x;
-		new_subpcb.ref_point1_y = new_subpcb.offset_y;
-		new_subpcb.ref_point2_x = new_subpcb.offset_x + new_subpcb.size_x;
-		new_subpcb.ref_point2_y = new_subpcb.offset_y + new_subpcb.size_y;
-		new_subpcb.enabled = 1;
-		m_pcbs.push_back(new_subpcb);
-	}
 
-	//Load fidmark info
-	if (m_projectsCfg->HasGroup("fid_mark"))
-	{
-		wxString fid_mark_des;
-		long dummy;
-		wxConfigPathChanger cfg_cd_to_sub_pcb(m_projectsCfg, "fid_mark/");
-		for (bool have_group = m_projectsCfg->GetFirstGroup(fid_mark_des, dummy);
-				have_group;
-				have_group = m_projectsCfg->GetNextGroup(fid_mark_des, dummy)
-			)
+		//Load fidmark info
+		if (projectConf->HasGroup("fid_mark"))
 		{
-			wxString tmp_str;
-			int str_index;
-			FidMark fidmark;
-			fidmark.designator = fid_mark_des;
-			tmp_str = m_projectsCfg->Read(fid_mark_des + "/usage_type", G_array_on_subpcb[FID_MARK_USE_UNKNOWN]);
-			str_index = G_array_on_subpcb.Index(tmp_str, false);
-			fidmark.usage_type = (wxNOT_FOUND == str_index) ? FID_MARK_USE_UNKNOWN : str_index;
-			tmp_str = m_projectsCfg->Read(fid_mark_des + "/usage_as_global", G_array_global[FID_MARK_USE_UNKNOWN]);
-			str_index = G_array_global.Index(tmp_str, false);
-			fidmark.usage_as_global = (wxNOT_FOUND == str_index) ? FID_MARK_USE_UNKNOWN : str_index;
-			m_fidmarks.push_back(fidmark);
+			wxString fid_mark_des;
+			long dummy;
+			wxConfigPathChanger cfg_cd_to_sub_pcb(projectConf, "fid_mark/");
+			for (bool have_group = projectConf->GetFirstGroup(fid_mark_des, dummy);
+					have_group;
+					have_group = projectConf->GetNextGroup(fid_mark_des, dummy)
+				)
+			{
+				wxString tmp_str;
+				int str_index;
+				FidMark fidmark;
+				fidmark.designator = fid_mark_des;
+				tmp_str = projectConf->Read(fid_mark_des + "/usage_type", G_array_on_subpcb[FID_MARK_USE_UNKNOWN]);
+				str_index = G_array_on_subpcb.Index(tmp_str, false);
+				fidmark.usage_type = (wxNOT_FOUND == str_index) ? FID_MARK_USE_UNKNOWN : str_index;
+				tmp_str = projectConf->Read(fid_mark_des + "/usage_as_global", G_array_global[FID_MARK_USE_UNKNOWN]);
+				str_index = G_array_global.Index(tmp_str, false);
+				fidmark.usage_as_global = (wxNOT_FOUND == str_index) ? FID_MARK_USE_UNKNOWN : str_index;
+				m_fidmarks.push_back(fidmark);
+			}
 		}
-	}
+
+		if (projectConf->HasGroup("files"))
+		{
+			m_cadfiles.clear();
+			wxConfigPathChanger cfg_cd_to_files(projectConf, "files/");
+			for (size_t i = 0; ; i++)
+			{
+				wxString key = wxString::Format("file%d", i);
+				if (!projectConf->HasEntry(key))
+					break;
+				wxString file = projectConf->Read(key, "");
+				wxFileName fullname(file);
+				if (fullname.MakeAbsolute(wxPathOnly(filename)))
+					m_cadfiles.Add(fullname.GetFullPath());
+			}
+		}
+
+	} // wxConfigPathChanger::~wxConfigPathChanger()
+	delete projectConf;
 }
 
 
 void Project::SaveProjectInfo()
 {
+	m_newProject = false;
+	wxFileConfig *projectConf = new wxFileConfig();
+	projectConf->DeleteAll();
+
 	long subpcbs = m_pcbs.size();
 	long fidmarks = m_fidmarks.size();
-	wxConfigPathChanger cfg_cd_to(m_projectsCfg, "/" + wxFileNameFromPath(m_filename) + "/");
-	m_projectsCfg->Write("project_name", m_project_name);
-	m_projectsCfg->Write("pcb_height", m_height);
-	m_projectsCfg->Write("pnp_angle", m_angle);
-	m_projectsCfg->Write("apply_offset", m_apply_offset);
-	//	m_projectsCfg->Write("subpcb_count", subpcbs);
-	m_projectsCfg->DeleteGroup("subpcb");
-	for (long index = 0; index < subpcbs; index++)
+
 	{
-		m_projectsCfg->Write("subpcb/" + m_pcbs[index].subpcb_name + "/size_x", m_pcbs[index].size_x);
-		m_projectsCfg->Write("subpcb/" + m_pcbs[index].subpcb_name + "/size_y", m_pcbs[index].size_y);
-		m_projectsCfg->Write("subpcb/" + m_pcbs[index].subpcb_name + "/offset_x", m_pcbs[index].offset_x);
-		m_projectsCfg->Write("subpcb/" + m_pcbs[index].subpcb_name + "/offset_y", m_pcbs[index].offset_y);
-		m_projectsCfg->Write("subpcb/" + m_pcbs[index].subpcb_name + "/enabled", m_pcbs[index].enabled);
-	}
-	//Save fidmark info
-	m_projectsCfg->DeleteGroup("fid_mark");
-	for (long index = 0; index < fidmarks; index++)
-	{
-		m_projectsCfg->Write("fid_mark/" + m_fidmarks[index].designator + "/usage_type", G_array_on_subpcb[m_fidmarks[index].usage_type]);
-		m_projectsCfg->Write("fid_mark/" + m_fidmarks[index].designator + "/usage_as_global", G_array_global[m_fidmarks[index].usage_as_global]);
-	}
-	m_projectsCfg->Flush();
+		wxConfigPathChanger cfg_cd_to(projectConf, "/project/");
+		projectConf->Write("project_name", m_project_name);
+		projectConf->Write("pcb_height", m_height);
+		projectConf->Write("pnp_angle", m_angle);
+		projectConf->Write("apply_offset", m_apply_offset);
+		//	projectConf->Write("subpcb_count", subpcbs);
+		projectConf->DeleteGroup("subpcb");
+		for (long index = 0; index < subpcbs; index++)
+		{
+			projectConf->Write("subpcb/" + m_pcbs[index].subpcb_name + "/size_x", m_pcbs[index].size_x);
+			projectConf->Write("subpcb/" + m_pcbs[index].subpcb_name + "/size_y", m_pcbs[index].size_y);
+			projectConf->Write("subpcb/" + m_pcbs[index].subpcb_name + "/offset_x", m_pcbs[index].offset_x);
+			projectConf->Write("subpcb/" + m_pcbs[index].subpcb_name + "/offset_y", m_pcbs[index].offset_y);
+			projectConf->Write("subpcb/" + m_pcbs[index].subpcb_name + "/enabled", m_pcbs[index].enabled);
+		}
+		//Save fidmark info
+		projectConf->DeleteGroup("fid_mark");
+		for (long index = 0; index < fidmarks; index++)
+		{
+			projectConf->Write("fid_mark/" + m_fidmarks[index].designator + "/usage_type", G_array_on_subpcb[m_fidmarks[index].usage_type]);
+			projectConf->Write("fid_mark/" + m_fidmarks[index].designator + "/usage_as_global", G_array_global[m_fidmarks[index].usage_as_global]);
+		}
+		//Save files info
+		projectConf->DeleteGroup("files");
+		for (size_t i = 0; i < m_cadfiles.size(); i++)
+		{
+			wxFileName fullpath(m_cadfiles[i]);
+			if (fullpath.MakeRelativeTo(wxPathOnly(m_filename)))
+				projectConf->Write(wxString::Format("files/file%d", i), fullpath.GetFullPath());
+		}
+
+	} // wxConfigPathChanger::~wxConfigPathChanger()
+
+	wxFileOutputStream os(m_filename);
+	projectConf->Save(os);
+
+	delete projectConf;
 }
 
 void Project::LoadComponent(ComponentType& compType, const Component &comp)

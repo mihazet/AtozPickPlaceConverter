@@ -63,6 +63,14 @@
 			<Add library="libwsock32.a" />
 			<Add library="libodbc32.a" />
 		</Linker>
+		<Unit filename="alatar/PnP_conv/PnP_convMain.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="alatar/PnP_conv/PnP_convMain.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="common.h" />
 		<Unit filename="comp_table.cpp" />
 		<Unit filename="comp_table.h" />

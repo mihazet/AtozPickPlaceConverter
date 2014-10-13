@@ -1,27 +1,16 @@
-/***************************************************************
- * Name:      main_frame.h
- * Purpose:   Defines Application Frame
- * Author:    Alatar ()
- * Created:   2012-12-16
- * Copyright: Alatar ()
- * License:
- **************************************************************/
-
-#ifndef MAIN_FRAME_H
-#define MAIN_FRAME_H
-
 #include <wx/wx.h>
 #include <wx/grid.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/notebook.h>
+#include <wx/treectrl.h>
 #include <wx/laywin.h>
 
 class Project;
 
-class MainFrame : public wxFrame
+class MainFrame: public wxFrame
 {
 public:
-	MainFrame();
+    MainFrame();
 	~MainFrame();
 
 	void CreateMenu();
@@ -29,11 +18,14 @@ public:
 private:
 	void OnFileOpen(wxCommandEvent& event);
 	void OnFileSave(wxCommandEvent& event);
+	void OnFileProjectOpen(wxCommandEvent& event);
+	void OnFileProjectSave(wxCommandEvent& event);
 	void OnFileQuit(wxCommandEvent& event);
 	void OnHelpAbout(wxCommandEvent& event);
 	void OnSashDrag(wxSashEvent& event);
 	void OnSize(wxSizeEvent& event);
 	void OnPropertyGridChanged(wxPropertyGridEvent& event);
+	void OnTreeActivated(wxTreeEvent& event);
 	void OnCompGridColSort(wxGridEvent& event);
 	void OnTypeGridColSort(wxGridEvent& event);
 	void OnPatternGridColSort(wxGridEvent& event);
@@ -41,8 +33,11 @@ private:
 
 
 	void OnProjectLoaded(wxCommandEvent& event);
+	void OnProjectCadFileLoaded(wxCommandEvent& event);
 	void OnProjectUpdated(wxCommandEvent& event);
+	void OnProjectUpdateTitle(wxCommandEvent& event);
 
+	void BuildFilesTree();
 	void BuildCompGrid();
 	void BuildTypeGrid();
 	void BuildPatternGrid();
@@ -57,6 +52,7 @@ private:
 
 	Project *m_project;
 
+	wxTreeCtrl *m_filesTree;
 	wxPropertyGrid *m_projectPG;
 	wxNotebook *m_book;
 	wxGrid *m_compGrid;
@@ -65,11 +61,11 @@ private:
 	wxGrid *m_fidMarkGrid;
 	wxTextCtrl *m_logText;
 
-	wxSashLayoutWindow *m_bottomLayoutWin;
+	wxSashLayoutWindow *m_leftLayoutWin;
 	wxSashLayoutWindow *m_rightLayoutWin;
+	wxSashLayoutWindow *m_bottomLayoutWin;
 
 
 	DECLARE_EVENT_TABLE()
 };
 
-#endif // MAIN_FRAME_H

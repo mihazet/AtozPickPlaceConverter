@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-enum FidMarkColumns
+enum
 {
 	COL_DESIGNATOR = 0,
 	COL_NAME,
@@ -14,7 +14,7 @@ enum FidMarkColumns
 	COL_LOCATION_X,
 	COL_LOCATION_Y,
 	COL_LOCAL_FOR,
-	COUNT,
+	COUNT_COLS,
 };
 
 
@@ -63,7 +63,7 @@ int FidMarkTable::GetNumberRows()
 }
 int FidMarkTable::GetNumberCols()
 {
-	return COUNT;
+	return COUNT_COLS;
 }
 
 wxString FidMarkTable::GetColLabelValue( int col )
@@ -139,12 +139,12 @@ wxString FidMarkTable::GetValue(int row, int col)
 			result = wxString::Format("%f", data_comp->pnp_location_y);
 			break;
 		case COL_LOCAL_FOR:
-			//			local_for_count = data_fidmark->local_for_comps.GetCount();
-			//			for(size_t index = 0; index < local_for_count; index++)
-			//			{
-			//				result += data_fidmark->local_for_comps[index] + ";";
-			//			}
-			//			result = result.BeforeLast(';');//FIXME
+			//	local_for_count = data_fidmark->local_for_comps.GetCount();
+			//	for(size_t index = 0; index < local_for_count; index++)
+			//	{
+			//		result += data_fidmark->local_for_comps[index] + ";";
+			//	}
+			//	result = result.BeforeLast(';');//FIXME
 			break;
 	}
 	return result;

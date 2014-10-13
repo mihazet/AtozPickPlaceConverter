@@ -1,6 +1,3 @@
-#ifndef FID_MARK_TABLE_H
-#define FID_MARK_TABLE_H
-
 #include <wx/wx.h>
 #include <wx/grid.h>
 
@@ -26,8 +23,8 @@ public:
 
 	virtual wxString GetColLabelValue( int col );
 
-	// РЎРѕСЂС‚РёСЂРѕРІРєР°
-	// col - РЅРѕРјРµСЂ СЃС‚РѕР»Р±С†Р°, РїРѕ РєРѕС‚РѕСЂРѕРјСѓ РїСЂРѕРёСЃС…РѕРґРёС‚ СЃРѕСЂС‚РёСЂРѕРІРєР°
+	// Сортировка
+	// col - номер столбца, по которому происходит сортировка
 	void Sort(int col);
 
 private:
@@ -36,5 +33,4 @@ private:
 	ComponentVector& m_component;
 };
 
-#endif // FID_MARK_TABLE_H
 

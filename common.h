@@ -8,35 +8,46 @@
 #define LAYER_BOT_NAME		("B")
 #define FIDMARD_DES_PREF	("FM")
 
-// ---- common types
+static bool CompareString(wxString s1, wxString s2)
+{
+	if (s1.length() == s2.length())
+		return s1 < s2;
+	else
+		return s1.length() < s2.length();
+}
+
+
+// common types
+// from Alatar's proect
+//
 
 struct Component
 {
-	/// Ð¸ÑÑ…Ð¾Ð´Ð½Ñ‹Ðµ Ð´Ð°Ð½Ð½Ñ‹Ðµ
-	wxString	designator;		/**< ÐžÐ±Ð¾Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° */
-	wxString	cad_name;		/**< Ð˜Ð¼Ñ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PCAD/Altium */
-	wxString	cad_pattern;	/**< Ð˜Ð¼Ñ Ð¿Ð¾ÑÐ°Ð´Ð¾Ñ‡Ð½Ð¾Ð³Ð¾ Ð¼ÐµÑÑ‚Ð° Ð² PCAD/Altium */
-	wxString	cad_value;		/**< ÐÐ¾Ð¼Ð¸Ð½Ð°Ð» ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð°, Ð¸Ð»Ð¸ ÐµÐ³Ð¾ Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ */
-	wxString	full_name;		/**< Ð˜Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€, Ñ€Ð°ÑÑ‡Ð¸Ñ‚Ð°Ð½Ð½Ñ‹Ð¹ Ð½Ð° Ð±Ð°Ð·Ðµ Ð¸Ð¼Ñ‘Ð½ Ð¸ Ð½Ð¾Ð¼Ð¸Ð½Ð°Ð»Ð° */
-	wxString	layer;			/**< Ð¡Ð»Ð¾Ð¹, Ð² ÐºÐ¾Ñ‚Ð¾Ñ€Ð¾Ð¼ Ð½Ð°Ñ…Ð¾Ð´Ð¸Ñ‚ÑÑ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ */
-	double		cad_location_x;	/**< ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ð° Ñ€ÐµÑ„ÐµÑ€Ð½Ð¾Ð¹ Ñ‚Ð¾Ñ‡ÐºÐ¸ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PCAD/Altium */
-	double		cad_location_y;	/**< ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ð° Ñ€ÐµÑ„ÐµÑ€Ð½Ð¾Ð¹ Ñ‚Ð¾Ñ‡ÐºÐ¸ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PCAD/Altium */
-	double		cad_angle;		/**< ÑƒÐ³Ð¾Ð» Ð¿Ð¾Ð²Ð¾Ñ€Ð¾Ñ‚Ð° ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PCAD/Altium */
+	// èñõîäíûå äàííûå
+	wxString	designator;		// Îáîçíà÷åíèå êîìïîíåíòà
+	wxString	cad_name;		// Èìÿ êîìïîíåíòà â PCAD/Altium
+	wxString	cad_pattern;	// Èìÿ ïîñàäî÷íîãî ìåñòà â PCAD/Altium
+	wxString	cad_value;		// Íîìèíàë êîìïîíåíòà, èëè åãî íàçâàíèå
+	wxString	full_name;		// Èäåíòèôèêàòîð, ðàñ÷èòàííûé íà áàçå èì¸í è íîìèíàëà
+	wxString	layer;			// Ñëîé, â êîòîðîì íàõîäèòñÿ êîìïîíåíò
+	double		cad_location_x;	// êîîðäèíàòà ðåôåðíîé òî÷êè êîìïîíåíòà â PCAD/Altium
+	double		cad_location_y;	// êîîðäèíàòà ðåôåðíîé òî÷êè êîìïîíåíòà â PCAD/Altium
+	double		cad_angle;		// óãîë ïîâîðîòà êîìïîíåíòà â PCAD/Altium
 
-	/// Ñ€Ð°ÑÑÑ‡Ð¸Ñ‚Ð°Ð½Ð½Ñ‹Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ
-	bool		enabled;		/**< Ð£ÑÑ‚Ð°Ð½Ð°Ð²Ð»Ð¸Ð²Ð°ÐµÑ‚ÑÑ Ð»Ð¸ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ Ð² PP-050/DD-500 */
-	wxString	strip_value;	/**< ÐÐ¾Ð¼Ð¸Ð½Ð°Ð» ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð°, Ð¸Ð»Ð¸ ÐµÐ³Ð¾ Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ Ð¿Ð¾ÑÐ»Ðµ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ Ð¼Ð°Ñ€ÐºÐµÑ€Ð° DNP */
-	wxString	pattern;		/**< Ð˜Ð¼Ñ Ð¿Ð¾ÑÐ°Ð´Ð¾Ñ‡Ð½Ð¾Ð³Ð¾ Ð¼ÐµÑÑ‚Ð° Ð² Ð±Ð°Ð·Ðµ ÐºÐ¾Ð½Ð²ÐµÑ€Ñ‚Ð¾Ñ€Ð° */
-	wxString	pnp_name;		/**< Ð˜Ð¼Ñ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PP-050/DD-500 */
-	wxString	pnp_package;	/**< Ð˜Ð¼Ñ ÐºÐ¾Ñ€Ð¿ÑƒÑÐ° Ð² PP-050 */
-	wxString	pnp_footprint;	/**< Ð˜Ð¼Ñ Ñ„ÑƒÑ‚Ð¿Ñ€Ð¸Ð½Ñ‚Ð° Ð² DD-500 */
-	double		pnp_location_x;	/**< ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ð° Ñ†ÐµÐ½Ñ‚Ñ€Ð° ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PP-050/DD-500 */
-	double		pnp_location_y;	/**< ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ð° Ñ†ÐµÐ½Ñ‚Ñ€Ð° ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PP-050/DD-500 */
-	double		pnp_angle;		/**< ÑƒÐ³Ð¾Ð» Ð¿Ð¾Ð²Ð¾Ñ€Ð¾Ñ‚Ð° ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PP-050/DD-500 */
-	bool		pnp_enabled;	/**< Ð£ÑÑ‚Ð°Ð½Ð°Ð²Ð»Ð¸Ð²Ð°ÐµÑ‚ÑÑ Ð»Ð¸ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ Ð² PP-050/DD-500 */
-	int			pnp_subpcb_index;	/**< Ðš ÐºÐ°ÐºÐ¾Ð¼Ñƒ ÐºÑƒÑÐºÑƒ Ð¿Ð»Ð°Ñ‚Ñ‹ Ð¾Ñ‚Ð½Ð¾ÑÐ¸Ñ‚ÑÑ */
+	// ðàññ÷èòàííûå çíà÷åíèÿ
+	bool		enabled;		// Óñòàíàâëèâàåòñÿ ëè êîìïîíåíò â PP-050/DD-500
+	wxString	strip_value;	// Íîìèíàë êîìïîíåíòà, èëè åãî íàçâàíèå ïîñëå óäàëåíèÿ ìàðêåðà DNP
+	wxString	pattern;		// Èìÿ ïîñàäî÷íîãî ìåñòà â áàçå êîíâåðòîðà
+	wxString	pnp_name;		// Èìÿ êîìïîíåíòà â PP-050/DD-500
+	wxString	pnp_package;	// Èìÿ êîðïóñà â PP-050
+	wxString	pnp_footprint;	// Èìÿ ôóòïðèíòà â DD-500
+	double		pnp_location_x;	// êîîðäèíàòà öåíòðà êîìïîíåíòà â PP-050/DD-500
+	double		pnp_location_y;	// êîîðäèíàòà öåíòðà êîìïîíåíòà â PP-050/DD-500
+	double		pnp_angle;		// óãîë ïîâîðîòà êîìïîíåíòà â PP-050/DD-500
+	bool		pnp_enabled;	// Óñòàíàâëèâàåòñÿ ëè êîìïîíåíò â PP-050/DD-500
+	int			pnp_subpcb_index;	// Ê êàêîìó êóñêó ïëàòû îòíîñèòñÿ
 
-	int 		index;			/**< Ð¸Ð½Ð´ÐµÐºÑ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð°, Ð½Ð° Ð½ÐµÐ³Ð¾ ÑÑÑ‹Ð»ÐµÑ‚ÑÑ FidMark */
+	int 		index;			// èíäåêñ êîìïîíåíòà, íà íåãî ññûëåòñÿ FidMark
 
 	Component()
 		: cad_location_x(0), cad_location_y(0), cad_angle(0), enabled(true),
@@ -45,10 +56,10 @@ struct Component
 	{
 	}
 
-	/// ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ° Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ Ð¿Ð¾ Ð¾Ð±Ð¾Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸ÑŽ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° (designator)
-	bool operator < (const Component& comp) const { return designator < comp.designator; }
-	/// Ð½Ð°Ð±Ð¾Ñ€ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð¾Ðº Ð¿Ð¾ Ð¾ÑÑ‚Ð°Ð»ÑŒÐ½Ñ‹Ð¼ Ð¿Ð¾Ð»ÑÐ¼
-	static bool ByCadName(const Component& arg1, const Component& arg2) {	return arg1.cad_name < arg2.cad_name; }
+	// ñîðòèðîâêà ïî óìîë÷àíèþ ïî îáîçíà÷åíèþ êîìïîíåíòà (designator)
+	bool operator < (const Component& comp) const { return CompareString(designator, comp.designator); }
+	// íàáîð ñîðòèðîâîê ïî îñòàëüíûì ïîëÿì
+	static bool ByCadName(const Component& arg1, const Component& arg2) { return arg1.cad_name < arg2.cad_name; }
 	static bool ByCadPattern(const Component& arg1, const Component& arg2) { return arg1.cad_pattern < arg2.cad_pattern; }
 	static bool ByCadValue(const Component& arg1, const Component& arg2) { return arg1.cad_value < arg2.cad_value; }
 	static bool ByFullName(const Component& arg1, const Component& arg2) { return arg1.cad_value < arg2.cad_value; }
@@ -72,23 +83,23 @@ struct Component
 
 struct ComponentType
 {
-	wxString	name;			/**< Ð˜Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€, Ñ€Ð°ÑÑ‡Ð¸Ñ‚Ð°Ð½Ð½Ñ‹Ð¹ Ð½Ð° Ð±Ð°Ð·Ðµ Ð¸Ð¼Ñ‘Ð½ Ð¸ Ð½Ð¾Ð¼Ð¸Ð½Ð°Ð»Ð° Ð² PCAD/Altium */
-	wxString	pattern;		/**< Ð˜Ð¼Ñ Ð¿Ð¾ÑÐ°Ð´Ð¾Ñ‡Ð½Ð¾Ð³Ð¾ Ð¼ÐµÑÑ‚Ð° Ð² Ð±Ð°Ð·Ðµ ÐºÐ¾Ð½Ð²ÐµÑ€Ñ‚Ð¾Ñ€Ð° */
-	wxString	pnp_name;		/**< Ð˜Ð¼Ñ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² PP-050/DD-500 */
-	bool		override_name;	/**< ÐÐµ Ð³ÐµÐ½ÐµÑ€Ð¸Ñ‚ÑŒ Ð¸Ð¼Ñ Ð¸Ð· ÑˆÐ°Ð±Ð»Ð¾Ð½Ð° Ð¸ Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ñ */
-	wxString	value;			/**< ÐÐ¾Ð¼Ð¸Ð½Ð°Ð»ÑŒÐ½Ð¾Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð´Ð»Ñ Ñ€ÐµÐ·Ð¸ÑÑ‚Ð¾Ñ€Ð¾Ð²/ÐºÐ¾Ð½Ð´Ñ‘Ñ€Ð¾Ð²/etc. Ð¸Ð»Ð¸ Ð¿Ñ€Ð¾ÑÑ‚Ð¾ Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° */
-	int			comp_count;		/**< ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² ÑÑ‚Ð¾Ð³Ð¾ Ñ‚Ð¸Ð¿Ð° Ð½Ð° Ð¿Ð»Ð°Ñ‚Ðµ */
-	bool		enabled;		/**< Ð£ÑÑ‚Ð°Ð½Ð°Ð²Ð»Ð¸Ð²Ð°ÐµÑ‚ÑÑ Ð»Ð¸ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ Ð² PP-050/DD-500 */
-	bool		is_new;			/**< Ð‘Ñ‹Ð» Ð»Ð¸ ÑÑ‚Ð¾Ñ‚ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ Ð² Ð±Ð°Ð·Ðµ ÐºÐ¾Ð½Ð²ÐµÑ€Ñ‚Ð¾Ñ€Ð° */
+	wxString	name;			// Èäåíòèôèêàòîð, ðàñ÷èòàííûé íà áàçå èì¸í è íîìèíàëà â PCAD/Altium
+	wxString	pattern;		// Èìÿ ïîñàäî÷íîãî ìåñòà â áàçå êîíâåðòîðà
+	wxString	pnp_name;		// Èìÿ êîìïîíåíòà â PP-050/DD-500
+	bool		override_name;	// Íå ãåíåðèòü èìÿ èç øàáëîíà è íàçâàíèÿ
+	wxString	value;			// Íîìèíàëüíîå çíà÷åíèå äëÿ ðåçèñòîðîâ/êîíä¸ðîâ/etc. èëè ïðîñòî íàçâàíèå êîìïîíåíòà
+	int			comp_count;		// Êîëè÷åñòâî êîìïîíåíòîâ ýòîãî òèïà íà ïëàòå
+	bool		enabled;		// Óñòàíàâëèâàåòñÿ ëè êîìïîíåíò â PP-050/DD-500
+	bool		is_new;			// Áûë ëè ýòîò êîìïîíåíò â áàçå êîíâåðòîðà
 
 	ComponentType()
 		: override_name(false), comp_count(1), enabled(true), is_new(true)
 	{
 	}
 
-	/// ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ° Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ Ð¿Ð¾ name
+	// ñîðòèðîâêà ïî óìîë÷àíèþ ïî name
 	bool operator < (const ComponentType& type) const { return name < type.name; }
-	/// Ð½Ð°Ð±Ð¾Ñ€ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð¾Ðº Ð¿Ð¾ Ð¾ÑÑ‚Ð°Ð»ÑŒÐ½Ñ‹Ð¼ Ð¿Ð¾Ð»ÑÐ¼
+	// íàáîð ñîðòèðîâîê ïî îñòàëüíûì ïîëÿì
 	static bool ByPattern(const ComponentType& arg1, const ComponentType& arg2) {	return arg1.pattern < arg2.pattern; }
 	static bool ByPnpName(const ComponentType& arg1, const ComponentType& arg2) {	return arg1.pnp_name < arg2.pnp_name; }
 	static bool ByOverrideName(const ComponentType& arg1, const ComponentType& arg2) {	return arg1.override_name < arg2.override_name; }
@@ -100,16 +111,16 @@ struct ComponentType
 
 struct Pattern
 {
-	wxString	pattern;			/**< Ð˜Ð¼Ñ Ð¿Ð¾ÑÐ°Ð´Ð¾Ñ‡Ð½Ð¾Ð³Ð¾ Ð¼ÐµÑÑ‚Ð° Ð² Ð±Ð°Ð·Ðµ ÐºÐ¾Ð½Ð²ÐµÑ€Ñ‚Ð¾Ñ€Ð° */
-	wxString	pnp_package;		/**< Ð˜Ð¼Ñ ÐºÐ¾Ñ€Ð¿ÑƒÑÐ° Ð² PP-050 */
-	bool		add_pack_to_name;	/**< Ð”Ð¾Ð±Ð°Ð²Ð»ÑÑ‚ÑŒ Ð¸Ð¼Ñ ÐºÐ¾Ñ€Ð¿ÑƒÑÐ° Ðº Ð¸Ð¼ÐµÐ½Ð¸ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° */
-	wxString	pnp_footprint;		/**< Ð˜Ð¼Ñ Ñ„ÑƒÑ‚Ð¿Ñ€Ð¸Ð½Ñ‚Ð° Ð² DD-500 */
-	double		offset_x;			/**< ÑÐ¼ÐµÑ‰ÐµÐ½Ð¸Ðµ Ñ†ÐµÐ½Ñ‚Ñ€Ð° ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð¾Ñ‚ Ñ€ÐµÑ„ÐµÑ€Ð½Ð¾Ð¹ Ñ‚Ð¾Ñ‡ÐºÐ¸ */
-	double		offset_y;			/**< ÑÐ¼ÐµÑ‰ÐµÐ½Ð¸Ðµ Ñ†ÐµÐ½Ñ‚Ñ€Ð° ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð¾Ñ‚ Ñ€ÐµÑ„ÐµÑ€Ð½Ð¾Ð¹ Ñ‚Ð¾Ñ‡ÐºÐ¸ */
-	double		angle;				/**< ÑƒÐ³Ð¾Ð» Ð¿Ð¾Ð²Ð¾Ñ€Ð¾Ñ‚Ð° ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° Ð² Ð±Ð°Ð·Ðµ PCAD/Altium Ð¾Ñ‚Ð½Ð¾ÑÐ¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ PP-050/DD-500 */
-	int			comp_count;			/**< ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² Ñ Ñ‚Ð°ÐºÐ¸Ð¼ ÐºÐ¾Ñ€Ð¿ÑƒÑÐ¾Ð¼ Ð½Ð° Ð¿Ð»Ð°Ñ‚Ðµ */
-	bool		enabled;			/**< Ð£ÑÑ‚Ð°Ð½Ð°Ð²Ð»Ð¸Ð²Ð°ÐµÑ‚ÑÑ Ð»Ð¸ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ Ñ Ñ‚Ð°ÐºÐ¸Ð¼ ÐºÐ¾Ñ€Ð¿ÑƒÑÐ¾Ð¼ Ð² PP-050/DD-500 */
-	bool		is_new;				/**< Ð‘Ñ‹Ð» Ð»Ð¸ ÑÑ‚Ð¾Ñ‚ ÐºÐ¾Ñ€Ð¿ÑƒÑ Ð² Ð±Ð°Ð·Ðµ ÐºÐ¾Ð½Ð²ÐµÑ€Ñ‚Ð¾Ñ€Ð° */
+	wxString	pattern;			// Èìÿ ïîñàäî÷íîãî ìåñòà â áàçå êîíâåðòîðà
+	wxString	pnp_package;		// Èìÿ êîðïóñà â PP-050
+	bool		add_pack_to_name;	// Äîáàâëÿòü èìÿ êîðïóñà ê èìåíè êîìïîíåíòà
+	wxString	pnp_footprint;		// Èìÿ ôóòïðèíòà â DD-500
+	double		offset_x;			// ñìåùåíèå öåíòðà êîìïîíåíòà îò ðåôåðíîé òî÷êè
+	double		offset_y;			// ñìåùåíèå öåíòðà êîìïîíåíòà îò ðåôåðíîé òî÷êè
+	double		angle;				// óãîë ïîâîðîòà êîìïîíåíòà â áàçå PCAD/Altium îòíîñèòåëüíî PP-050/DD-500
+	int			comp_count;			// Êîëè÷åñòâî êîìïîíåíòîâ ñ òàêèì êîðïóñîì íà ïëàòå
+	bool		enabled;			// Óñòàíàâëèâàåòñÿ ëè êîìïîíåíò ñ òàêèì êîðïóñîì â PP-050/DD-500
+	bool		is_new;				// Áûë ëè ýòîò êîðïóñ â áàçå êîíâåðòîðà
 	Pattern()
 		: add_pack_to_name(false),
 		  offset_x(0), offset_y(0), angle(0),
@@ -117,9 +128,9 @@ struct Pattern
 	{
 	}
 
-	/// ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ° Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ Ð¿Ð¾ pattern
+	// ñîðòèðîâêà ïî óìîë÷àíèþ ïî pattern
 	bool operator < (const Pattern& type) const { return pattern < type.pattern; }
-	/// Ð½Ð°Ð±Ð¾Ñ€ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð¾Ðº Ð¿Ð¾ Ð¾ÑÑ‚Ð°Ð»ÑŒÐ½Ñ‹Ð¼ Ð¿Ð¾Ð»ÑÐ¼
+	// íàáîð ñîðòèðîâîê ïî îñòàëüíûì ïîëÿì
 	static bool ByPattern(const Pattern& arg1, const Pattern& arg2) {	return arg1.pattern < arg2.pattern; }
 	static bool ByPnpPackage(const Pattern& arg1, const Pattern& arg2) {	return arg1.pnp_package < arg2.pnp_package; }
 	static bool ByAddPackToName(const Pattern& arg1, const Pattern& arg2) {	return arg1.add_pack_to_name < arg2.add_pack_to_name; }
@@ -134,7 +145,7 @@ struct Pattern
 };
 
 
-enum FidMarkUse
+enum
 {
 	FID_MARK_USE_UNKNOWN = 0,
 	FID_MARK_USE_IGNORE,
@@ -147,7 +158,7 @@ enum FidMarkUse
 struct FidMark
 {
 	wxString	designator;
-	int			component_index;	/**< == ComponentDescr::index */
+	int			component_index;	// == ComponentDescr::index
 	int			usage_type;
 	int			usage_as_global;
 	//	wxArrayString	local_for_comps;
@@ -156,9 +167,9 @@ struct FidMark
 	{
 	}
 
-	/// ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ° Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ Ð¿Ð¾ Ð¾Ð±Ð¾Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸ÑŽ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° (designator)
+	// ñîðòèðîâêà ïî óìîë÷àíèþ ïî îáîçíà÷åíèþ êîìïîíåíòà (designator)
 	bool operator < (const FidMark& type) const { return designator < type.designator; }
-	/// Ð½Ð°Ð±Ð¾Ñ€ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð¾Ðº Ð¿Ð¾ Ð¾ÑÑ‚Ð°Ð»ÑŒÐ½Ñ‹Ð¼ Ð¿Ð¾Ð»ÑÐ¼
+	// íàáîð ñîðòèðîâîê ïî îñòàëüíûì ïîëÿì
 	static bool ByComponentIndex(const FidMark& arg1, const FidMark& arg2) {	return arg1.component_index < arg2.component_index; }
 	static bool ByUsageType(const FidMark& arg1, const FidMark& arg2) {	return arg1.usage_type < arg2.usage_type; }
 	static bool ByUsageAsGlobal(const FidMark& arg1, const FidMark& arg2) {	return arg1.usage_as_global < arg2.usage_as_global; }
@@ -167,16 +178,16 @@ struct FidMark
 
 struct Subpcb
 {
-	wxString	subpcb_name; 	/**< Ð˜Ð¼Ñ Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		ref_point1_x;	/**< ÐšÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ ÑƒÐ³Ð»Ð° Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		ref_point1_y;	/**< ÐšÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ ÑƒÐ³Ð»Ð° Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		ref_point2_x;	/**< ÐšÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ ÑƒÐ³Ð»Ð° Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		ref_point2_y;	/**< ÐšÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ ÑƒÐ³Ð»Ð° Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		size_x;  		/**< Ñ€Ð°Ð·Ð¼ÐµÑ€ Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		size_y;  		/**< Ñ€Ð°Ð·Ð¼ÐµÑ€ Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		offset_x;		/**< ÑÐ¼ÐµÑ‰ÐµÐ½Ð¸Ðµ Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	double		offset_y;		/**< ÑÐ¼ÐµÑ‰ÐµÐ½Ð¸Ðµ Ð¿Ð»Ð°Ñ‚Ñ‹ */
-	bool		enabled; 		/**< Ð½Ðµ ÑÐ¾Ð±Ð¸Ñ€Ð°Ñ‚ÑŒ ÑÑ‚Ñƒ Ð¿Ð»Ð°Ñ‚Ñƒ */
+	wxString	subpcb_name; 	// Èìÿ ïëàòû
+	double		ref_point1_x;	// Êîîðäèíàòû óãëà ïëàòû
+	double		ref_point1_y;	// Êîîðäèíàòû óãëà ïëàòû
+	double		ref_point2_x;	// Êîîðäèíàòû óãëà ïëàòû
+	double		ref_point2_y;	// Êîîðäèíàòû óãëà ïëàòû
+	double		size_x;  		// ðàçìåð ïëàòû
+	double		size_y;  		// ðàçìåð ïëàòû
+	double		offset_x;		// ñìåùåíèå ïëàòû
+	double		offset_y;		// ñìåùåíèå ïëàòû
+	bool		enabled; 		// íå ñîáèðàòü ýòó ïëàòó
 	Subpcb()
 		: ref_point1_x(0), ref_point1_y(0), ref_point2_x(0), ref_point2_y(0),
 		  size_x(0), size_y(0), offset_x(0), offset_y(0),
@@ -204,5 +215,4 @@ extern wxArrayString G_array_global;
 
 
 #endif // COMMON_H
-
 

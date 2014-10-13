@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-enum ComponentColumns
+enum
 {
 	COL_DESIGNATOR = 0,
 	COL_CAD_NAME,
@@ -24,7 +24,7 @@ enum ComponentColumns
 	COL_PNP_ANGLE,
 	COL_PNP_SUBPCB,
 	COL_PNP_ENABLED,
-	COUNT,
+	COUNT_COLS,
 };
 
 
@@ -46,7 +46,7 @@ int ComponentTable::GetNumberRows()
 
 int ComponentTable::GetNumberCols()
 {
-	return COUNT;
+	return COUNT_COLS;
 }
 
 wxString ComponentTable::GetColLabelValue( int col )
@@ -192,6 +192,7 @@ void ComponentTable::Sort(int col)
 	switch (col)
 	{
 		case COL_DESIGNATOR:
+			// по умолчанию
 			std::sort(m_component.begin(), m_component.end());
 			break;
 		case COL_CAD_NAME:
