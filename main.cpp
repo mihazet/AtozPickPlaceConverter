@@ -1,9 +1,9 @@
 /***************************************************************
  * Name:      main.cpp
  * Purpose:   Code for Application Class
- * Author:    Alatar ()
- * Created:   2012-12-16
- * Copyright: Alatar ()
+ * Author:    MZet ()
+ * Created:   2014-10-01
+ * Copyright: MZet ()
  * License:
  **************************************************************/
 

@@ -1,9 +1,9 @@
 /***************************************************************
  * Name:      main_frame.cpp
  * Purpose:   Code for Application Frame
- * Author:    Alatar ()
+ * Author:    Alatar, MZet
  * Created:   2012-12-16
- * Copyright: Alatar ()
+ * Copyright: Alatar, MZet
  * License:
  **************************************************************/
 
@@ -160,7 +160,7 @@ void MainFrame::OnFileQuit(wxCommandEvent &event)
 
 void MainFrame::OnHelpAbout(wxCommandEvent& event)
 {
-	wxMessageBox("PickPlaceConverter Version 1.2", "About");
+	wxMessageBox("PickPlaceConverter Version 1.0", "About");
 }
 
 void MainFrame::OnSashDrag(wxSashEvent& event)

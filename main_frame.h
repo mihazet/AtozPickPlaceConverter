@@ -1,9 +1,9 @@
 /***************************************************************
  * Name:      main_frame.h
  * Purpose:   Defines Application Frame
- * Author:    Alatar ()
+ * Author:    Alatar, MZet
  * Created:   2012-12-16
- * Copyright: Alatar ()
+ * Copyright: Alatar, MZet
  * License:
  **************************************************************/
 

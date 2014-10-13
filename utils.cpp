@@ -179,4 +179,48 @@ wxString ParseNominal(wxString a_designator, wxString a_value)
 	return result;
 }
 
+// Алфавитно-цифровое сравнение двух строк
+// скопировано из проекта KiCad
+int compare( const wxChar* str1, const wxChar* str2, int NbMax )
+{
+	int i;
+	int nb1 = 0, nb2 = 0;
+
+	if ( (str1 == NULL) || (str2 == NULL) )
+		return 0;
+
+	for ( i = 0; i < NbMax; i++ )
+	{
+		if ( isdigit( *str1 ) && isdigit( *str2 ) ) /* nombres en jeu */
+		{
+			nb1 = 0; nb2 = 0;
+			while ( isdigit( *str1 ) )
+			{
+				nb1 = nb1 * 10 + *str1 - '0'; str1++;
+			}
+
+			while ( isdigit( *str2 ) )
+			{
+				nb2 = nb2 * 10 + *str2 - '0'; str2++;
+			}
+
+			if ( nb1 < nb2 )
+				return -1;
+			if ( nb1 > nb2 )
+				return 1;
+		}
+
+		if ( *str1 < *str2 )
+			return -1;
+		if ( *str1 > *str2 )
+			return 1;
+		if ( (*str1 == 0 ) && ( *str2 == 0 ) )
+			return 0;
+		str1++; str2++;
+	}
+
+	return 0;
+}
+
+
 
