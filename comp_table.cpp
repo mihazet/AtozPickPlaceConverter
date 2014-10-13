@@ -1,14 +1,11 @@
 #include "comp_table.h"
+#include "project.h"
 
-BEGIN_EVENT_TABLE(cCompTable, wxListCtrl)
-//	EVT_CONTEXT_MENU(cCompTable::OnContextMenu)
-//	EVT_MENU(ID_MENU_AUTOUPDATE, cCompTable::OnAutoUpdate)
-//	EVT_TIMER(ID_TIMER, cCompTable::OnTimer)
-END_EVENT_TABLE()
+#include <algorithm>
 
-enum {
-	COL_NUM = 0,
-	COL_DESIGNATOR,
+enum ComponentColumns
+{
+	COL_DESIGNATOR = 0,
 	COL_CAD_NAME,
 	COL_CAD_PATTERN,
 	COL_CAD_VALUE,
@@ -27,160 +24,230 @@ enum {
 	COL_PNP_ANGLE,
 	COL_PNP_SUBPCB,
 	COL_PNP_ENABLED,
-	COL_COUNT
+	COUNT,
 };
 
-cCompTable::cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style, const wxValidator &validator, const wxString &name)
-	: wxListCtrl(parent, winid, pos, size, style | wxLC_VIRTUAL, validator, name)
+
+ComponentTable::ComponentTable(Project *project)
+	: wxGridTableBase()
+	, m_project(project)
+	, m_component(project->GetComponent())
 {
-	m_comp_data = a_data;
-
-	m_attr_disabled_comp = new wxListItemAttr;
-	m_attr_disabled_comp->SetTextColour(*wxLIGHT_GREY);
-	m_attr_data_to_out = new wxListItemAttr;
-	m_attr_data_to_out->SetBackgroundColour(*wxGREEN);
-
-	InsertColumn(COL_NUM,		_T("#"),	wxLIST_FORMAT_LEFT, 32);
-	InsertColumn(COL_DESIGNATOR,	_T("Des"),	wxLIST_FORMAT_LEFT, 60);
-	InsertColumn(COL_CAD_NAME,	_T("Name"),	wxLIST_FORMAT_LEFT, 110);
-	InsertColumn(COL_CAD_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_CAD_VALUE,	_T("Value"),	wxLIST_FORMAT_LEFT, 60);
-	InsertColumn(COL_FULL_NAME,	_T("ID"),	wxLIST_FORMAT_LEFT, 120);
-	InsertColumn(COL_LAYER,		_T("Layer"),	wxLIST_FORMAT_LEFT, 40);
-	InsertColumn(COL_CAD_LOCATION_X,_T("X"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_CAD_LOCATION_Y,_T("Y"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_CAD_ANGLE,	_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
-	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 110);
-	InsertColumn(COL_PNP_NAME,	_T("PNP Comp"),	wxLIST_FORMAT_LEFT, 110);
-	InsertColumn(COL_PNP_PACKAGE,	_T("PNP Pack"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_PNP_FOOTPRINT,	_T("PNP Foot"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_PNP_LOCATION_X,_T("PNP X"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_PNP_LOCATION_Y,_T("PNP Y"),	wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_PNP_ANGLE,	_T("PNP Angle"),wxLIST_FORMAT_LEFT, 70);
-	InsertColumn(COL_PNP_SUBPCB,	_T("PNP pcb"),	wxLIST_FORMAT_LEFT, 50);
-	InsertColumn(COL_PNP_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
-
-	ReInit();
-
 }
 
-cCompTable::~cCompTable()
+ComponentTable::~ComponentTable()
 {
-//	m_Timer->Stop();
-//	delete m_Timer;
-//	delete m_PopupMenu;
 }
 
-
-// ----------------------------------------------------------------------------
-// Текст в ячейках
-// ----------------------------------------------------------------------------
-wxString cCompTable::OnGetItemText(long item, long column) const
+int ComponentTable::GetNumberRows()
 {
-	if (m_comp_data)
+	return m_component.size();
+}
+
+int ComponentTable::GetNumberCols()
+{
+	return COUNT;
+}
+
+wxString ComponentTable::GetColLabelValue( int col )
+{
+	wxString result = wxEmptyString;
+	switch (col)
 	{
-		t_component_descr *data = &(m_comp_data->Item(item));
-		switch (column)
-		{
-			case COL_NUM:
-				return wxString::Format("%ld", item+1);
-			case COL_DESIGNATOR:
-				return data->designator;
-			case COL_CAD_NAME:
-				return data->cad_name;
-			case COL_CAD_PATTERN:
-				return data->cad_pattern;
-			case COL_CAD_VALUE:
-				return data->cad_value;
-			case COL_FULL_NAME:
-				return data->full_name;
-			case COL_LAYER:
-				return data->layer;
-			case COL_CAD_LOCATION_X:
-				return wxString::Format("%.3f", data->cad_location_x);
-			case COL_CAD_LOCATION_Y:
-				return wxString::Format("%.3f", data->cad_location_y);
-			case COL_CAD_ANGLE:
-				return wxString::Format("%.1f", data->cad_angle);
-			case COL_ENABLED:
-				return wxString::Format("%d", data->enabled);
-			case COL_PATTERN:
-				return data->pattern;
-			case COL_PNP_NAME:
-				return data->pnp_name;
-			case COL_PNP_PACKAGE:
-				return data->pnp_package;
-			case COL_PNP_FOOTPRINT:
-				return data->pnp_footprint;
-			case COL_PNP_LOCATION_X:
-				return wxString::Format("%.3f", data->pnp_location_x);
-			case COL_PNP_LOCATION_Y:
-				return wxString::Format("%.3f", data->pnp_location_y);
-			case COL_PNP_ANGLE:
-				return wxString::Format("%.1f", data->pnp_angle);
-			case COL_PNP_SUBPCB:
-				return wxString::Format("%d", data->pnp_subpcb_index);
-			case COL_PNP_ENABLED:
-				return wxString::Format("%d", data->pnp_enabled);
-			default:
-				return wxEmptyString;
-		}
-	} else {
-		return wxEmptyString;
-	}
-}
+		case COL_DESIGNATOR:
+			result = "Des";
+			break;
+		case COL_CAD_NAME:
+			result = "Name";
+			break;
+		case COL_CAD_PATTERN:
+			result = "Pattern";
+			break;
+		case COL_CAD_VALUE:
+			result = "Value";
+			break;
+		case COL_FULL_NAME:
+			result = "ID";
+			break;
+		case COL_LAYER:
+			result = "Layer";
+			break;
+		case COL_CAD_LOCATION_X:
+			result = "X";
+			break;
+		case COL_CAD_LOCATION_Y:
+			result = "Y";
+			break;
+		case COL_CAD_ANGLE:
+			result = "Angle";
+			break;
+		case COL_ENABLED:
+			result = "To OUT";
+			break;
+		case COL_PATTERN:
+			result = "Patt";
+			break;
+		case COL_PNP_NAME:
+			result = "PNP Comp";
+			break;
+		case COL_PNP_PACKAGE:
+			result = "PNP Pack";
+			break;
+		case COL_PNP_FOOTPRINT:
+			result = "PNP Foot";
+			break;
+		case COL_PNP_LOCATION_X:
+			result = "PNP X";
+			break;
+		case COL_PNP_LOCATION_Y:
+			result = "PNP Y";
+			break;
+		case COL_PNP_ANGLE:
+			result = "PNP Angle";
+			break;
+		case COL_PNP_SUBPCB:
+			result = "PNP pcb";
+			break;
+		case COL_PNP_ENABLED:
+			result = "To OUT";
+			break;
 
-// ----------------------------------------------------------------------------
-// Атрибуты строки
-// ----------------------------------------------------------------------------
-wxListItemAttr *cCompTable::OnGetItemAttr(long item) const
-{
-	if(NULL == m_comp_data)
-		return NULL;
-
-	t_component_descr *data = &(m_comp_data->Item(item));
-	wxListItemAttr *result = NULL;
-
-	if(!(data->enabled && data->pnp_enabled))
-	{
-		result = m_attr_disabled_comp;
-	}
-	return result;
-}
-wxListItemAttr *cCompTable::OnGetItemColumnAttr(long item, long column) const
-{
-	if(NULL == m_comp_data)
-		return NULL;
-
-	wxListItemAttr *result = OnGetItemAttr(item);
-
-	if(NULL == result)
-	{
-		switch (column)
-		{
-			case COL_DESIGNATOR:
-			case COL_LAYER:
-			case COL_PNP_NAME:
-			case COL_PNP_FOOTPRINT:
-			case COL_PNP_LOCATION_X:
-			case COL_PNP_LOCATION_Y:
-			case COL_PNP_ANGLE:
-				result = m_attr_data_to_out;
-			default:
-				result = NULL;
-		}
 	}
 	return result;
 }
 
-void cCompTable::ReInit()
+wxString ComponentTable::GetValue( int row, int col )
 {
-	if (NULL == m_comp_data)
-		return;
+	wxString result = wxEmptyString;
+	Component& data = m_component[row];
+	switch (col)
+	{
+		case COL_DESIGNATOR:
+			result = data.designator;
+			break;
+		case COL_CAD_NAME:
+			result = data.cad_name;
+			break;
+		case COL_CAD_PATTERN:
+			result = data.cad_pattern;
+			break;
+		case COL_CAD_VALUE:
+			result = data.cad_value;
+			break;
+		case COL_FULL_NAME:
+			result = data.full_name;
+			break;
+		case COL_LAYER:
+			result = data.layer;
+			break;
+		case COL_CAD_LOCATION_X:
+			result = wxString::Format("%.3f", data.cad_location_x);
+			break;
+		case COL_CAD_LOCATION_Y:
+			result = wxString::Format("%.3f", data.cad_location_y);
+			break;
+		case COL_CAD_ANGLE:
+			result = wxString::Format("%.1f", data.cad_angle);
+			break;
+		case COL_ENABLED:
+			result = wxString::Format("%d", data.enabled);
+			break;
+		case COL_PATTERN:
+			result = data.pattern;
+			break;
+		case COL_PNP_NAME:
+			result = data.pnp_name;
+			break;
+		case COL_PNP_PACKAGE:
+			result = data.pnp_package;
+			break;
+		case COL_PNP_FOOTPRINT:
+			result = data.pnp_footprint;
+			break;
+		case COL_PNP_LOCATION_X:
+			result = wxString::Format("%.3f", data.pnp_location_x);
+			break;
+		case COL_PNP_LOCATION_Y:
+			result = wxString::Format("%.3f", data.pnp_location_y);
+			break;
+		case COL_PNP_ANGLE:
+			result = wxString::Format("%.1f", data.pnp_angle);
+			break;
+		case COL_PNP_SUBPCB:
+			result = wxString::Format("%d", data.pnp_subpcb_index);
+			break;
+		case COL_PNP_ENABLED:
+			result = wxString::Format("%d", data.pnp_enabled);
+			break;
+	}
+	return result;
+}
 
-	SetItemCount(m_comp_data->GetCount());
-	Refresh();
-//	if(m_PopupMenu->IsChecked(ID_MENU_AUTOSCROLL) && GetItemCount())
-//		EnsureVisible(GetItemCount() - 1);
+void ComponentTable::SetValue( int row, int col, const wxString& value )
+{
+}
+
+void ComponentTable::Sort(int col)
+{
+	switch (col)
+	{
+		case COL_DESIGNATOR:
+			std::sort(m_component.begin(), m_component.end());
+			break;
+		case COL_CAD_NAME:
+			std::sort(m_component.begin(), m_component.end(), Component::ByCadName);
+			break;
+		case COL_CAD_PATTERN:
+			std::sort(m_component.begin(), m_component.end(), Component::ByCadPattern);
+			break;
+		case COL_CAD_VALUE:
+			std::sort(m_component.begin(), m_component.end(), Component::ByCadValue);
+			break;
+		case COL_FULL_NAME:
+			std::sort(m_component.begin(), m_component.end(), Component::ByFullName);
+			break;
+		case COL_LAYER:
+			std::sort(m_component.begin(), m_component.end(), Component::ByLayer);
+			break;
+		case COL_CAD_LOCATION_X:
+			std::sort(m_component.begin(), m_component.end(), Component::ByCadLocationX);
+			break;
+		case COL_CAD_LOCATION_Y:
+			std::sort(m_component.begin(), m_component.end(), Component::ByCadLocationY);
+			break;
+		case COL_CAD_ANGLE:
+			std::sort(m_component.begin(), m_component.end(), Component::ByCadAngle);
+			break;
+		case COL_ENABLED:
+			std::sort(m_component.begin(), m_component.end(), Component::ByEnabled);
+			break;
+		case COL_PATTERN:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPattern);
+			break;
+		case COL_PNP_NAME:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpName);
+			break;
+		case COL_PNP_PACKAGE:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpPackage);
+			break;
+		case COL_PNP_FOOTPRINT:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpFootprint);
+			break;
+		case COL_PNP_LOCATION_X:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpLocationX);
+			break;
+		case COL_PNP_LOCATION_Y:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpLocationY);
+			break;
+		case COL_PNP_ANGLE:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpAngle);
+			break;
+		case COL_PNP_SUBPCB:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpSubpcbIndex);
+			break;
+		case COL_PNP_ENABLED:
+			std::sort(m_component.begin(), m_component.end(), Component::ByPnpEnabled);
+			break;
+	}
+
 }

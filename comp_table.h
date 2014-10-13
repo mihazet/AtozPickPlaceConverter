@@ -1,42 +1,39 @@
 #ifndef COMP_TABLE_H
 #define COMP_TABLE_H
 
-#include "common.h"
 #include <wx/wx.h>
-#include <wx/listctrl.h>
+#include <wx/grid.h>
 
-class cCompTable : public wxListCtrl
+#include "common.h"
+
+class Project;
+
+class ComponentTable : public wxGridTableBase
 {
 public:
-	cCompTable();
-	cCompTable(tComponentDescr *a_data, wxWindow *parent, wxWindowID winid = wxID_ANY,
-		const wxPoint& pos = wxDefaultPosition,
-		const wxSize& size = wxDefaultSize,
-		long style = wxLC_REPORT|wxLC_VIRTUAL|wxLC_SINGLE_SEL|wxLC_HRULES|wxLC_VRULES,
-		const wxValidator &validator = wxDefaultValidator,
-		const wxString &name = wxListCtrlNameStr);
-	virtual ~cCompTable();
-	void ReInit();
-protected:
+	ComponentTable(Project *project);
+	virtual ~ComponentTable();
+
+	// You must override these functions in a derived table class
+	//
+
+	// return the number of rows and columns in this table
+	virtual int GetNumberRows();
+	virtual int GetNumberCols();
+//	virtual bool IsEmptyCell( int row, int col ) { return false; }
+	virtual wxString GetValue( int row, int col );
+	virtual void SetValue( int row, int col, const wxString& value );
+
+	virtual wxString GetColLabelValue( int col );
+
+	// Сортировка
+	// col - номер столбца, по которому происходит сортировка
+	void Sort(int col);
+
 private:
-	tComponentDescr		*m_comp_data;
-	wxListItemAttr		*m_attr_disabled_comp;
-	wxListItemAttr		*m_attr_data_to_out;
-
-
-	// Переопределяем виртуальные функции
-
-	// ----------------------------------------------------------------------------
-	// Текст в ячейках
-	// ----------------------------------------------------------------------------
-	virtual wxString OnGetItemText(long item, long column) const;
-
-	// ----------------------------------------------------------------------------
-	// Атрибуты строки
-	// ----------------------------------------------------------------------------
-	virtual wxListItemAttr *OnGetItemAttr(long item) const;
-	virtual wxListItemAttr *OnGetItemColumnAttr(long item, long column) const;
-	DECLARE_EVENT_TABLE()
+	Project *m_project;
+	ComponentVector& m_component;
 };
 
-#endif // EVENTS_TABLE_H
+#endif // COMP_TABLE_H
+

@@ -1,8 +1,10 @@
 #include "comp_type_table.h"
-#include "PnP_convMain.h"
-#include <wx/fileconf.h>
+#include "project.h"
 
-enum eCompTypeTable {
+#include <algorithm>
+
+enum ComponentTypeColumns
+{
 	COL_NAME = 0,
 	COL_PATTERN,
 	COL_PNP_NAME,
@@ -10,15 +12,15 @@ enum eCompTypeTable {
 	COL_COMP_COUNT,
 	COL_ENABLED,
 	COL_IS_NEW,
-	COL_COUNT
+	COUNT,
 };
 
-cCompTypeTable::cCompTypeTable(tComponentTypeDescr *a_data, PnP_convFrame *a_data_ctrl)
+
+ComponentTypeTable::ComponentTypeTable(Project *project)
 	: wxGridTableBase()
+	, m_project(project)
+	, m_type(project->GetComponentType())
 {
-	m_comp_type_data = a_data;
-	m_main_data_controller = a_data_ctrl;
-	m_config = NULL;
 
 	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
 	SetAttrProvider (attrProvider);
@@ -43,126 +45,144 @@ cCompTypeTable::cCompTypeTable(tComponentTypeDescr *a_data, PnP_convFrame *a_dat
 	SetColAttr (bool_attr, COL_ENABLED);
 	SetColAttr (bool_attr, COL_OVR_NAME);
 
-//	InsertColumn(COL_NAME,		_T("Name"),	wxLIST_FORMAT_LEFT, 120);
-//	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
-//	InsertColumn(COL_PNP_NAME,	_T("PNP Name"),	wxLIST_FORMAT_LEFT, 110);
-//	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
-//	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
-//	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
+	//	InsertColumn(COL_NAME,		_T("Name"),	wxLIST_FORMAT_LEFT, 120);
+	//	InsertColumn(COL_PATTERN,	_T("Patt"),	wxLIST_FORMAT_LEFT, 70);
+	//	InsertColumn(COL_PNP_NAME,	_T("PNP Name"),	wxLIST_FORMAT_LEFT, 110);
+	//	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
+	//	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
+	//	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
 }
 
-cCompTypeTable::~cCompTypeTable()
+ComponentTypeTable::~ComponentTypeTable()
 {
 }
 
-int cCompTypeTable::GetNumberRows()
+int ComponentTypeTable::GetNumberRows()
 {
-	if(NULL == m_comp_type_data)
-		return 0;
-	return m_comp_type_data->GetCount();
+	return m_type.size();
 }
-int cCompTypeTable::GetNumberCols()
+int ComponentTypeTable::GetNumberCols()
 {
-	return COL_COUNT;
+	return COUNT;
 }
 
-wxString cCompTypeTable::GetColLabelValue( int a_col )
+wxString ComponentTypeTable::GetColLabelValue( int col )
 {
 	wxString result = wxEmptyString;
-	switch (a_col)
+	switch (col)
 	{
 		case COL_NAME:
-			result = _T("Name");
+			result = "Name";
 			break;
 		case COL_PATTERN:
-			result = _T("Pattern");
+			result = "Pattern";
 			break;
 		case COL_PNP_NAME:
-			result = _T("Name in PnP");
+			result = "Name in PnP";
 			break;
 		case COL_OVR_NAME:
-			result = _T("Override Name");
+			result = "Override Name";
 			break;
 		case COL_COMP_COUNT:
-			result = _T("Count");
+			result = "Count";
 			break;
 		case COL_ENABLED:
-			result = _T("To OUT");
+			result = "To OUT";
 			break;
 		case COL_IS_NEW:
-			result = _T("New");
+			result = "New";
 			break;
 	}
 	return result;
 }
 
-// ----------------------------------------------------------------------------
-// Текст в ячейках
-// ----------------------------------------------------------------------------
-wxString cCompTypeTable::GetValue(int a_row, int a_col)
+wxString ComponentTypeTable::GetValue(int row, int col)
 {
-	if((NULL == m_comp_type_data) || (a_row >= (int)m_comp_type_data->GetCount()))
-		return wxEmptyString;
-
 	wxString result = wxEmptyString;
-	t_component_type_descr *data = m_comp_type_data->Item(a_row);
-	switch (a_col)
+	ComponentType& data = m_type[row];
+	switch (col)
 	{
 		case COL_NAME:
-			result = data->name;
+			result = data.name;
 			break;
 		case COL_PATTERN:
-			result = data->pattern;
+			result = data.pattern;
 			break;
 		case COL_PNP_NAME:
-			result = data->pnp_name;
+			result = data.pnp_name;
 			break;
 		case COL_OVR_NAME:
-			result = wxString::Format("%d", data->override_name);
+			result = wxString::Format("%d", data.override_name);
 			break;
 		case COL_COMP_COUNT:
-			result = wxString::Format("%d", data->comp_count);
+			result = wxString::Format("%d", data.comp_count);
 			break;
 		case COL_ENABLED:
-			result = wxString::Format("%d", data->enabled);
+			result = wxString::Format("%d", data.enabled);
 			break;
 		case COL_IS_NEW:
-			result = wxString::Format("%d", data->is_new);
+			result = wxString::Format("%d", data.is_new);
 			break;
 	}
 	return result;
 }
 
-void cCompTypeTable::SetValue(int a_row, int a_col, const wxString& a_value)
+void ComponentTypeTable::SetValue(int row, int col, const wxString& value)
 {
 	long tmp_long;
-	if((NULL == m_config) || (NULL == m_comp_type_data) || (a_row >= (int)m_comp_type_data->GetCount()))
-		return;
-	if(a_value.IsEmpty())
+
+	if (value.IsEmpty())
 		return;
 
-	t_component_type_descr *data = m_comp_type_data->Item(a_row);
-	wxConfigPathChanger cfg_cd_to(m_config, "/"+data->name+"/");
-	switch(a_col)
+	ComponentType& data = m_type[row];
+	switch (col)
 	{
 		case COL_PATTERN:
-			data->pattern = a_value;
-			m_config->Write("pattern", a_value);
+			data.pattern = value;
 			break;
 		case COL_PNP_NAME:
-			data->pnp_name = a_value;
-			m_config->Write("pnp_name", a_value);
+			data.pnp_name = value;
 			break;
 		case COL_OVR_NAME:
-			a_value.ToLong(&tmp_long);
-			data->override_name = tmp_long;
-			m_config->Write("override_name", a_value);
+			value.ToLong(&tmp_long);
+			data.override_name = tmp_long;
 			break;
 		case COL_ENABLED:
-			a_value.ToLong(&tmp_long);
-			data->enabled = tmp_long;
-			m_config->Write("enabled", a_value);
+			value.ToLong(&tmp_long);
+			data.enabled = tmp_long;
 			break;
 	}
-	m_main_data_controller->UpdateComponents();
+	//
+	// update project
+	//
+	m_project->UpdateComponents();
+	m_project->Notify(wxEVT_PROJECT_UPDATED);
+}
+
+void ComponentTypeTable::Sort(int col)
+{
+	switch (col)
+	{
+		case COL_NAME:
+			std::sort(m_type.begin(), m_type.end());
+			break;
+		case COL_PATTERN:
+			std::sort(m_type.begin(), m_type.end(), ComponentType::ByPattern);
+			break;
+		case COL_PNP_NAME:
+			std::sort(m_type.begin(), m_type.end(), ComponentType::ByPnpName);
+			break;
+		case COL_OVR_NAME:
+			std::sort(m_type.begin(), m_type.end(), ComponentType::ByOverrideName);
+			break;
+		case COL_COMP_COUNT:
+			std::sort(m_type.begin(), m_type.end(), ComponentType::ByCompCount);
+			break;
+		case COL_ENABLED:
+			std::sort(m_type.begin(), m_type.end(), ComponentType::ByEnabled);
+			break;
+		case COL_IS_NEW:
+			std::sort(m_type.begin(), m_type.end(), ComponentType::ByIsNew);
+			break;
+	}
 }

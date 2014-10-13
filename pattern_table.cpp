@@ -1,8 +1,10 @@
 #include "pattern_table.h"
-#include "PnP_convMain.h"
-#include <wx/fileconf.h>
+#include "project.h"
 
-enum ePatternTable {
+#include <algorithm>
+
+enum PatternColumns
+{
 	COL_PATTERN = 0,
 	COL_PNP_PACKAGE,
 	COL_ADD_TO_NAME,
@@ -13,16 +15,14 @@ enum ePatternTable {
 	COL_COMP_COUNT,
 	COL_ENABLED,
 	COL_IS_NEW,
-	COL_COUNT
+	COUNT,
 };
 
-cPatternTable::cPatternTable(tPatternDescr *a_data, PnP_convFrame *a_data_ctrl)
+PatternTable::PatternTable(Project *project)
 	: wxGridTableBase()
+	, m_project(project)
+	, m_pattern(project->GetPattern())
 {
-	m_pattern_data = a_data;
-	m_main_data_controller = a_data_ctrl;
-	m_config = NULL;
-
 	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
 	SetAttrProvider (attrProvider);
 
@@ -61,163 +61,181 @@ cPatternTable::cPatternTable(tPatternDescr *a_data, PnP_convFrame *a_data_ctrl)
 	SetColAttr (bool_attr, COL_ENABLED);
 	SetColAttr (bool_attr, COL_ADD_TO_NAME);
 
-//	InsertColumn(COL_PATTERN,	_T("Patt Name"),wxLIST_FORMAT_LEFT, 120);
-//	InsertColumn(COL_PNP_PACKAGE,	_T("Package"),	wxLIST_FORMAT_LEFT, 120);
-//	InsertColumn(COL_PNP_FOOTPRINT,	_T("Footprint"),wxLIST_FORMAT_LEFT, 120);
-//	InsertColumn(COL_OFFSET_X,	_T("X"),	wxLIST_FORMAT_LEFT, 70);
-//	InsertColumn(COL_OFFSET_Y,	_T("Y"),	wxLIST_FORMAT_LEFT, 70);
-//	InsertColumn(COL_ANGLE,		_T("Angle"),	wxLIST_FORMAT_LEFT, 70);
-//	InsertColumn(COL_COMP_COUNT,	_T("Count"),	wxLIST_FORMAT_LEFT, 50);
-//	InsertColumn(COL_ENABLED,	_T("To OUT"),	wxLIST_FORMAT_LEFT, 50);
-//	InsertColumn(COL_IS_NEW,	_T("New"),	wxLIST_FORMAT_LEFT, 50);
 }
 
-cPatternTable::~cPatternTable()
+PatternTable::~PatternTable()
 {
 }
 
-int cPatternTable::GetNumberRows()
+int PatternTable::GetNumberRows()
 {
-	if(NULL == m_pattern_data)
-		return 0;
-	return m_pattern_data->GetCount();
-}
-int cPatternTable::GetNumberCols()
-{
-	return COL_COUNT;
+	return m_pattern.size();
 }
 
-wxString cPatternTable::GetColLabelValue( int a_col )
+int PatternTable::GetNumberCols()
+{
+	return COUNT;
+}
+
+wxString PatternTable::GetColLabelValue( int col )
 {
 	wxString result = wxEmptyString;
-	switch (a_col)
+	switch (col)
 	{
 		case COL_PATTERN:
-			result = _T("Pattern");
+			result = "Pattern";
 			break;
 		case COL_PNP_PACKAGE:
-			result = _T("Package");
+			result = "Package";
 			break;
 		case COL_ADD_TO_NAME:
-			result = _T("Include to name");
+			result = "Include to name";
 			break;
 		case COL_PNP_FOOTPRINT:
-			result = _T("Footprint");
+			result = "Footprint";
 			break;
 		case COL_OFFSET_X:
-			result = _T("X");
+			result = "X";
 			break;
 		case COL_OFFSET_Y:
-			result = _T("Y");
+			result = "Y";
 			break;
 		case COL_ANGLE:
-			result = _T("Angle");
+			result = "Angle";
 			break;
 		case COL_COMP_COUNT:
-			result = _T("Count");
+			result = "Count";
 			break;
 		case COL_ENABLED:
-			result = _T("To OUT");
+			result = "To OUT";
 			break;
 		case COL_IS_NEW:
-			result = _T("New");
+			result = "New";
 			break;
 	}
 	return result;
 }
 
-// ----------------------------------------------------------------------------
-// Текст в ячейках
-// ----------------------------------------------------------------------------
-wxString cPatternTable::GetValue(int a_row, int a_col)
+wxString PatternTable::GetValue( int row, int col )
 {
-	if((NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
-		return wxEmptyString;
-
 	wxString result = wxEmptyString;
-	t_pattern_descr *data = m_pattern_data->Item(a_row);
-	switch (a_col)
+	Pattern& data = m_pattern[row];
+	switch (col)
 	{
 		case COL_PATTERN:
-			result = data->pattern;
+			result = data.pattern;
 			break;
 		case COL_PNP_PACKAGE:
-			result = data->pnp_package;
+			result = data.pnp_package;
 			break;
 		case COL_ADD_TO_NAME:
-			result = wxString::Format("%d", data->add_pack_to_name);
+			result = wxString::Format("%d", data.add_pack_to_name);
 			break;
 		case COL_PNP_FOOTPRINT:
-			result = data->pnp_footprint;
+			result = data.pnp_footprint;
 			break;
 		case COL_OFFSET_X:
-			result = wxString::Format("%f", data->offset_x);
+			result = wxString::Format("%f", data.offset_x);
 			break;
 		case COL_OFFSET_Y:
-			result = wxString::Format("%f", data->offset_y);
+			result = wxString::Format("%f", data.offset_y);
 			break;
 		case COL_ANGLE:
-			result = wxString::Format("%f", data->angle);
+			result = wxString::Format("%f", data.angle);
 			break;
 		case COL_COMP_COUNT:
-			result = wxString::Format("%d", data->comp_count);
+			result = wxString::Format("%d", data.comp_count);
 			break;
 		case COL_ENABLED:
-			result = wxString::Format("%d", data->enabled);
+			result = wxString::Format("%d", data.enabled);
 			break;
 		case COL_IS_NEW:
-			result = wxString::Format("%d", data->is_new);
+			result = wxString::Format("%d", data.is_new);
 			break;
 	}
 	return result;
 }
 
-void cPatternTable::SetValue(int a_row, int a_col, const wxString& a_value)
+void PatternTable::SetValue( int row, int col, const wxString& value )
 {
 	double tmp_double;
 	long tmp_long;
-	if((NULL == m_config) || (NULL == m_pattern_data) || (a_row >= (int)m_pattern_data->GetCount()))
-		return;
-	if(a_value.IsEmpty())
+
+	if (value.IsEmpty())
 		return;
 
-	t_pattern_descr *data = m_pattern_data->Item(a_row);
-	wxConfigPathChanger cfg_cd_to(m_config, "/"+data->pattern+"/");
-	switch(a_col)
+	Pattern& data = m_pattern[row];
+	switch (col)
 	{
 		case COL_PNP_PACKAGE:
-			data->pnp_package = a_value;
-			m_config->Write("pnp_package", a_value);
+			data.pnp_package = value;
 			break;
 		case COL_ADD_TO_NAME:
-			a_value.ToLong(&tmp_long);
-			data->add_pack_to_name = tmp_long;
-			m_config->Write("add_pack_to_name", a_value);
+			value.ToLong(&tmp_long);
+			data.add_pack_to_name = tmp_long;
 			break;
 		case COL_PNP_FOOTPRINT:
-			data->pnp_footprint = a_value;
-			m_config->Write("pnp_footprint", a_value);
+			data.pnp_footprint = value;
 			break;
 		case COL_OFFSET_X:
-			a_value.ToDouble(&tmp_double);
-			data->offset_x = tmp_double;
-			m_config->Write("offset_x", a_value);
+			value.ToDouble(&tmp_double);
+			data.offset_x = tmp_double;
 			break;
 		case COL_OFFSET_Y:
-			a_value.ToDouble(&tmp_double);
-			data->offset_y = tmp_double;
-			m_config->Write("offset_y", a_value);
+			value.ToDouble(&tmp_double);
+			data.offset_y = tmp_double;
 			break;
 		case COL_ANGLE:
-			a_value.ToDouble(&tmp_double);
-			data->angle = tmp_double;
-			m_config->Write("angle", a_value);
+			value.ToDouble(&tmp_double);
+			data.angle = tmp_double;
 			break;
 		case COL_ENABLED:
-			a_value.ToLong(&tmp_long);
-			data->enabled = tmp_long;
-			m_config->Write("enabled", a_value);
+			value.ToLong(&tmp_long);
+			data.enabled = tmp_long;
 			break;
 	}
-	m_main_data_controller->UpdateComponents();
+
+	//
+	// update project
+	//
+	m_project->UpdateComponents();
+	m_project->Notify(wxEVT_PROJECT_UPDATED);
+
+}
+
+void PatternTable::Sort(int col)
+{
+	switch (col)
+	{
+		case COL_PATTERN:
+			std::sort(m_pattern.begin(), m_pattern.end());
+			break;
+		case COL_PNP_PACKAGE:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByPnpPackage);
+			break;
+		case COL_ADD_TO_NAME:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByAddPackToName);
+			break;
+		case COL_PNP_FOOTPRINT:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByPnpFootprint);
+			break;
+		case COL_OFFSET_X:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByOffsetX);
+			break;
+		case COL_OFFSET_Y:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByOffsetY);
+			break;
+		case COL_ANGLE:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByAngle);
+			break;
+		case COL_COMP_COUNT:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByCompCount);
+			break;
+		case COL_ENABLED:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByEnabled);
+			break;
+		case COL_IS_NEW:
+			std::sort(m_pattern.begin(), m_pattern.end(), Pattern::ByIsNew);
+			break;
+	}
 }

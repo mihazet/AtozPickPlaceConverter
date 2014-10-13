@@ -1,8 +1,10 @@
 #include "fid_mark_table.h"
-#include "PnP_convMain.h"
-#include <wx/fileconf.h>
+#include "project.h"
 
-enum eFidMarkTable {
+#include <algorithm>
+
+enum FidMarkColumns
+{
 	COL_DESIGNATOR = 0,
 	COL_NAME,
 	COL_LAYER,
@@ -12,16 +14,17 @@ enum eFidMarkTable {
 	COL_LOCATION_X,
 	COL_LOCATION_Y,
 	COL_LOCAL_FOR,
-	COL_COUNT
+	COUNT,
 };
 
-cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks, PnP_convFrame *a_data_ctrl)
-	: wxGridTableBase()
-{
-	m_component_data = a_comps;
-	m_fid_mark_data = a_fidmarks;
-	m_main_data_controller = a_data_ctrl;
 
+
+FidMarkTable::FidMarkTable(Project *project)
+	: wxGridTableBase()
+	, m_project(project)
+	, m_fidmark(project->GetFidMark())
+	, m_component(project->GetComponent())
+{
 	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
 	SetAttrProvider (attrProvider);
 
@@ -50,71 +53,66 @@ cFidMarkTable::cFidMarkTable(tComponentDescr *a_comps, tFidMarkDescr *a_fidmarks
 	SetColAttr (choise_global_attr, COL_USE_GLOBAL);
 }
 
-cFidMarkTable::~cFidMarkTable()
+FidMarkTable::~FidMarkTable()
 {
 }
 
-int cFidMarkTable::GetNumberRows()
+int FidMarkTable::GetNumberRows()
 {
-	if(NULL == m_fid_mark_data)
-		return 0;
-	return m_fid_mark_data->GetCount();
+	return m_fidmark.size();
 }
-int cFidMarkTable::GetNumberCols()
+int FidMarkTable::GetNumberCols()
 {
-	return COL_COUNT;
+	return COUNT;
 }
 
-wxString cFidMarkTable::GetColLabelValue( int a_col )
+wxString FidMarkTable::GetColLabelValue( int col )
 {
 	wxString result = wxEmptyString;
-	switch (a_col)
+	switch (col)
 	{
 		case COL_DESIGNATOR:
-			result = _T("Designator");
+			result = "Designator";
 			break;
 		case COL_NAME:
-			result = _T("Name");
+			result = "Name";
 			break;
 		case COL_LAYER:
-			result = _T("Layer");
+			result = "Layer";
 			break;
 		case COL_SUBPCB_INDEX:
-			result = _T("SubPCB");
+			result = "SubPCB";
 			break;
 		case COL_USE_ON_SUBPCB:
-			result = _T("Use as (on subPCB)");
+			result = "Use as (on subPCB)";
 			break;
 		case COL_USE_GLOBAL:
-			result = _T("Use as (global)");
+			result = "Use as (global)";
 			break;
 		case COL_LOCATION_X:
-			result = _T("X");
+			result = "X";
 			break;
 		case COL_LOCATION_Y:
-			result = _T("Y");
+			result = "Y";
 			break;
 		case COL_LOCAL_FOR:
-			result = _T("Local for components");
+			result = "Local for components";
 			break;
 	}
 	return result;
 }
 
-// ----------------------------------------------------------------------------
-// Текст в ячейках
-// ----------------------------------------------------------------------------
-wxString cFidMarkTable::GetValue(int a_row, int a_col)
+wxString FidMarkTable::GetValue(int row, int col)
 {
-	if((NULL == m_component_data) || (NULL == m_fid_mark_data) || (a_row >= (int)m_fid_mark_data->GetCount()))
-		return wxEmptyString;
 
-	;
 	wxString result = wxEmptyString;
-	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
-	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
-//	size_t local_for_count;
-	switch (a_col)
+	FidMark& data_fidmark = m_fidmark[row];
+	//Component& data_comp = m_component[data_fidmark.component_index];
+	int comp_index = data_fidmark.component_index;
+	ComponentIt data_comp = std::find_if(m_component.begin(), m_component.end(), CompByIndex(comp_index));
+
+	//	size_t local_for_count;
+	switch (col)
 	{
 		case COL_DESIGNATOR:
 			result = data_comp->designator;
@@ -129,10 +127,10 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 			result = wxString::Format("%d", data_comp->pnp_subpcb_index);
 			break;
 		case COL_USE_ON_SUBPCB:
-			result = G_array_on_subpcb[data_fidmark->usage_type];
+			result = G_array_on_subpcb[data_fidmark.usage_type];
 			break;
 		case COL_USE_GLOBAL:
-			result = G_array_global[data_fidmark->usage_as_global];
+			result = G_array_global[data_fidmark.usage_as_global];
 			break;
 		case COL_LOCATION_X:
 			result = wxString::Format("%f", data_comp->pnp_location_x);
@@ -141,97 +139,131 @@ wxString cFidMarkTable::GetValue(int a_row, int a_col)
 			result = wxString::Format("%f", data_comp->pnp_location_y);
 			break;
 		case COL_LOCAL_FOR:
-//			local_for_count = data_fidmark->local_for_comps.GetCount();
-//			for(size_t index = 0; index < local_for_count; index++)
-//			{
-//				result += data_fidmark->local_for_comps[index] + ";";
-//			}
-//			result = result.BeforeLast(';');//FIXME не самый красивый метод убрать последний символ
+			//			local_for_count = data_fidmark->local_for_comps.GetCount();
+			//			for(size_t index = 0; index < local_for_count; index++)
+			//			{
+			//				result += data_fidmark->local_for_comps[index] + ";";
+			//			}
+			//			result = result.BeforeLast(';');//FIXME
 			break;
 	}
 	return result;
 }
 
-void cFidMarkTable::SetValue(int a_row, int a_col, const wxString& a_value)
+void FidMarkTable::SetValue(int row, int col, const wxString& value)
 {
-	if((NULL == m_main_data_controller) || (NULL == m_component_data) || (NULL == m_fid_mark_data) || (a_row >= (int)m_fid_mark_data->GetCount()))
-		return;
-	if((COL_LOCAL_FOR != a_col) && a_value.IsEmpty())
+
+	if ((COL_LOCAL_FOR != col) && value.IsEmpty())
 		return;
 
-	t_fid_mark_descr *data_fidmark = m_fid_mark_data->Item(a_row);
-	t_component_descr *data_comp = &m_component_data->Item(data_fidmark->component_index);
+	FidMark& data_fidmark = m_fidmark[row];
+	int comp_index = data_fidmark.component_index;
+	ComponentIt data_comp = std::find_if(m_component.begin(), m_component.end(), CompByIndex(comp_index));
+
 	long tmp_long;
-	bool single_board = m_main_data_controller->IsSingleBoard();
-//	wxString component;
-//	bool component_found = false;
-	switch(a_col)
+	bool single_board = m_project->IsSingleBoard();
+	//	wxString component;
+	//	bool component_found = false;
+	switch (col)
 	{
 		case COL_USE_ON_SUBPCB:
-			tmp_long = G_array_on_subpcb.Index(a_value, false);
-			if(wxNOT_FOUND == tmp_long)
+			tmp_long = G_array_on_subpcb.Index(value, false);
+			if (wxNOT_FOUND == tmp_long)
 				tmp_long = FID_MARK_USE_UNKNOWN;
-			if((FID_MARK_USE_FM1 == tmp_long)||(FID_MARK_USE_FM2 == tmp_long)||(FID_MARK_USE_FM3 == tmp_long))
+			if ((FID_MARK_USE_FM1 == tmp_long) || (FID_MARK_USE_FM2 == tmp_long) || (FID_MARK_USE_FM3 == tmp_long))
 			{
-				for(int index = m_fid_mark_data->GetCount()-1; index >= 0; index--) //проверка, есть ли уже репер с таким номером
+				for (int index = m_fidmark.size() - 1; index >= 0; index--)
 				{
-					t_fid_mark_descr *fm_descr = m_fid_mark_data->Item(index);
-					t_component_descr *fm_comp = &m_component_data->Item(fm_descr->component_index);
-					if((fm_comp->layer != data_comp->layer) || (fm_comp->pnp_subpcb_index != data_comp->pnp_subpcb_index))
+					FidMark& fm_descr = m_fidmark[index];
+					//Component& fm_comp = m_component[fm_descr.component_index];
+					int comp_index = fm_descr.component_index;
+					ComponentIt fm_comp = std::find_if(m_component.begin(), m_component.end(), CompByIndex(comp_index));
+
+					if ((fm_comp->layer != data_comp->layer) || (fm_comp->pnp_subpcb_index != data_comp->pnp_subpcb_index))
 						continue;
-					if(tmp_long == fm_descr->usage_type) //если есть, то меняем местами
+					if (tmp_long == fm_descr.usage_type)
 					{
-						fm_descr->usage_type = data_fidmark->usage_type;
-						if(single_board)
-							fm_descr->usage_as_global = data_fidmark->usage_as_global;
+						fm_descr.usage_type = data_fidmark.usage_type;
+						if (single_board)
+							fm_descr.usage_as_global = data_fidmark.usage_as_global;
 						break;
 					}
 				}
 			}
-			data_fidmark->usage_type = tmp_long;
-			if(single_board)
-				data_fidmark->usage_as_global = tmp_long;
+			data_fidmark.usage_type = tmp_long;
+			if (single_board)
+				data_fidmark.usage_as_global = tmp_long;
 			break;
 		case COL_USE_GLOBAL:
-			tmp_long = G_array_global.Index(a_value, false);
-			if(wxNOT_FOUND == tmp_long)
+			tmp_long = G_array_global.Index(value, false);
+			if (wxNOT_FOUND == tmp_long)
 				tmp_long = FID_MARK_USE_UNKNOWN;
-			if((FID_MARK_USE_FM1 == tmp_long)||(FID_MARK_USE_FM2 == tmp_long)||(FID_MARK_USE_FM3 == tmp_long))
+			if ((FID_MARK_USE_FM1 == tmp_long) || (FID_MARK_USE_FM2 == tmp_long) || (FID_MARK_USE_FM3 == tmp_long))
 			{
-				for(int index = m_fid_mark_data->GetCount()-1; index >= 0; index--) //проверка, есть ли уже репер с таким номером
+				for (int index = m_fidmark.size() - 1; index >= 0; index--)
 				{
-					t_fid_mark_descr *fm_descr = m_fid_mark_data->Item(index);
-					t_component_descr *fm_comp = &m_component_data->Item(fm_descr->component_index);
-					if(fm_comp->layer != data_comp->layer)
+					FidMark& fm_descr = m_fidmark[index];
+					int comp_index = fm_descr.component_index;
+					ComponentIt fm_comp = std::find_if(m_component.begin(), m_component.end(), CompByIndex(comp_index));
+
+					if (fm_comp->layer != data_comp->layer)
 						continue;
-					if(tmp_long == fm_descr->usage_as_global) //если есть, то меняем местами
+					if (tmp_long == fm_descr.usage_as_global)
 					{
-						fm_descr->usage_as_global = data_fidmark->usage_as_global;
-						if(single_board)
-							fm_descr->usage_type = data_fidmark->usage_type;
+						fm_descr.usage_as_global = data_fidmark.usage_as_global;
+						if (single_board)
+							fm_descr.usage_type = data_fidmark.usage_type;
 						break;
 					}
 				}
 			}
-			data_fidmark->usage_as_global = (wxNOT_FOUND == tmp_long)?FID_MARK_USE_UNKNOWN:tmp_long;
-			if(single_board)
-				data_fidmark->usage_type = tmp_long;
+			data_fidmark.usage_as_global = (wxNOT_FOUND == tmp_long) ? FID_MARK_USE_UNKNOWN : tmp_long;
+			if (single_board)
+				data_fidmark.usage_type = tmp_long;
 			break;
 		case COL_LOCAL_FOR:
-//			if(a_value.IsEmpty())
-//				break;
-//			component = a_value.BeforeFirst(';');
-//			component = component.Trim(true).Trim(false);
-//			for(size_t index = m_component_data->GetCount()-1; index >= 0; index--)
-//			{
-//				if(m_component_data->Item(index)->designator == component)
-//				{
-//					component_found = true;
-//					break;
-//				}
-//			}
+			//			if(a_value.IsEmpty())
+			//				break;
+			//			component = a_value.BeforeFirst(';');
+			//			component = component.Trim(true).Trim(false);
+			//			for(size_t index = m_component_data->GetCount()-1; index >= 0; index--)
+			//			{
+			//				if(m_component_data->Item(index)->designator == component)
+			//				{
+			//					component_found = true;
+			//					break;
+			//				}
+			//			}
 			break;
 	}
-	m_main_data_controller->SaveProjectInfo();
-	m_main_data_controller->Refresh();
+	//m_main_data_controller->SaveProjectInfo();
+	//m_main_data_controller->Refresh();
+	m_project->Notify(wxEVT_PROJECT_UPDATED);
+}
+
+void FidMarkTable::Sort(int col)
+{
+	switch (col)
+	{
+		case COL_DESIGNATOR:
+			break;
+		case COL_NAME:
+			break;
+		case COL_LAYER:
+			break;
+		case COL_SUBPCB_INDEX:
+			break;
+		case COL_USE_ON_SUBPCB:
+			std::sort(m_fidmark.begin(), m_fidmark.end(), FidMark::ByUsageType);
+			break;
+		case COL_USE_GLOBAL:
+			std::sort(m_fidmark.begin(), m_fidmark.end(), FidMark::ByUsageAsGlobal);
+			break;
+		case COL_LOCATION_X:
+			break;
+		case COL_LOCATION_Y:
+			break;
+		case COL_LOCAL_FOR:
+			break;
+	}
 }

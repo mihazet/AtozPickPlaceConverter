@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Data ID="{03F4E8E5-87E1-40A4-B0D3-F11E303B75AF}">
+<Templates>
+<Template Name="default" Size="42000,92799,1600" ID="{6D43C929-BB26-4E96-899C-7AEE66883F9B}">
+<TopSide VariantsOnly="no">
+<Fiducials LastFidIsBadmark="no">
+<Fiducial Ref="1" CadRef="FM1" Position="30500,88750" Name="FM Circle 1.0"/>
+<Fiducial Ref="2" CadRef="FM2" Position="10000,10250" Name="FM Circle 1.0"/>
+</Fiducials>
+<Components>
+<Component Ref="C2" Name="C0805 0.1uF" Position="16699,86800" Angle="18000"/>
+<Component Ref="C3" Name="C0805 0.022uF" Position="10699,85800" Angle="0"/>
+<Component Ref="C4" Name="C0805 0.1uF" Position="17300,83899" Angle="27000"/>
+<Component Ref="C5" Name="C0805 1000pF" Position="14300,83199" Angle="0"/>
+<Component Ref="C6" Name="C0805 0.1uF" Position="12150,78149" Angle="9000"/>
+<Component Ref="C7" Name="C0805 0.1uF" Position="14300,73500" Angle="27000"/>
+<Component Ref="C8" Name="C0805 0.1uF" Position="18399,74199" Angle="0"/>
+<Component Ref="C9" Name="C0805 1000pF" Position="21600,74199" Angle="18000"/>
+<Component Ref="C10" Name="C0805 0.022uF" Position="24100,72050" Angle="9000"/>
+<Component Ref="C11" Name="C0805 0.1uF" Position="27800,74699" Angle="9000"/>
+<Component Ref="C12" Name="C0805 0.1uF" Position="32949,78250" Angle="9000"/>
+<Component Ref="C13" Name="C0805 0.1uF" Position="31000,84449" Angle="9000"/>
+<Component Ref="C14" Name="C0805 0.01uF" Position="25500,83149" Angle="27000"/>
+<Component Ref="C15" Name="C0805 0.01uF" Position="23699,78699" Angle="9000"/>
+<Component Ref="C16" Name="C0805 0.022uF" Position="30699,65750" Angle="0"/>
+<Component Ref="C17" Name="C0805 0.022uF" Position="33949,65199" Angle="0"/>
+<Component Ref="C18" Name="C0805 0.1uF" Position="36000,56350" Angle="0"/>
+<Component Ref="C19" Name="C0805 0.1uF" Position="38199,56350" Angle="0"/>
+<Component Ref="C20" Name="C0805 0.1uF" Position="32199,49149" Angle="27000"/>
+<Component Ref="C21" Name="C0805 0.1uF" Position="23500,51149" Angle="0"/>
+<Component Ref="C22" Name="C0805 0.1uF" Position="17399,27449" Angle="0"/>
+<Component Ref="C23" Name="C0805 0.1uF" Position="33300,22100" Angle="9000"/>
+<Component Ref="C25" Name="C0805 0.1uF" Position="27149,17800" Angle="0"/>
+<Component Ref="C26" Name="C0805 0.1uF" Position="21800,14449" Angle="9000"/>
+<Component Ref="C27" Name="C0805 47pF" Position="23000,14399" Angle="9000"/>
+<Component Ref="C28" Name="C0805 470pF" Position="16899,16199" Angle="9000"/>
+<Component Ref="C29" Name="C0805 0.047uF" Position="17699,13800" Angle="0"/>
+<Component Ref="C30" Name="C0805 0.1uF" Position="24649,58850" Angle="18000"/>
+<Component Ref="C31" Name="C1206 1uF" Position="37300,58500" Angle="18000"/>
+<Component Ref="C32" Name="C1206 1uF" Position="19800,43100" Angle="27000"/>
+<Component Ref="C33" Name="C1206 1uF" Position="21699,37350" Angle="18000"/>
+<Component Ref="C34" Name="C1206 1uF" Position="16750,31449" Angle="0"/>
+<Component Ref="C35" Name="C1206 1uF" Position="16750,29350" Angle="0"/>
+<Component Ref="C36" Name="C1206 1uF" Position="38500,31199" Angle="0"/>
+<Component Ref="C38" Name="C1206 1uF" Position="38550,35800" Angle="0"/>
+<Component Ref="D1" Name="MAX4472" Position="17850,78699" Angle="18000"/>
+<Component Ref="D2" Name="TS5A3166" Position="34149,34649" Angle="9000"/>
+<Component Ref="D4" Name="MCP4011 10k" Position="28449,83149" Angle="18000"/>
+<Component Ref="D5" Name="TS5A23159" Position="10150,3250" Angle="0"/>
+<Component Ref="D6" Name="TS5A23159" Position="15099,3250" Angle="0"/>
+<Component Ref="D7" Name="MCP4011 10k" Position="30399,76050" Angle="18000"/>
+<Component Ref="D8" Name="TPS79730" Position="21100,39600" Angle="9000"/>
+<Component Ref="D9" Name="TPS79730" Position="39149,33550" Angle="27000"/>
+<Component Ref="D10" Name="TRC105" Position="23649,24149" Angle="0"/>
+<Component Ref="D11" Name="RF3608D" Position="14000,23500" Angle="18000"/>
+<Component Ref="DD1" Name="STM32L151" Position="28850,54500" Angle="9000"/>
+<Component Ref="L1" Name="L1210 10uH" Position="38699,64750" Angle="27000"/>
+<Component Ref="L3" Name="L0603 22nH" Position="23399,17250" Angle="9000"/>
+<Component Ref="L4" Name="L0603 22nH" Position="22000,17250" Angle="27000"/>
+<Component Ref="L5" Name="L0603 BLM 300" Position="18649,19199" Angle="9000"/>
+<Component Ref="L6" Name="L0603 33nH" Position="17149,20800" Angle="9000"/>
+<Component Ref="L7" Name="L0603 33nH" Position="18899,22250" Angle="27000"/>
+<Component Ref="L8" Name="L0603 220nH" Position="11599,20449" Angle="0"/>
+<Component Ref="R1" Name="R0805 1M" Position="9699,82550" Angle="27000"/>
+<Component Ref="R2" Name="R0805 1M" Position="12449,84500" Angle="9000"/>
+<Component Ref="R3" Name="R0805 330k" Position="15500,85000" Angle="9000"/>
+<Component Ref="R4" Name="R0805 330k" Position="20649,85000" Angle="18000"/>
+<Component Ref="R5" Name="R0805 100k" Position="19750,83199" Angle="18000"/>
+<Component Ref="R6" Name="R0805 7.5M" Position="21899,83199" Angle="0"/>
+<Component Ref="R7" Name="R0805 7.5M" Position="23699,81899" Angle="27000"/>
+<Component Ref="R8" Name="R0805 15k" Position="25500,79750" Angle="9000"/>
+<Component Ref="R9" Name="R0805 30k" Position="32949,74949" Angle="9000"/>
+<Component Ref="R10" Name="R0805 1k" Position="32949,72800" Angle="27000"/>
+<Component Ref="R11" Name="R0805 330k" Position="26500,72899" Angle="18000"/>
+<Component Ref="R12" Name="R0805 1M" Position="24100,74199" Angle="27000"/>
+<Component Ref="R13" Name="R0805 330k" Position="21600,72399" Angle="0"/>
+<Component Ref="R14" Name="R0805 3k" Position="17149,71300" Angle="27000"/>
+<Component Ref="R15" Name="R0805 1M" Position="10349,79350" Angle="9000"/>
+<Component Ref="R16" Name="R0805 3k" Position="33300,68300" Angle="9000"/>
+<Component Ref="R17" Name="R0805 10k" Position="30899,47350" Angle="18000"/>
+<Component Ref="R18" Name="R0805 7.5M" Position="33899,37250" Angle="18000"/>
+<Component Ref="R19" Name="R0805 30k" Position="22199,35350" Angle="18000"/>
+<Component Ref="R20" Name="R0805 6.8k" Position="27149,16100" Angle="0"/>
+<Component Ref="R21" Name="R0805 1" Position="18600,16199" Angle="9000"/>
+<Component Ref="R22" Name="R0805 1M" Position="23949,2850" Angle="9000"/>
+<Component Ref="R23" Name="R0805 1M" Position="25750,2850" Angle="9000"/>
+<Component Ref="ZQ1" Name="XTL1020" Position="30199,24449" Angle="9000"/>
+</Components>
+<HeightRef/>
+</TopSide>
+<BottomSide VariantsOnly="no">
+<Fiducials LastFidIsBadmark="no"/>
+<Components/>
+<HeightRef/>
+</BottomSide>
+<Variants/>
+</Template>
+</Templates>
+<Product>
+<General Size="42000,92800,1600" ActiveSide="Top" PcbType="Single" AutoSideDetect="no"/>
+<TopSide Barcode="">
+<Orientations>
+<PP050 ProductOrientation="2"/>
+</Orientations>
+<Fiducials BadmarkSupport="no">
+<PP050 UseGlobalRefs="yes" CheckLocalRefs="yes" HighAccuracy="yes"/>
+</Fiducials>
+</TopSide>
+<BottomSide Barcode="">
+<Orientations>
+<PP050 ProductOrientation="1"/>
+</Orientations>
+<Fiducials BadmarkSupport="no">
+<PP050 UseGlobalRefs="yes" CheckLocalRefs="yes" HighAccuracy="yes"/>
+</Fiducials>
+</BottomSide>
+<Panels>
+<Panel Ref="1" Template="default" Position="0,0" Angle="0"/>
+</Panels>
+</Product>
+</Data>
