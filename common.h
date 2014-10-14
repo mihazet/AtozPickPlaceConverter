@@ -8,9 +8,9 @@
 #define LAYER_BOT_NAME		("B")
 #define FIDMARD_DES_PREF	("FM")
 
-// --- implementation in 'utils.cpp'
-//
-int compare( const wxChar* str1, const wxChar* str2, int NbMax = 32735);
+// --- Алфавитно-цифровое сравнение двух строк
+// implementation in 'utils.cpp'
+bool compare_alphanum( const wxString& str1, const wxString& str2);
 
 // ---- common types
 
@@ -51,7 +51,7 @@ struct Component
 
 	/// сортировка по умолчанию по обозначению компонента (designator)
 	//bool operator < (const Component& comp) const { return designator < comp.designator; }
-	bool operator < (const Component& comp) const { return compare(designator, comp.designator) < 0; }
+	bool operator < (const Component& comp) const { return compare_alphanum(designator, comp.designator); }
 	/// набор сортировок по остальным полям
 	static bool ByCadName(const Component& arg1, const Component& arg2) {	return arg1.cad_name < arg2.cad_name; }
 	static bool ByCadPattern(const Component& arg1, const Component& arg2) { return arg1.cad_pattern < arg2.cad_pattern; }
