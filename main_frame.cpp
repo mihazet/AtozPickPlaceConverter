@@ -160,7 +160,7 @@ void MainFrame::OnFileQuit(wxCommandEvent &event)
 
 void MainFrame::OnHelpAbout(wxCommandEvent& event)
 {
-	wxMessageBox("PickPlaceConverter Version 1.0", "About");
+	wxMessageBox("PickPlaceConverter Version 1.0\nBuild at "__DATE__" "__TIME__, "About");
 }
 
 void MainFrame::OnSashDrag(wxSashEvent& event)
