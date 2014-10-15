@@ -77,6 +77,8 @@
 		<Unit filename="main_frame.h" />
 		<Unit filename="pattern_table.cpp" />
 		<Unit filename="pattern_table.h" />
+		<Unit filename="pcb_canvas.cpp" />
+		<Unit filename="pcb_canvas.h" />
 		<Unit filename="project.cpp" />
 		<Unit filename="project.h" />
 		<Unit filename="resource.rc">
