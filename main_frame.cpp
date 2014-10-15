@@ -380,6 +380,8 @@ void MainFrame::OnProjectLoaded(wxCommandEvent& event)
 
 	BuildProjectPG();
 
+	m_canvas->Refresh();
+
 	// Update frame title
 	SetTitle(wxFileNameFromPath(m_project->Filename()) + " - " + APP_TITLE);
 	wxLogMessage("Done.");
