@@ -11,7 +11,13 @@ public:
 	PcbCanvas(wxWindow *parent, wxWindowID id, Project *project);
 
 private:
+	void OnPaint(wxPaintEvent& event);
+	void OnSize(wxSizeEvent& event);
+
+
 	Project *m_project;
+
+	DECLARE_EVENT_TABLE()
 };
 
 #endif

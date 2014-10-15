@@ -17,6 +17,7 @@
 #include <wx/laywin.h>
 
 class Project;
+class PcbCanvas;
 
 class MainFrame : public wxFrame
 {
@@ -63,6 +64,7 @@ private:
 	wxGrid *m_typeGrid;
 	wxGrid *m_patternGrid;
 	wxGrid *m_fidMarkGrid;
+	PcbCanvas *m_canvas;
 	wxTextCtrl *m_logText;
 
 	wxSashLayoutWindow *m_bottomLayoutWin;

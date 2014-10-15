@@ -9,6 +9,7 @@
 
 #include "main_frame.h"
 #include "project.h"
+#include "pcb_canvas.h"
 
 #include "comp_table.h"
 #include "comp_type_table.h"
@@ -58,6 +59,9 @@ MainFrame::MainFrame()
 {
 	CreateMenu();
 
+	m_project = new Project();
+	PushEventHandler(m_project);
+
 	// window right
 	m_rightLayoutWin = new wxSashLayoutWindow(this, ID_WINDOW_RIGHT);
 	m_rightLayoutWin->SetDefaultSize(wxSize(200, 1000));
@@ -78,10 +82,12 @@ MainFrame::MainFrame()
 	m_typeGrid = new wxGrid(m_book, ID_TYPE_GRID);
 	m_patternGrid = new wxGrid(m_book, ID_PATTERN_GRID);
 	m_fidMarkGrid = new wxGrid(m_book, ID_FIDMARK_GRID);
+	m_canvas = new PcbCanvas(m_book, wxID_ANY, m_project);
 	m_book->AddPage(m_compGrid, "Components", true);
 	m_book->AddPage(m_typeGrid, "Component Types");
 	m_book->AddPage(m_patternGrid, "Patterns");
 	m_book->AddPage(m_fidMarkGrid, "Fiducials");
+	m_book->AddPage(m_canvas, "PCB View");
 	m_logText = new wxTextCtrl(m_bottomLayoutWin, wxID_ANY, "",
 							   wxDefaultPosition, wxDefaultSize,
 							   wxTE_READONLY | wxTE_MULTILINE);
@@ -90,9 +96,6 @@ MainFrame::MainFrame()
 
 	SetSize(wxSize(1000, 800));
 	Center();
-
-	m_project = new Project();
-	PushEventHandler(m_project);
 }
 
 MainFrame::~MainFrame()
