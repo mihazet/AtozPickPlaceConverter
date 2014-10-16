@@ -394,6 +394,9 @@ void MainFrame::OnProjectUpdated(wxCommandEvent& event)
 	UpdateTypeGrid();
 	UpdatePatternGrid();
 	UpdateFidMarkGrid();
+
+	m_canvas->Refresh();
+
 	wxLogMessage("Done.");
 }
 
