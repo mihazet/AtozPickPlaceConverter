@@ -117,7 +117,7 @@
 
 1402775758 d:\wx\wxmsw-3.0.1\include\wx\compiler.h
 
-1410954987 d:\wx\wxmsw-3.0.1\lib\gcc_lib\mswu\wx\setup.h
+1410954988 d:\wx\wxmsw-3.0.1\lib\gcc_lib\mswu\wx\setup.h
 
 1402775758 d:\wx\wxmsw-3.0.1\include\wx\msw\wince\libraries.h
 
@@ -4377,67 +4377,67 @@
 	<wx/regex.h>
 	<wx/numformatter.h>
 
-1413292092 source:d:\projects\atozpickplaceconverter\comp_table.cpp
+1413220139 source:d:\projects\atozpickplaceconverter\comp_table.cpp
 	"comp_table.h"
 	"project.h"
 	<algorithm>
 
-1413292092 d:\projects\atozpickplaceconverter\comp_table.h
+1413220139 d:\projects\atozpickplaceconverter\comp_table.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413292674 d:\projects\atozpickplaceconverter\common.h
+1413389204 d:\projects\atozpickplaceconverter\common.h
 	<wx/wx.h>
 	<vector>
 
-1413292092 d:\projects\atozpickplaceconverter\project.h
+1413220139 d:\projects\atozpickplaceconverter\project.h
 	<wx/wx.h>
 	<vector>
 	"common.h"
 
-1413292092 source:d:\projects\atozpickplaceconverter\comp_type_table.cpp
+1413220139 source:d:\projects\atozpickplaceconverter\comp_type_table.cpp
 	"comp_type_table.h"
 	"project.h"
 	<algorithm>
 
-1413292092 d:\projects\atozpickplaceconverter\comp_type_table.h
+1413220139 d:\projects\atozpickplaceconverter\comp_type_table.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413292092 source:d:\projects\atozpickplaceconverter\fid_mark_table.cpp
+1413220139 source:d:\projects\atozpickplaceconverter\fid_mark_table.cpp
 	"fid_mark_table.h"
 	"project.h"
 	<algorithm>
 
-1413292092 d:\projects\atozpickplaceconverter\fid_mark_table.h
+1413220139 d:\projects\atozpickplaceconverter\fid_mark_table.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413292674 source:d:\projects\atozpickplaceconverter\main.cpp
+1413220488 source:d:\projects\atozpickplaceconverter\main.cpp
 	<wx/wx.h>
 	"main_frame.h"
 
-1413374507 d:\projects\atozpickplaceconverter\main_frame.h
+1413389204 d:\projects\atozpickplaceconverter\main_frame.h
 	<wx/wx.h>
 	<wx/grid.h>
 	<wx/propgrid/propgrid.h>
 	<wx/notebook.h>
 	<wx/laywin.h>
 
-1413292092 source:d:\projects\atozpickplaceconverter\pattern_table.cpp
+1413220139 source:d:\projects\atozpickplaceconverter\pattern_table.cpp
 	"pattern_table.h"
 	"project.h"
 	<algorithm>
 
-1413292092 d:\projects\atozpickplaceconverter\pattern_table.h
+1413220139 d:\projects\atozpickplaceconverter\pattern_table.h
 	<wx/wx.h>
 	<wx/grid.h>
 	"common.h"
 
-1413292674 source:d:\projects\atozpickplaceconverter\project.cpp
+1413389204 source:d:\projects\atozpickplaceconverter\project.cpp
 	"project.h"
 	"utils.h"
 	<wx/filename.h>
@@ -4447,16 +4447,16 @@
 	<wx/textfile.h>
 	<algorithm>
 
-1413292092 d:\projects\atozpickplaceconverter\utils.h
+1413220139 d:\projects\atozpickplaceconverter\utils.h
 
-1413292092 source:d:\projects\atozpickplaceconverter\resource.rc
+1412273244 source:d:\projects\atozpickplaceconverter\resource.rc
 	"wx/msw/wx.rc"
 
-1413292674 source:d:\projects\atozpickplaceconverter\utils.cpp
+1413389204 source:d:\projects\atozpickplaceconverter\utils.cpp
 	<wx/regex.h>
 	<wx/numformatter.h>
 
-1413460657 source:d:\projects\atozpickplaceconverter\main_frame.cpp
+1413480624 source:d:\projects\atozpickplaceconverter\main_frame.cpp
 	"main_frame.h"
 	"project.h"
 	"pcb_canvas.h"
@@ -4465,10 +4465,10 @@
 	"pattern_table.h"
 	"fid_mark_table.h"
 
-1413374700 d:\projects\atozpickplaceconverter\pcb_canvas.h
+1413480215 d:\projects\atozpickplaceconverter\pcb_canvas.h
 	<wx/wx.h>
 
-1413459171 source:d:\projects\atozpickplaceconverter\pcb_canvas.cpp
+1413480936 source:d:\projects\atozpickplaceconverter\pcb_canvas.cpp
 	"pcb_canvas.h"
 	"project.h"
 

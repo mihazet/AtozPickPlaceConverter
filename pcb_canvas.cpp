@@ -12,6 +12,12 @@ PcbCanvas::PcbCanvas(wxWindow *parent, wxWindowID id, Project *project)
 {
 }
 
+void PcbCanvas::DrawComponent(wxDC& dc, int x, int y)
+{
+	dc.DrawLine(x - 1500, y, x + 1500, y);
+	dc.DrawLine(x, y - 1500, x, y + 1500);
+}
+
 void PcbCanvas::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
@@ -57,21 +63,27 @@ void PcbCanvas::OnPaint(wxPaintEvent& event)
 
 	// рисуем общую плату
 	dc.SetPen(*wxBLACK_PEN);
-	dc.SetBrush(wxBrush(wxColour("FOREST GREEN")));
+	dc.SetBrush(wxBrush(wxColour("DARK GREEN")));
 	dc.DrawRectangle(offset_x_pcb, offset_y_pcb, w_pcb, h_pcb);
 
 	// рисуем входящие платы
-	if (!m_project->IsSingleBoard())
+	dc.SetBrush(wxBrush(wxColour("FOREST GREEN")));
+	for (size_t i = 0; i < m_project->Pcbs().size(); i++)
 	{
-		dc.SetBrush(wxBrush(wxColour("GREEN")));
-		for (size_t i = 0; i < m_project->Pcbs().size(); i++)
-		{
-			int x = m_project->Pcbs()[i].offset_x * 1000;
-			int y = m_project->Pcbs()[i].offset_y * 1000;
-			int w = m_project->Pcbs()[i].size_x * 1000;
-			int h = m_project->Pcbs()[i].size_y * 1000;
-			dc.DrawRectangle(x, y, w, h);
-		}
+		int x = m_project->Pcbs()[i].offset_x * 1000;
+		int y = m_project->Pcbs()[i].offset_y * 1000;
+		int w = m_project->Pcbs()[i].size_x * 1000;
+		int h = m_project->Pcbs()[i].size_y * 1000;
+		dc.DrawRectangle(x, y, w, h);
+	}
+
+	// рисуем компоненты
+	dc.SetPen(wxPen(wxColour("YELLOW")));
+	for (size_t i = 0; i < m_project->GetComponent().size(); i++)
+	{
+		int x = m_project->GetComponent()[i].pnp_location_x * 1000;
+		int y = m_project->GetComponent()[i].pnp_location_y * 1000;
+		DrawComponent(dc, x, y);
 	}
 
 }

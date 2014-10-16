@@ -11,6 +11,8 @@ public:
 	PcbCanvas(wxWindow *parent, wxWindowID id, Project *project);
 
 private:
+	void DrawComponent(wxDC& dc, int x, int y);
+
 	void OnPaint(wxPaintEvent& event);
 	void OnSize(wxSizeEvent& event);
 

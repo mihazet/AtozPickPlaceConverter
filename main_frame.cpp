@@ -267,60 +267,63 @@ void MainFrame::OnPropertyGridChanged(wxPropertyGridEvent& event)
 	}
 	else if ( prop_name.StartsWith("SubPcb ") )
 	{
-		prop_name = prop_name.AfterFirst('.');
-		wxPGProperty* category = property->GetParent();
-		if (NULL == category)
-			return;
-		wxString category_name = category->GetName();
-		wxString subpcb_index_str = category_name.AfterLast(' ');
-		wxString subpcb_name;
-		long subpcb_index;
-		subpcb_index_str.ToLong(&subpcb_index);
-		Subpcb& subpcb = m_project->Pcbs()[subpcb_index];
+		do
+		{
 
-		if (prop_name == "PCB name")
-		{
-			subpcb.subpcb_name = value.As<wxString>();
-		}
-		else if (prop_name == "enabled")
-		{
-			subpcb.enabled = value.As<bool>();
-		}
-		else if ((prop_name == "size_x") || (prop_name == "size_y") || (prop_name == "offset_x") || (prop_name == "offset_y"))
-		{
-			subpcb.size_x   = category->GetPropertyByName("size_x")->GetValue().GetDouble();
-			subpcb.size_y   = category->GetPropertyByName("size_y")->GetValue().GetDouble();
-			subpcb.offset_x = category->GetPropertyByName("offset_x")->GetValue().GetDouble();
-			subpcb.offset_y = category->GetPropertyByName("offset_y")->GetValue().GetDouble();
-			subpcb.ref_point1_x = subpcb.offset_x;
-			subpcb.ref_point1_y = subpcb.offset_y;
-			subpcb.ref_point2_x = subpcb.offset_x + subpcb.size_x;
-			subpcb.ref_point2_y = subpcb.offset_y + subpcb.size_y;
-			m_project->UpdatePCBFullSize();
-		}
-		else
-		{
-			subpcb.ref_point1_x = category->GetPropertyByName("ref_point1_x")->GetValue().GetDouble();
-			subpcb.ref_point1_y = category->GetPropertyByName("ref_point1_y")->GetValue().GetDouble();
-			subpcb.ref_point2_x = category->GetPropertyByName("ref_point2_x")->GetValue().GetDouble();
-			subpcb.ref_point2_y = category->GetPropertyByName("ref_point2_y")->GetValue().GetDouble();
-			if ((subpcb.ref_point2_x < subpcb.ref_point1_x) || (subpcb.ref_point2_y < subpcb.ref_point1_y))
+			prop_name = prop_name.AfterFirst('.');
+			wxPGProperty* category = property->GetParent();
+			if (NULL == category)
+				return;
+			wxString category_name = category->GetName();
+			wxString subpcb_index_str = category_name.AfterLast(' ');
+			wxString subpcb_name;
+			long subpcb_index;
+			subpcb_index_str.ToLong(&subpcb_index);
+			Subpcb& subpcb = m_project->Pcbs()[subpcb_index];
+
+			if (prop_name == "PCB name")
 			{
-				wxMessageBox("Point 1 must be left-bottom and point 2 - right-top!", "Incorrect input");
+				subpcb.subpcb_name = value.As<wxString>();
+			}
+			else if (prop_name == "enabled")
+			{
+				subpcb.enabled = value.As<bool>();
+			}
+			else if ((prop_name == "size_x") || (prop_name == "size_y") || (prop_name == "offset_x") || (prop_name == "offset_y"))
+			{
+				subpcb.size_x   = category->GetPropertyByName("size_x")->GetValue().GetDouble();
+				subpcb.size_y   = category->GetPropertyByName("size_y")->GetValue().GetDouble();
+				subpcb.offset_x = category->GetPropertyByName("offset_x")->GetValue().GetDouble();
+				subpcb.offset_y = category->GetPropertyByName("offset_y")->GetValue().GetDouble();
 				subpcb.ref_point1_x = subpcb.offset_x;
 				subpcb.ref_point1_y = subpcb.offset_y;
 				subpcb.ref_point2_x = subpcb.offset_x + subpcb.size_x;
 				subpcb.ref_point2_y = subpcb.offset_y + subpcb.size_y;
-				m_project->Notify(wxEVT_PROJECT_UPDATED);
-				return;
 			}
-			subpcb.size_x = subpcb.ref_point2_x - subpcb.ref_point1_x;
-			subpcb.size_y = subpcb.ref_point2_y - subpcb.ref_point1_y;
-			subpcb.offset_x = subpcb.ref_point1_x;
-			subpcb.offset_y = subpcb.ref_point1_y;
-			m_project->UpdatePCBFullSize();
+			else
+			{
+				subpcb.ref_point1_x = category->GetPropertyByName("ref_point1_x")->GetValue().GetDouble();
+				subpcb.ref_point1_y = category->GetPropertyByName("ref_point1_y")->GetValue().GetDouble();
+				subpcb.ref_point2_x = category->GetPropertyByName("ref_point2_x")->GetValue().GetDouble();
+				subpcb.ref_point2_y = category->GetPropertyByName("ref_point2_y")->GetValue().GetDouble();
+				if ((subpcb.ref_point2_x < subpcb.ref_point1_x) || (subpcb.ref_point2_y < subpcb.ref_point1_y))
+				{
+					wxMessageBox("Point 1 must be left-bottom and point 2 - right-top!", "Incorrect input");
+					subpcb.ref_point1_x = subpcb.offset_x;
+					subpcb.ref_point1_y = subpcb.offset_y;
+					subpcb.ref_point2_x = subpcb.offset_x + subpcb.size_x;
+					subpcb.ref_point2_y = subpcb.offset_y + subpcb.size_y;
+					break;
+				}
+				subpcb.size_x = subpcb.ref_point2_x - subpcb.ref_point1_x;
+				subpcb.size_y = subpcb.ref_point2_y - subpcb.ref_point1_y;
+				subpcb.offset_x = subpcb.ref_point1_x;
+				subpcb.offset_y = subpcb.ref_point1_y;
+			}
 		}
+		while (false);
 	}
+	m_project->UpdatePCBFullSize();
 	m_project->UpdateComponents();
 	m_project->Notify(wxEVT_PROJECT_UPDATED);
 }
