@@ -911,6 +911,7 @@ void Project::LoadProjectInfo(wxString filename)
 {
 	if (filename.IsEmpty())
 		return;
+	wxString filename_only = wxFileNameFromPath(filename);
 	wxString filename_pref = ("Pick Place for ");
 	wxString proj_name = wxFileName(filename).GetName();
 	if (proj_name.StartsWith(filename_pref))
@@ -918,9 +919,40 @@ void Project::LoadProjectInfo(wxString filename)
 		proj_name = proj_name.Mid(filename_pref.Len());
 	}
 
+	// поиск этого проекта в конфиге
+	if (!m_projectsCfg->HasGroup(filename_only))
+	{
+		// если точно такого проекта нет,
+		// ищем похожие ...
+		wxConfigPathChanger cfg_cd_to(m_projectsCfg, "/");
+		long index;
+		wxString group;
+		wxArrayString foundProjects;
+
+		bool cont = m_projectsCfg->GetFirstGroup(group, index);
+		while (cont)
+		{
+
+			// ищем совпадения в имени по первой половине
+			int n = proj_name.Length() / 2;
+			if (!wxStrncmp_String<wxString>(group, proj_name, n))
+			{
+				foundProjects.Add(group);
+			}
+			cont = m_projectsCfg->GetNextGroup(group, index);
+		}
+
+		if (foundProjects.GetCount() > 0)
+		{
+			wxString proj = wxGetSingleChoice("Select a project to copy info:", "Load info", foundProjects);
+			if (!proj.IsEmpty())
+				filename_only = proj;
+		}
+	}
+
 	m_pcbs.clear();
 
-	wxConfigPathChanger cfg_cd_to(m_projectsCfg, "/" + wxFileNameFromPath(filename) + "/");
+	wxConfigPathChanger cfg_cd_to(m_projectsCfg, "/" + filename_only + "/");
 	m_project_name = m_projectsCfg->Read("project_name", proj_name);
 	m_height = m_projectsCfg->ReadDouble("pcb_height", m_height);
 	m_angle = m_projectsCfg->ReadLong("pnp_angle", m_angle);

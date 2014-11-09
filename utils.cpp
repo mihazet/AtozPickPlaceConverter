@@ -180,46 +180,31 @@ wxString ParseNominal(wxString a_designator, wxString a_value)
 }
 
 // Алфавитно-цифровое сравнение двух строк
-// скопировано из проекта KiCad
-int compare( const wxChar* str1, const wxChar* str2, int NbMax )
+int compare_alphanum( const wxString& str1, const wxString& str2)
 {
-	int i;
-	int nb1 = 0, nb2 = 0;
+	long nb1 = 0;
+	long nb2 = 0;
+	wxString s1;
+	wxString s2;
 
-	if ( (str1 == NULL) || (str2 == NULL) )
-		return 0;
+	wxRegEx regEx("([^0-9]+)([0-9]+)");
 
-	for ( i = 0; i < NbMax; i++ )
+	if (regEx.Matches(str1))
 	{
-		if ( isdigit( *str1 ) && isdigit( *str2 ) ) /* nombres en jeu */
-		{
-			nb1 = 0; nb2 = 0;
-			while ( isdigit( *str1 ) )
-			{
-				nb1 = nb1 * 10 + *str1 - '0'; str1++;
-			}
-
-			while ( isdigit( *str2 ) )
-			{
-				nb2 = nb2 * 10 + *str2 - '0'; str2++;
-			}
-
-			if ( nb1 < nb2 )
-				return -1;
-			if ( nb1 > nb2 )
-				return 1;
-		}
-
-		if ( *str1 < *str2 )
-			return -1;
-		if ( *str1 > *str2 )
-			return 1;
-		if ( (*str1 == 0 ) && ( *str2 == 0 ) )
-			return 0;
-		str1++; str2++;
+		s1 = regEx.GetMatch(str1, 1);
+		regEx.GetMatch(str1, 2).ToLong(&nb1);
 	}
 
-	return 0;
+	if (regEx.Matches(str2))
+	{
+		s2 = regEx.GetMatch(str2, 1);
+		regEx.GetMatch(str2, 2).ToLong(&nb2);
+	}
+
+	if (s1 == s2)
+		return nb1 < nb2;
+	else
+		return s1 < s2;
 }
 
 
