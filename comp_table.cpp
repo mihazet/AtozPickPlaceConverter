@@ -33,6 +33,13 @@ ComponentTable::ComponentTable(Project *project)
 	, m_project(project)
 	, m_component(project->GetComponent())
 {
+	wxGridCellAttrProvider *attrProvider = new wxGridCellAttrProvider;
+	SetAttrProvider (attrProvider);
+
+	wxGridCellAttr *ro_attr = new wxGridCellAttr();
+	ro_attr->SetReadOnly();
+	for (int col = 0; col < COUNT; col++)
+		SetColAttr(ro_attr, col);
 }
 
 ComponentTable::~ComponentTable()
@@ -47,6 +54,24 @@ int ComponentTable::GetNumberRows()
 int ComponentTable::GetNumberCols()
 {
 	return COUNT;
+}
+
+wxGridCellAttr *ComponentTable::GetAttr(int row, int col,
+										wxGridCellAttr::wxAttrKind  kind)
+{
+	wxGridCellAttr *attr = GetAttrProvider()->GetAttr(row, col, kind);
+
+	Component& data = m_component[row];
+
+	if (!(data.enabled && data.pnp_enabled))
+	{
+		wxGridCellAttr *attrNew = attr->Clone();
+		attr->DecRef();
+		attr = attrNew;
+		attr->SetTextColour(*wxLIGHT_GREY);
+	}
+
+	return attr;
 }
 
 wxString ComponentTable::GetColLabelValue( int col )

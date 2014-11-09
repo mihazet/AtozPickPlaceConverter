@@ -4377,3 +4377,85 @@
 	<wx/regex.h>
 	<wx/numformatter.h>
 
+1415211581 source:d:\projects\atozpickplaceconverter\main.cpp
+	<wx/wx.h>
+	"main_frame.h"
+
+1415211581 d:\projects\atozpickplaceconverter\main_frame.h
+	<wx/wx.h>
+	<wx/grid.h>
+	<wx/propgrid/propgrid.h>
+	<wx/notebook.h>
+	<wx/laywin.h>
+
+1412273242 source:d:\projects\atozpickplaceconverter\resource.rc
+	"wx/msw/wx.rc"
+
+1415211581 source:d:\projects\atozpickplaceconverter\utils.cpp
+	<wx/regex.h>
+	<wx/numformatter.h>
+
+1415537420 source:d:\projects\atozpickplaceconverter\comp_type_table.cpp
+	"comp_type_table.h"
+	"project.h"
+	<algorithm>
+
+1415537420 d:\projects\atozpickplaceconverter\comp_type_table.h
+	<wx/wx.h>
+	<wx/grid.h>
+	"common.h"
+
+1415537420 d:\projects\atozpickplaceconverter\common.h
+	<wx/wx.h>
+	<vector>
+
+1415537420 d:\projects\atozpickplaceconverter\project.h
+	<wx/wx.h>
+	<vector>
+	"common.h"
+
+1415537420 source:d:\projects\atozpickplaceconverter\fid_mark_table.cpp
+	"fid_mark_table.h"
+	"project.h"
+	<algorithm>
+
+1415537420 d:\projects\atozpickplaceconverter\fid_mark_table.h
+	<wx/wx.h>
+	<wx/grid.h>
+	"common.h"
+
+1415537420 source:d:\projects\atozpickplaceconverter\main_frame.cpp
+	"main_frame.h"
+	"project.h"
+	"comp_table.h"
+	"comp_type_table.h"
+	"pattern_table.h"
+	"fid_mark_table.h"
+
+1415537799 d:\projects\atozpickplaceconverter\comp_table.h
+	<wx/wx.h>
+	<wx/grid.h>
+	"common.h"
+
+1415537420 d:\projects\atozpickplaceconverter\pattern_table.h
+	<wx/wx.h>
+	<wx/grid.h>
+	"common.h"
+
+1415537420 source:d:\projects\atozpickplaceconverter\pattern_table.cpp
+	"pattern_table.h"
+	"project.h"
+	<algorithm>
+
+1415537420 source:d:\projects\atozpickplaceconverter\project.cpp
+	"project.h"
+	"utils.h"
+	<wx/filename.h>
+	<wx/fileconf.h>
+	<wx/tokenzr.h>
+	<wx/xml/xml.h>
+	<wx/textfile.h>
+	<algorithm>
+
+1415211581 d:\projects\atozpickplaceconverter\utils.h
+
