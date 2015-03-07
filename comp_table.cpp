@@ -39,7 +39,10 @@ ComponentTable::ComponentTable(Project *project)
 	wxGridCellAttr *ro_attr = new wxGridCellAttr();
 	ro_attr->SetReadOnly();
 	for (int col = 0; col < COUNT; col++)
+	{
 		SetColAttr(ro_attr, col);
+		ro_attr->IncRef();
+	}
 }
 
 ComponentTable::~ComponentTable()

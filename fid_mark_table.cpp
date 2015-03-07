@@ -31,8 +31,11 @@ FidMarkTable::FidMarkTable(Project *project)
 	wxGridCellAttr *ro_attr = new wxGridCellAttr();
 	ro_attr->SetReadOnly();
 	SetColAttr (ro_attr, COL_DESIGNATOR);
+	ro_attr->IncRef();
 	SetColAttr (ro_attr, COL_NAME);
+	ro_attr->IncRef();
 	SetColAttr (ro_attr, COL_LAYER);
+	ro_attr->IncRef();
 	SetColAttr (ro_attr, COL_SUBPCB_INDEX);
 
 	wxGridCellAttr *ro_float_attr = new wxGridCellAttr();
@@ -40,6 +43,7 @@ FidMarkTable::FidMarkTable(Project *project)
 	ro_float_attr->SetRenderer(float_rend);
 	ro_float_attr->SetReadOnly();
 	SetColAttr (ro_float_attr, COL_LOCATION_X);
+	ro_float_attr->IncRef();
 	SetColAttr (ro_float_attr, COL_LOCATION_Y);
 
 	wxGridCellAttr *choise_on_subpcb_attr = new wxGridCellAttr();

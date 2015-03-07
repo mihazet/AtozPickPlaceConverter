@@ -21,8 +21,8 @@ wxArrayString G_array_global;
 
 FileTemplate::FileTemplate()
 {
-	m_template.push_back( ItemTemplate("pcad", ";", "refdes:pattern:name:value:layer:location_x:location_y:angle", false) );
-	m_template.push_back( ItemTemplate("altum", ",", "refdes:pattern:::location_x:location_y:::layer:angle:value", true) );
+	m_template.push_back( ItemTemplate("pcad", "; ", "refdes:pattern:name:value:layer:location_x:location_y:angle", false) );
+	m_template.push_back( ItemTemplate("altum", ", ", "refdes:pattern:::location_x:location_y:::layer:angle:value", true) );
 }
 
 ItemTemplate *FileTemplate::FindByType(wxString type)
@@ -382,7 +382,7 @@ bool Project::Parse(const wxString& filename, ItemTemplate *templ)
 		if (str.IsEmpty())
 			continue;
 
-		wxArrayString strCols = wxStringTokenize(str, templ->delimiter, wxTOKEN_RET_EMPTY);
+		wxArrayString strCols = wxStringTokenize(str, templ->delimiter, wxTOKEN_STRTOK);
 		if (strCols.GetCount() != format.GetCount())
 		{
 			wxLogWarning("line %d (cols: %d/%d): invalid format: %s", line, strCols.GetCount(), format.GetCount(), str);
@@ -919,11 +919,11 @@ void Project::LoadProjectInfo(wxString filename)
 		proj_name = proj_name.Mid(filename_pref.Len());
 	}
 
-	// поиск этого проекта в конфиге
+	// РїРѕРёСЃРє СЌС‚РѕРіРѕ РїСЂРѕРµРєС‚Р° РІ РєРѕРЅС„РёРіРµ
 	if (!m_projectsCfg->HasGroup(filename_only))
 	{
-		// если точно такого проекта нет,
-		// ищем похожие ...
+		// РµСЃР»Рё С‚РѕС‡РЅРѕ С‚Р°РєРѕРіРѕ РїСЂРѕРµРєС‚Р° РЅРµС‚,
+		// РёС‰РµРј РїРѕС…РѕР¶РёРµ ...
 		wxConfigPathChanger cfg_cd_to(m_projectsCfg, "/");
 		long index;
 		wxString group;
@@ -933,7 +933,7 @@ void Project::LoadProjectInfo(wxString filename)
 		while (cont)
 		{
 
-			// ищем совпадения в имени по первой половине
+			// РёС‰РµРј СЃРѕРІРїР°РґРµРЅРёСЏ РІ РёРјРµРЅРё РїРѕ РїРµСЂРІРѕР№ РїРѕР»РѕРІРёРЅРµ
 			int n = proj_name.Length() / 2;
 			if (!wxStrncmp_String<wxString>(group, proj_name, n))
 			{

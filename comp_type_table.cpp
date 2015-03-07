@@ -28,6 +28,7 @@ ComponentTypeTable::ComponentTypeTable(Project *project)
 	wxGridCellAttr *ro_attr = new wxGridCellAttr();
 	ro_attr->SetReadOnly();
 	SetColAttr (ro_attr, COL_NAME);
+	ro_attr->IncRef();
 	SetColAttr (ro_attr, COL_IS_NEW);
 
 	wxGridCellAttr *ro_num_attr = new wxGridCellAttr();
@@ -43,6 +44,7 @@ ComponentTypeTable::ComponentTypeTable(Project *project)
 	bool_edit->UseStringValues("1", "0");
 	bool_attr->SetEditor(bool_edit);
 	SetColAttr (bool_attr, COL_ENABLED);
+	bool_attr->IncRef();
 	SetColAttr (bool_attr, COL_OVR_NAME);
 
 	//	InsertColumn(COL_NAME,		_T("Name"),	wxLIST_FORMAT_LEFT, 120);
