@@ -85,7 +85,7 @@ Project::~Project()
 	delete m_projectsCfg;
 }
 
-void Project::Load(const wxString& filename)
+void Project::Load(const wxString& filename, const wxString& type)
 {
 	ItemTemplate *templ = NULL;
 
@@ -97,15 +97,15 @@ void Project::Load(const wxString& filename)
 		SavePatterns();
 	}
 
-	wxString ext = wxFileName(filename).GetExt();
+//	wxString ext = wxFileName(filename).GetExt();
 
-	if (ext == "txt")
+	if (type == "pcad")
 	{
 		templ = m_fileTempl.FindByType("pcad");
 		m_activeCompsCfg = m_compPcadCfg;
 		m_activePatternsCfg = m_patternsPcadCfg;
 	}
-	else if (ext == "csv")
+	else if (type == "altum")
 	{
 		templ = m_fileTempl.FindByType("altum");
 		m_activeCompsCfg = m_compAltumCfg;
@@ -113,7 +113,7 @@ void Project::Load(const wxString& filename)
 	}
 	else
 	{
-		wxLogError("Don`t know how to open %s!", ext);
+		wxLogError("Don`t know how to open %s!", type);
 		return ;
 	}
 
@@ -383,7 +383,7 @@ bool Project::Parse(const wxString& filename, ItemTemplate *templ)
 			continue;
 
 		wxArrayString strCols = wxStringTokenize(str, templ->delimiter, wxTOKEN_STRTOK);
-		if (strCols.GetCount() != format.GetCount())
+		if (strCols.GetCount() < format.GetCount())
 		{
 			wxLogWarning("line %d (cols: %d/%d): invalid format: %s", line, strCols.GetCount(), format.GetCount(), str);
 			continue;

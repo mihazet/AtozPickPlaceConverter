@@ -101,7 +101,7 @@ public:
 	~Project();
 
 	// ---- Load data and parsing, save
-	void Load(const wxString& filename);
+	void Load(const wxString& filename, const wxString& type = "pcad");
 	void SaveProd(const wxString& filename);
 	void SaveDD500File(wxXmlDocument *xmlDoc, wxString file);
 

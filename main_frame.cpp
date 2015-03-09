@@ -125,15 +125,25 @@ void MainFrame::CreateMenu()
 void MainFrame::OnFileOpen(wxCommandEvent &event)
 {
 	wxFileDialog openDialog(this, "Select a file", "", "",
-							"All supported files (*.txt;*.csv)|*.txt;*.csv"
-							"|PCAD PnP files (*.txt)|*.txt"
-							"|Altium Designer PnP files (*.csv)|*.csv"
-							"|All files (*.*)|*.*",
+							"All supported files (*.txt)|*.txt"
+							/*"|PCAD PnP files (*.txt)|*.txt"*/
+							/*"Altium Designer PnP files (*.txt)|*.txt"*/
+							/*"|All files (*.*)|*.*"*/,
 							wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (openDialog.ShowModal() == wxID_OK)
 	{
-		m_project->Load(openDialog.GetPath());
+		wxArrayString choices;
+		choices.Add("PCAD PnP file");
+		choices.Add("Altium Designer PnP file");
+		const wxString *data[2] = { new wxString("pcad"), new wxString("altum") };
+		wxString *sel = static_cast<wxString *>(wxGetSingleChoiceData("Select a type CAD", "CAD",
+												choices, (void **)data, this));
+		if (sel)
+			m_project->Load(openDialog.GetPath(), *sel);
+
+		for (size_t i = 0; i < 2; i++)
+			delete data[i];
 	}
 }
 
