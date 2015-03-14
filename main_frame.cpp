@@ -15,6 +15,7 @@
 #include "pattern_table.h"
 #include "fid_mark_table.h"
 
+#include <wx/splitter.h>
 
 #define APP_TITLE	("Pick & Place Converter")
 
@@ -31,8 +32,6 @@ enum
 	ID_FIDMARK_GRID,
 
 
-	ID_WINDOW_RIGHT,
-	ID_WINDOW_BOTTOM,
 };
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
@@ -40,8 +39,6 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(ID_FILE_SAVE, MainFrame::OnFileSave)
 	EVT_MENU(ID_FILE_QUIT, MainFrame::OnFileQuit)
 	EVT_MENU(ID_HELP_ABOUT, MainFrame::OnHelpAbout)
-	EVT_SASH_DRAGGED_RANGE(ID_WINDOW_RIGHT, ID_WINDOW_BOTTOM, MainFrame::OnSashDrag)
-	EVT_SIZE(MainFrame::OnSize)
 	EVT_PG_CHANGED(ID_PROP, MainFrame::OnPropertyGridChanged)
 	EVT_GRID_CMD_COL_SORT(ID_COMP_GRID, MainFrame::OnCompGridColSort)
 	EVT_GRID_CMD_COL_SORT(ID_TYPE_GRID, MainFrame::OnTypeGridColSort)
@@ -58,22 +55,19 @@ MainFrame::MainFrame()
 {
 	CreateMenu();
 
-	// window right
-	m_rightLayoutWin = new wxSashLayoutWindow(this, ID_WINDOW_RIGHT);
-	m_rightLayoutWin->SetDefaultSize(wxSize(200, 1000));
-	m_rightLayoutWin->SetOrientation(wxLAYOUT_VERTICAL);
-	m_rightLayoutWin->SetAlignment(wxLAYOUT_RIGHT);
-	m_rightLayoutWin->SetSashVisible(wxSASH_LEFT, true);
+	wxSplitterWindow *mainSplitter = new wxSplitterWindow(this, wxID_ANY);
+	mainSplitter->SetSashGravity(1.0);
+	mainSplitter->SetMinimumPaneSize(100);
+	mainSplitter->SetWindowStyle(wxSP_NOBORDER);
 
-	// window bottom
-	m_bottomLayoutWin = new wxSashLayoutWindow(this, ID_WINDOW_BOTTOM);
-	m_bottomLayoutWin->SetDefaultSize(wxSize(1000, 100));
-	m_bottomLayoutWin->SetOrientation(wxLAYOUT_HORIZONTAL);
-	m_bottomLayoutWin->SetAlignment(wxLAYOUT_BOTTOM);
-	m_bottomLayoutWin->SetSashVisible(wxSASH_TOP, true);
+	wxSplitterWindow *verticalSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY);
+	verticalSplitter->SetSashGravity(1.0);
+	verticalSplitter->SetMinimumPaneSize(200);
+	verticalSplitter->SetWindowStyle(wxSP_NOBORDER);
 
-	m_projectPG = new wxPropertyGrid(m_rightLayoutWin, ID_PROP);
-	m_book = new wxNotebook(this, wxID_ANY);
+
+	m_projectPG = new wxPropertyGrid(verticalSplitter, ID_PROP);
+	m_book = new wxNotebook(verticalSplitter, wxID_ANY);
 	m_compGrid = new wxGrid(m_book, ID_COMP_GRID);
 	m_typeGrid = new wxGrid(m_book, ID_TYPE_GRID);
 	m_patternGrid = new wxGrid(m_book, ID_PATTERN_GRID);
@@ -82,13 +76,18 @@ MainFrame::MainFrame()
 	m_book->AddPage(m_typeGrid, "Component Types");
 	m_book->AddPage(m_patternGrid, "Patterns");
 	m_book->AddPage(m_fidMarkGrid, "Fiducials");
-	m_logText = new wxTextCtrl(m_bottomLayoutWin, wxID_ANY, "",
+	m_logText = new wxTextCtrl(mainSplitter, wxID_ANY, "",
 							   wxDefaultPosition, wxDefaultSize,
 							   wxTE_READONLY | wxTE_MULTILINE);
 
 	wxLog::SetActiveTarget(new wxLogTextCtrl(m_logText));
 
+
+	verticalSplitter->SplitVertically(m_book, m_projectPG, 200);
+	mainSplitter->SplitHorizontally(verticalSplitter, m_logText, 100);
+
 	SetSize(wxSize(1000, 800));
+
 	Center();
 
 	m_project = new Project();
@@ -125,10 +124,10 @@ void MainFrame::CreateMenu()
 void MainFrame::OnFileOpen(wxCommandEvent &event)
 {
 	wxFileDialog openDialog(this, "Select a file", "", "",
-							"All supported files (*.txt)|*.txt"
+							"All supported files (*.txt; *.csv)|*.txt;*.csv"
 							/*"|PCAD PnP files (*.txt)|*.txt"*/
 							/*"Altium Designer PnP files (*.txt)|*.txt"*/
-							/*"|All files (*.*)|*.*"*/,
+							"|All files (*.*)|*.*",
 							wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (openDialog.ShowModal() == wxID_OK)
@@ -137,7 +136,7 @@ void MainFrame::OnFileOpen(wxCommandEvent &event)
 		choices.Add("PCAD PnP file");
 		choices.Add("Altium Designer PnP file");
 		const wxString *data[2] = { new wxString("pcad"), new wxString("altum") };
-		wxString *sel = static_cast<wxString *>(wxGetSingleChoiceData("Select a type CAD", "CAD",
+		wxString *sel = static_cast<wxString *>(wxGetSingleChoiceData("Select a type CAD:", "Select",
 												choices, (void **)data, this));
 		if (sel)
 			m_project->Load(openDialog.GetPath(), *sel);
@@ -170,33 +169,7 @@ void MainFrame::OnFileQuit(wxCommandEvent &event)
 
 void MainFrame::OnHelpAbout(wxCommandEvent& event)
 {
-	wxMessageBox("PickPlaceConverter Version 1.0\nBuild at "__DATE__" "__TIME__, "About");
-}
-
-void MainFrame::OnSashDrag(wxSashEvent& event)
-{
-	if (event.GetDragStatus() == wxSASH_STATUS_OUT_OF_RANGE)
-		return;
-
-	switch (event.GetId())
-	{
-		case ID_WINDOW_RIGHT:
-			m_rightLayoutWin->SetDefaultSize(wxSize(event.GetDragRect().width, 1000));
-			break;
-
-		case ID_WINDOW_BOTTOM:
-			m_bottomLayoutWin->SetDefaultSize(wxSize(1000, event.GetDragRect().height));
-			break;
-	}
-
-	wxLayoutAlgorithm layout;
-	layout.LayoutFrame(this, m_book);
-}
-
-void MainFrame::OnSize(wxSizeEvent& event)
-{
-	wxLayoutAlgorithm layout;
-	layout.LayoutFrame(this, m_book);
+	wxMessageBox("PickPlaceConverter Version 1.1\nBuild at "__DATE__" "__TIME__, "About");
 }
 
 void MainFrame::OnPropertyGridChanged(wxPropertyGridEvent& event)
@@ -209,7 +182,7 @@ void MainFrame::OnPropertyGridChanged(wxPropertyGridEvent& event)
 	wxAny value = property->GetValue();
 	if ( value.IsNull() )
 	{
-		wxMessageBox("Value is NULL!", "Warning");
+		wxMessageBox("Value is NULL!", "Warning", wxOK | wxCENTER | wxICON_WARNING, this);
 		return;
 	}
 	// Handle changes in values, as needed

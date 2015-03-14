@@ -21,7 +21,7 @@ wxArrayString G_array_global;
 
 FileTemplate::FileTemplate()
 {
-	m_template.push_back( ItemTemplate("pcad", "; ", "refdes:pattern:name:value:layer:location_x:location_y:angle", false) );
+	m_template.push_back( ItemTemplate("pcad", ";", "refdes:pattern:name:value:layer:location_x:location_y:angle", false) );
 	m_template.push_back( ItemTemplate("altum", ", ", "refdes:pattern:::location_x:location_y:::layer:angle:value", true) );
 }
 

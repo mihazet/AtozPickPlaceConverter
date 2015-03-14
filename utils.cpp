@@ -1,6 +1,7 @@
 #include <wx/regex.h>
 #include <wx/numformatter.h>
 
+#include <wx/wx.h>
 
 // helper function
 // from Alatar's project without modifications
@@ -40,7 +41,7 @@ wxString ParseNominal(wxString a_designator, wxString a_value)
 			break;
 		case 'C':
 			unit = "F";
-			factor = 1e-6;
+			factor = 1e-12;
 			break;
 		case 'L':
 			unit = "H";
@@ -62,7 +63,8 @@ wxString ParseNominal(wxString a_designator, wxString a_value)
 		value = -1;
 		return wxEmptyString;
 	}
-	val = re_format2.GetMatch(a_value, 1); val.Replace(",", ".");
+	val = re_format2.GetMatch(a_value, 1);
+	val.Replace(",", ".");
 	tmp_unit = re_format2.GetMatch(a_value, 2);
 	value_postfix = re_format2.GetMatch(a_value, 3);
 

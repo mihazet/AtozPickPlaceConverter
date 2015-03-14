@@ -14,7 +14,6 @@
 #include <wx/grid.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/notebook.h>
-#include <wx/laywin.h>
 
 class Project;
 
@@ -31,8 +30,6 @@ private:
 	void OnFileSave(wxCommandEvent& event);
 	void OnFileQuit(wxCommandEvent& event);
 	void OnHelpAbout(wxCommandEvent& event);
-	void OnSashDrag(wxSashEvent& event);
-	void OnSize(wxSizeEvent& event);
 	void OnPropertyGridChanged(wxPropertyGridEvent& event);
 	void OnCompGridColSort(wxGridEvent& event);
 	void OnTypeGridColSort(wxGridEvent& event);
@@ -64,10 +61,6 @@ private:
 	wxGrid *m_patternGrid;
 	wxGrid *m_fidMarkGrid;
 	wxTextCtrl *m_logText;
-
-	wxSashLayoutWindow *m_bottomLayoutWin;
-	wxSashLayoutWindow *m_rightLayoutWin;
-
 
 	DECLARE_EVENT_TABLE()
 };
